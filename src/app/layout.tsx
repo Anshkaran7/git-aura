@@ -22,7 +22,7 @@ const defaultMetadata: Metadata = {
 };
 
 export async function generateMetadata(
-  { params, searchParams }: { params: Record<string, string>; searchParams: URLSearchParams },
+  { searchParams }: { searchParams: URLSearchParams },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const ogImage = searchParams.get("og_image");
