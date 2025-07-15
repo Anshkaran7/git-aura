@@ -173,6 +173,48 @@ const GitHubProfileCard = () => {
 
     setIsGenerating(true);
     try {
+      // First, generate and upload the image to ImgBB
+      let imageUrl = null;
+      if (profileRef.current) {
+        try {
+          // Generate the profile image
+          const dataUrl = await toPng(profileRef.current, {
+            cacheBust: true,
+            backgroundColor:
+              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            pixelRatio: 2,
+            skipFonts: false,
+          });
+
+          // Convert data URL to blob
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+
+          // Upload to ImgBB
+          const formData = new FormData();
+          formData.append("image", blob);
+          formData.append("name", `${searchedUsername}-github-profile`);
+
+          const imgbbResponse = await fetch(
+            `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          if (imgbbResponse.ok) {
+            const imgbbData = await imgbbResponse.json();
+            imageUrl = imgbbData.data.url;
+            console.log("✅ Image uploaded to ImgBB:", imageUrl);
+          } else {
+            console.error("❌ Failed to upload to ImgBB");
+          }
+        } catch (uploadError) {
+          console.error("❌ Error uploading image:", uploadError);
+        }
+      }
+
       const id = nanoid(10);
       const shareableProfile: ShareableProfile = {
         id,
@@ -190,10 +232,13 @@ const GitHubProfileCard = () => {
 
       setShareableId(id);
 
-      // Update URL without refreshing
+      // Update URL without refreshing - include image URL if available
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("share", id);
-      newUrl.searchParams.set("username", searchedUsername); // Add username for metadata
+      newUrl.searchParams.set("username", searchedUsername);
+      if (imageUrl) {
+        newUrl.searchParams.set("og_image", imageUrl);
+      }
       window.history.pushState({}, "", newUrl);
 
       return id;
@@ -458,6 +503,13 @@ const GitHubProfileCard = () => {
       const shareUrl = new URL(window.location.href);
       shareUrl.searchParams.set("share", currentShareableId);
       shareUrl.searchParams.set("username", searchedUsername);
+
+      // Include og_image if it exists in current URL
+      const currentUrl = new URL(window.location.href);
+      const ogImage = currentUrl.searchParams.get("og_image");
+      if (ogImage) {
+        shareUrl.searchParams.set("og_image", ogImage);
+      }
 
       const text = `Check out ${searchedUsername}'s GitHub contributions! 🚀`;
 
