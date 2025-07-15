@@ -543,6 +543,26 @@ const GitHubProfileCard = () => {
       className={`${selectedTheme.background} p-3 sm:p-6 font-anek-devanagari transition-colors duration-300 h-screen`}
     >
       <div className="max-w-5xl mx-auto mt-8">
+        <div className="text-center mb-8">
+          <h1
+            className={`text-4xl sm:text-6xl font-bold ${
+              selectedTheme.name === "Light"
+                ? "bg-gradient-to-r from-blue-600 to-purple-600"
+                : selectedTheme.name === "Ocean Dark"
+                ? "bg-gradient-to-r from-cyan-400 to-blue-500"
+                : "bg-gradient-to-r from-blue-400 to-purple-500"
+            } bg-clip-text text-transparent font-anek-devanagari`}
+          >
+            GitAura
+          </h1>
+          <p
+            className={`mt-2 text-lg sm:text-xl ${
+              selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
+            } font-anek-devanagari`}
+          >
+            Beautiful GitHub profile visualization
+          </p>
+        </div>
         {/* Theme Selector and Export/Share Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
           <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-0">
@@ -713,14 +733,14 @@ const GitHubProfileCard = () => {
                     {profile?.login}
                   </div>
                 </div>
-                <div className="flex gap-1 sm:gap-2">
+                {/* <div className="flex gap-1 sm:gap-2">
                   <button className="opacity-50 hover:opacity-100 transition-opacity">
                     <Download className="w-4 h-4" />
                   </button>
                   <button className="opacity-50 hover:opacity-100 transition-opacity">
                     <Settings className="w-4 h-4" />
                   </button>
-                </div>
+                </div> */}
               </div>
 
               <div
@@ -753,7 +773,7 @@ const GitHubProfileCard = () => {
                           selectedTheme.name === "Light"
                             ? "text-gray-500"
                             : "text-gray-400"
-                        } text-sm sm:text-base mb-2 sm:mb-3 font-anek-devanagari`}
+                        } text-sm sm:text-base mb-1 font-anek-devanagari`}
                       >
                         @{profile.login}
                       </p>
@@ -908,6 +928,21 @@ const GitHubProfileCard = () => {
           )
         )}
       </div>
+      <footer
+        className={`text-center fixed bottom-0 w-full py-4 ${selectedTheme.text} ${selectedTheme.background}`}
+      >
+        <p className="text-sm">
+          Made with ❤️ by{" "}
+          <a
+            href="https://karandev.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`underline ${selectedTheme.text}`}
+          >
+            Karan
+          </a>
+        </p>
+      </footer>
     </div>
   );
 };
