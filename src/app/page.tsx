@@ -3,14 +3,15 @@ import { Suspense } from "react";
 import GitHubProfileCard from "./components/GitHubProfileCard";
 
 interface PageProps {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 export async function generateMetadata({
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const username = searchParams.username as string;
-  const shareId = searchParams.share as string;
+  const params = await searchParams;
+  const username = params.username as string;
+  const shareId = params.share as string;
 
   // If we have a shareId, fetch the profile data to get the username
   let profileUsername = username;
