@@ -363,6 +363,11 @@ const GitHubProfileCard = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("share");
+    cleanUrl.searchParams.delete("username");
+    cleanUrl.searchParams.delete("og_image");
+    window.history.replaceState({}, "", cleanUrl);
     if (username.trim() && username !== searchedUsername) {
       fetchProfile(username.trim());
     }
