@@ -25,7 +25,7 @@ export async function generateMetadata(
   { searchParams }: { searchParams: URLSearchParams },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const ogImage = searchParams.get("og_image");
+  const ogImage = searchParams?.get("og_image") || null;
 
   const openGraphImages = ogImage ? [{ url: ogImage }] : [];
 
