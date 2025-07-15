@@ -19,6 +19,24 @@ export const metadata: Metadata = {
     "Visualization",
     "Developer Stats",
   ],
+  openGraph: {
+    title: "GitHub Profile Visualizer",
+    description: "Beautiful GitHub profile and contribution visualization",
+    images: [
+      {
+        url: "/api/og",
+        width: 1200,
+        height: 630,
+        alt: "GitHub Profile Visualizer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GitHub Profile Visualizer",
+    description: "Beautiful GitHub profile and contribution visualization",
+    images: ["/api/og"],
+  },
 };
 
 export default function RootLayout({
