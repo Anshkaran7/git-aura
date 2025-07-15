@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, ResolvingMetadata } from "next";
 import { Anek_Devanagari } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
@@ -8,7 +8,7 @@ const anekDevanagari = Anek_Devanagari({
   variable: "--font-anek-devanagari",
 });
 
-export const metadata: Metadata = {
+const defaultMetadata: Metadata = {
   title: "GitHub Profile Visualizer",
   description: "Beautiful GitHub profile and contribution visualization",
   authors: [{ name: "Your Name" }],
@@ -20,6 +20,23 @@ export const metadata: Metadata = {
     "Developer Stats",
   ],
 };
+
+export async function generateMetadata(
+  { params, searchParams }: { params: any; searchParams: any },
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const ogImage = searchParams.og_image;
+
+  const openGraphImages = ogImage ? [{ url: ogImage }] : [];
+
+  return {
+    ...defaultMetadata,
+    openGraph: {
+      ...defaultMetadata.openGraph,
+      images: openGraphImages,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
