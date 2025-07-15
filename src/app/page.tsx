@@ -452,41 +452,8 @@ const GitHubProfileCard = () => {
       const shareUrl = new URL(window.location.href);
       shareUrl.searchParams.set("share", currentShareableId);
 
-      // Generate image from profile card and upload to imgbb
-      let imageUrl = "";
-      if (profileRef.current) {
-        try {
-          const dataUrl = await toPng(profileRef.current, {
-            cacheBust: true,
-            backgroundColor: undefined,
-            pixelRatio: 2,
-            skipFonts: false,
-          });
-
-          const base64 = dataUrl.split(",")[1];
-          const formData = new FormData();
-          formData.append("image", base64);
-          formData.append("name", `${searchedUsername}-github-profile.png`);
-          const imgbbUrl = `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
-          const imgbbRes = await fetch(imgbbUrl, {
-            method: "POST",
-            body: formData,
-          });
-          const imgbbData = await imgbbRes.json();
-          if (imgbbData.success && imgbbData.data) {
-            imageUrl = imgbbData.data.display_url || imgbbData.data.url || "";
-          }
-        } catch (imgErr) {
-          console.error("Image upload failed:", imgErr);
-        }
-      }
-
-      // Add og:image param to shareUrl if imageUrl exists
-      if (imageUrl) {
-        shareUrl.searchParams.set("og_image", imageUrl);
-      }
-
       const text = `Check out ${searchedUsername}'s GitHub contributions! 🚀`;
+
       let shareLink = "";
       if (platform === "twitter") {
         shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
@@ -512,27 +479,19 @@ const GitHubProfileCard = () => {
     return selectedTheme.contribution.level0;
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
   return (
     <div
-      className={`min-h-screen ${selectedTheme.background} p-6 font-anek-devanagari transition-colors duration-300`}
+      className={`${selectedTheme.background} p-3 sm:p-6 font-anek-devanagari transition-colors duration-300 h-screen`}
     >
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto mt-8">
         {/* Theme Selector and Export/Share Buttons */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+          <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-0">
             {themes.map((theme) => (
               <button
                 key={theme.name}
                 onClick={() => setSelectedTheme(theme)}
-                className={`px-4 py-2 font-medium rounded-lg ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 font-medium rounded-lg text-sm sm:text-base ${
                   selectedTheme.name === theme.name
                     ? "ring-2 ring-blue-500 bg-blue-500 text-white"
                     : selectedTheme.name === "Light"
@@ -545,7 +504,7 @@ const GitHubProfileCard = () => {
             ))}
           </div>
           {profile && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {isGenerating ? (
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-500 rounded-lg text-white font-anek-devanagari">
                   <span className="animate-pulse">Generating...</span>
@@ -554,7 +513,7 @@ const GitHubProfileCard = () => {
                 <>
                   <button
                     onClick={() => handleShare("twitter")}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] rounded-lg text-white transition-colors font-anek-devanagari"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
                     title="Share on Twitter"
                   >
                     <Twitter className="w-4 h-4" />
@@ -562,7 +521,7 @@ const GitHubProfileCard = () => {
                   </button>
                   <button
                     onClick={() => handleShare("linkedin")}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0A66C2] hover:bg-[#094da1] rounded-lg text-white transition-colors font-anek-devanagari"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
                     title="Share on LinkedIn"
                   >
                     <Linkedin className="w-4 h-4" />
@@ -570,7 +529,7 @@ const GitHubProfileCard = () => {
                   </button>
                   <button
                     onClick={handleExportImage}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-anek-devanagari"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
                     title="Download as Image"
                   >
                     <Download className="w-4 h-4" />
@@ -583,7 +542,7 @@ const GitHubProfileCard = () => {
         </div>
 
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-8">
+        <form onSubmit={handleSearch} className="mb-4">
           <div className="relative">
             <Search
               className={`absolute left-3 top-3 h-5 w-5 ${
@@ -597,20 +556,20 @@ const GitHubProfileCard = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter GitHub username and press Enter"
-              className={`w-full pl-10 pr-24 py-3 ${
+              className={`w-full pl-10 pr-24 py-2.5 sm:py-3 ${
                 selectedTheme.cardBackground
               } ${
                 selectedTheme.name === "Light"
                   ? "text-gray-700 placeholder-gray-400 border-gray-300"
                   : "text-gray-100 placeholder-gray-500 border-gray-700"
-              } rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-anek-devanagari shadow-sm`}
+              } rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-anek-devanagari shadow-sm text-sm sm:text-base`}
             />
             <button
               type="submit"
               disabled={
                 !username.trim() || username === searchedUsername || loading
               }
-              className="absolute right-2 top-2 bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-anek-devanagari"
+              className="absolute right-2 top-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-anek-devanagari text-sm sm:text-base"
             >
               {loading ? "Searching..." : "Search"}
             </button>
@@ -643,241 +602,251 @@ const GitHubProfileCard = () => {
           </div>
         )}
 
-        {profile && (
-          <div
-            ref={profileRef}
-            data-profile-card
-            className={`${
-              selectedTheme.cardBackground
-            } rounded-2xl overflow-hidden shadow-lg border ${
-              selectedTheme.border
-            } ${
-              selectedTheme.name === "Ocean Dark"
-                ? "shadow-cyan-900/20 bg-opacity-90 backdrop-blur-sm"
-                : selectedTheme.name === "Dark"
-                ? "shadow-gray-900/30"
-                : "shadow-gray-200/50"
-            }`}
-          >
-            {/* Browser Window Controls */}
+        {loading ? (
+          <div className="flex items-center justify-center w-full py-24">
+            <img src="/loading.gif" alt="Loading..." className="w-32 h-32" />
+          </div>
+        ) : (
+          profile && (
             <div
-              className={`flex items-center gap-1.5 px-4 py-3 ${
-                selectedTheme.name === "Light"
-                  ? "bg-gray-50/80"
-                  : selectedTheme.name === "Ocean Dark"
-                  ? "bg-cyan-900/20"
-                  : "bg-gray-900/20"
-              } border-b ${selectedTheme.border}`}
-            >
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/90" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/90" />
-                <div className="w-3 h-3 rounded-full bg-green-500/90" />
-              </div>
-              <div
-                className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-sm font-anek-devanagari`}
-              >
-                <div
-                  className={`flex items-center gap-2 px-4 py-1 rounded-md ${
-                    selectedTheme.name === "Light"
-                      ? "bg-white/80"
-                      : selectedTheme.name === "Ocean Dark"
-                      ? "bg-cyan-950/50"
-                      : "bg-gray-950/50"
-                  } border ${selectedTheme.border}`}
-                >
-                  <span className="opacity-60">github.com/</span>
-                  {profile?.login}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button className="opacity-50 hover:opacity-100 transition-opacity">
-                  <Download className="w-4 h-4" />
-                </button>
-                <button className="opacity-50 hover:opacity-100 transition-opacity">
-                  <Settings className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div
-              className={`p-8 ${
+              ref={profileRef}
+              data-profile-card
+              className={`${
+                selectedTheme.cardBackground
+              } rounded-2xl overflow-hidden shadow-lg border ${
+                selectedTheme.border
+              } ${
                 selectedTheme.name === "Ocean Dark"
-                  ? "bg-gradient-to-b from-transparent to-cyan-950/20"
-                  : ""
+                  ? "shadow-cyan-900/20 bg-opacity-90 backdrop-blur-sm"
+                  : selectedTheme.name === "Dark"
+                  ? "shadow-gray-900/30"
+                  : "shadow-gray-200/50"
               }`}
             >
-              {/* Profile Header */}
-              <div className="flex items-start justify-between mb-8">
-                <div className="flex items-center gap-6">
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.name || profile.login}
-                    className="w-20 h-20 rounded-full ring-2 ring-blue-500/30 shadow-md"
-                  />
-                  <div>
-                    <h1
-                      className={`text-2xl font-semibold ${
+              {/* Browser Window Controls */}
+              <div
+                className={`flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-3 ${
+                  selectedTheme.name === "Light"
+                    ? "bg-gray-50/80"
+                    : selectedTheme.name === "Ocean Dark"
+                    ? "bg-cyan-900/20"
+                    : "bg-gray-900/20"
+                } border-b ${selectedTheme.border}`}
+              >
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/90" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/90" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/90" />
+                </div>
+                <div
+                  className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-xs sm:text-sm font-anek-devanagari`}
+                >
+                  <div
+                    className={`flex items-center gap-2 px-2 sm:px-4 py-0.5 sm:py-1 rounded-md ${
+                      selectedTheme.name === "Light"
+                        ? "bg-white/80"
+                        : selectedTheme.name === "Ocean Dark"
+                        ? "bg-cyan-950/50"
+                        : "bg-gray-950/50"
+                    } border ${selectedTheme.border}`}
+                  >
+                    <span className="opacity-60">github.com/</span>
+                    {profile?.login}
+                  </div>
+                </div>
+                <div className="flex gap-1 sm:gap-2">
+                  <button className="opacity-50 hover:opacity-100 transition-opacity">
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button className="opacity-50 hover:opacity-100 transition-opacity">
+                    <Settings className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className={`p-4 sm:p-8 ${
+                  selectedTheme.name === "Ocean Dark"
+                    ? "bg-gradient-to-b from-transparent to-cyan-950/20"
+                    : ""
+                }`}
+              >
+                {/* Profile Header */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-8 gap-4 sm:gap-0">
+                  <div className="flex items-center gap-3 sm:gap-6">
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.name || profile.login}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-2 ring-blue-500/30 shadow-md"
+                    />
+                    <div>
+                      <h1
+                        className={`text-xl sm:text-2xl font-semibold ${
+                          selectedTheme.name === "Light"
+                            ? "text-gray-800"
+                            : "text-gray-100"
+                        } mb-1 font-anek-devanagari`}
+                      >
+                        {profile.name || profile.login}
+                      </h1>
+                      <p
+                        className={`${
+                          selectedTheme.name === "Light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                        } text-sm sm:text-base mb-2 sm:mb-3 font-anek-devanagari`}
+                      >
+                        @{profile.login}
+                      </p>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-anek-devanagari">
+                        <div
+                          className={`flex items-center gap-1.5 ${
+                            selectedTheme.name === "Light"
+                              ? "text-gray-600 hover:text-gray-800"
+                              : "text-gray-300 hover:text-white"
+                          } transition-colors`}
+                        >
+                          <Users className="h-4 w-4" />
+                          <span>
+                            {profile.followers.toLocaleString()} Followers
+                          </span>
+                        </div>
+                        <div
+                          className={`flex items-center gap-1.5 ${
+                            selectedTheme.name === "Light"
+                              ? "text-gray-600 hover:text-gray-800"
+                              : "text-gray-300 hover:text-white"
+                          } transition-colors`}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                          <span>
+                            {profile.following.toLocaleString()} Following
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right mt-3 sm:mt-0">
+                    <div
+                      className={`text-xl sm:text-2xl font-semibold ${
                         selectedTheme.name === "Light"
                           ? "text-gray-800"
                           : "text-gray-100"
-                      } mb-1 font-anek-devanagari`}
+                      } font-anek-devanagari`}
                     >
-                      {profile.name || profile.login}
-                    </h1>
-                    <p
+                      {profile.public_repos.toLocaleString()}
+                    </div>
+                    <div
                       className={`${
                         selectedTheme.name === "Light"
                           ? "text-gray-500"
                           : "text-gray-400"
-                      } text-base mb-3 font-anek-devanagari`}
+                      } text-xs sm:text-sm font-anek-devanagari`}
                     >
-                      @{profile.login}
+                      Repositories
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {profile.bio && (
+                  <div className="mb-4 sm:mb-8">
+                    <p
+                      className={`flex items-center gap-2 text-sm sm:text-base ${
+                        selectedTheme.name === "Light"
+                          ? "text-gray-700"
+                          : "text-gray-200"
+                      } font-anek-devanagari`}
+                    >
+                      <Coffee
+                        className={`h-4 w-4 ${
+                          selectedTheme.name === "Light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                      {profile.bio}
                     </p>
-                    <div className="flex items-center gap-4 text-sm font-anek-devanagari">
-                      <div
-                        className={`flex items-center gap-1.5 ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-600 hover:text-gray-800"
-                            : "text-gray-300 hover:text-white"
-                        } transition-colors`}
-                      >
-                        <Users className="h-4 w-4" />
-                        <span>
-                          {profile.followers.toLocaleString()} Followers
-                        </span>
-                      </div>
-                      <div
-                        className={`flex items-center gap-1.5 ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-600 hover:text-gray-800"
-                            : "text-gray-300 hover:text-white"
-                        } transition-colors`}
-                      >
-                        <UserPlus className="h-4 w-4" />
-                        <span>
-                          {profile.following.toLocaleString()} Following
-                        </span>
-                      </div>
+                  </div>
+                )}
+
+                {/* Contribution section */}
+                <div className="mt-4 sm:mt-8">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-6 gap-2 sm:gap-0">
+                    <h2
+                      className={`text-lg sm:text-xl font-semibold ${
+                        selectedTheme.name === "Light"
+                          ? "text-gray-800"
+                          : "text-gray-100"
+                      } font-anek-devanagari`}
+                    >
+                      {contributions.length.toLocaleString()} contributions
+                    </h2>
+                    <div
+                      className={`${
+                        selectedTheme.name === "Light"
+                          ? "text-gray-500"
+                          : "text-gray-400"
+                      } text-xs sm:text-sm font-anek-devanagari`}
+                    >
+                      {new Date(profile.created_at).getFullYear()} - Present
                     </div>
                   </div>
-                </div>
 
-                <div className="text-right">
-                  <div
-                    className={`text-2xl font-semibold ${
-                      selectedTheme.name === "Light"
-                        ? "text-gray-800"
-                        : "text-gray-100"
-                    } font-anek-devanagari`}
-                  >
-                    {profile.public_repos.toLocaleString()}
-                  </div>
                   <div
                     className={`${
                       selectedTheme.name === "Light"
-                        ? "text-gray-500"
-                        : "text-gray-400"
-                    } text-sm font-anek-devanagari`}
+                        ? "bg-white"
+                        : selectedTheme.name === "Ocean Dark"
+                        ? "bg-[#0f172a]/50"
+                        : "bg-[#0d1117]/50"
+                    } rounded-xl p-3 sm:p-6 ${
+                      selectedTheme.border
+                    } border backdrop-blur-sm`}
+                    style={{ overflowX: "auto" }}
                   >
-                    Repositories
-                  </div>
-                </div>
-              </div>
-
-              {/* Bio */}
-              {profile.bio && (
-                <div className="mb-8">
-                  <p
-                    className={`flex items-center gap-2 text-base ${
-                      selectedTheme.name === "Light"
-                        ? "text-gray-700"
-                        : "text-gray-200"
-                    } font-anek-devanagari`}
-                  >
-                    <Coffee
-                      className={`h-4 w-4 ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                      }`}
-                    />
-                    {profile.bio}
-                  </p>
-                </div>
-              )}
-
-              {/* Contribution section */}
-              <div className="mt-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2
-                    className={`text-xl font-semibold ${
-                      selectedTheme.name === "Light"
-                        ? "text-gray-800"
-                        : "text-gray-100"
-                    } font-anek-devanagari`}
-                  >
-                    {contributions.length.toLocaleString()} contributions
-                  </h2>
-                  <div
-                    className={`${
-                      selectedTheme.name === "Light"
-                        ? "text-gray-500"
-                        : "text-gray-400"
-                    } text-sm font-anek-devanagari`}
-                  >
-                    {new Date(profile.created_at).getFullYear()} - Present
-                  </div>
-                </div>
-
-                <div
-                  className={`${
-                    selectedTheme.name === "Light"
-                      ? "bg-white"
-                      : selectedTheme.name === "Ocean Dark"
-                      ? "bg-[#0f172a]/50"
-                      : "bg-[#0d1117]/50"
-                  } rounded-xl p-6 ${
-                    selectedTheme.border
-                  } border backdrop-blur-sm`}
-                >
-                  {getMonthLabels()}
-                  {generateCommitGrid()}
-
-                  <div className="flex items-center justify-end mt-4 gap-2">
-                    <span
-                      className={`text-xs ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                      } font-anek-devanagari`}
-                    >
-                      Less
-                    </span>
-                    <div className="flex gap-1">
-                      {[0, 1, 2, 3, 4].map((level) => (
-                        <div
-                          key={level}
-                          className={`w-2.5 h-2.5 rounded-sm ${getContributionColor(
-                            level * 4
-                          )}`}
-                        />
-                      ))}
+                    <div className="min-w-[340px] sm:min-w-0">
+                      {getMonthLabels()}
+                      <div className="overflow-x-auto">
+                        {generateCommitGrid()}
+                      </div>
                     </div>
-                    <span
-                      className={`text-xs ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                      } font-anek-devanagari`}
-                    >
-                      More
-                    </span>
+                    <div className="flex items-center justify-end mt-2 sm:mt-4 gap-1 sm:gap-2">
+                      <span
+                        className={`text-xs ${
+                          selectedTheme.name === "Light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                        } font-anek-devanagari`}
+                      >
+                        Less
+                      </span>
+                      <div className="flex gap-0.5 sm:gap-1">
+                        {[0, 1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm ${getContributionColor(
+                              level * 4
+                            )}`}
+                          />
+                        ))}
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          selectedTheme.name === "Light"
+                            ? "text-gray-500"
+                            : "text-gray-400"
+                        } font-anek-devanagari`}
+                      >
+                        More
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )
         )}
       </div>
     </div>
