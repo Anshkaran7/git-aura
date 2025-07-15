@@ -12,6 +12,7 @@ export async function generateMetadata({
   const params = await searchParams;
   const username = params.username as string;
   const shareId = params.share as string;
+  const ogImage = params.og_image as string;
 
   // If we have a shareId, fetch the profile data to get the username
   let profileUsername = username;
@@ -27,7 +28,7 @@ export async function generateMetadata({
           description: "View this GitHub profile visualization",
           images: [
             {
-              url: `/api/og?shared=true`,
+              url: ogImage || `/api/og?shared=true`,
               width: 1200,
               height: 630,
               alt: "GitHub Profile Visualization",
@@ -38,7 +39,7 @@ export async function generateMetadata({
           card: "summary_large_image",
           title: "GitHub Profile Visualizer - Shared Profile",
           description: "View this GitHub profile visualization",
-          images: [`/api/og?shared=true`],
+          images: [ogImage || `/api/og?shared=true`],
         },
       };
     } catch (error) {
@@ -56,7 +57,9 @@ export async function generateMetadata({
         description: `View ${profileUsername}'s GitHub contributions and profile statistics`,
         images: [
           {
-            url: `/api/og?username=${encodeURIComponent(profileUsername)}`,
+            url:
+              ogImage ||
+              `/api/og?username=${encodeURIComponent(profileUsername)}`,
             width: 1200,
             height: 630,
             alt: `${profileUsername}'s GitHub Profile`,
@@ -67,7 +70,9 @@ export async function generateMetadata({
         card: "summary_large_image",
         title: `${profileUsername}'s GitHub Profile`,
         description: `View ${profileUsername}'s GitHub contributions and profile statistics`,
-        images: [`/api/og?username=${encodeURIComponent(profileUsername)}`],
+        images: [
+          ogImage || `/api/og?username=${encodeURIComponent(profileUsername)}`,
+        ],
       },
     };
   }
