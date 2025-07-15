@@ -511,7 +511,7 @@ const GitHubProfileCard = () => {
         shareUrl.searchParams.set("og_image", ogImage);
       }
 
-      const text = `Check out ${searchedUsername}'s GitHub contributions! 🚀`;
+      const text = `Check out my GitHub contributions! 🚀`;
 
       let shareLink = "";
       if (platform === "twitter") {
@@ -542,7 +542,7 @@ const GitHubProfileCard = () => {
     <div
       className={`${selectedTheme.background} p-3 sm:p-6 font-anek-devanagari transition-colors duration-300 h-screen`}
     >
-      <div className="max-w-5xl mx-auto mt-8">
+      <div className="max-w-5xl mx-auto ">
         <div className="text-center mb-8">
           <h1
             className={`text-4xl sm:text-6xl font-bold ${
