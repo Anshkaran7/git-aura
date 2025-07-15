@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Anek_Devanagari } from "next/font/google";
+import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 
-const anekDevanagari = Anek_Devanagari({
-  subsets: ["devanagari"],
-  variable: "--font-anek-devanagari",
+const monaSans = Mona_Sans({
+  subsets: ["latin"],
+  variable: "--font-mona-sans",
   display: "swap", // Add font-display: swap for performance
   preload: true,
 });
@@ -220,7 +220,7 @@ export default function RootLayout({
         <OrganizationStructuredData />
       </head>
       <body
-        className={`${anekDevanagari.variable} font-sans antialiased`}
+        className={`${monaSans.variable} font-sans antialiased`}
         suppressHydrationWarning={true}
       >
         {/* Skip to main content for accessibility */}

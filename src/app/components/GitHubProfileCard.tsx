@@ -363,10 +363,11 @@ const GitHubProfileCard = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Clean up URL parameters after search
     const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("og_image");
     cleanUrl.searchParams.delete("share");
     cleanUrl.searchParams.delete("username");
-    cleanUrl.searchParams.delete("og_image");
     window.history.replaceState({}, "", cleanUrl);
     if (username.trim() && username !== searchedUsername) {
       fetchProfile(username.trim());
@@ -545,8 +546,9 @@ const GitHubProfileCard = () => {
 
   return (
     <div
-      className={`${selectedTheme.background} p-3 sm:p-6 font-anek-devanagari transition-colors duration-300 h-screen`}
+      className={`${selectedTheme.background} p-3 sm:p-6 font-mona-sans transition-colors duration-300 h-screen`}
     >
+
       <div className="max-w-5xl mx-auto ">
         <div className="text-center mb-8">
           <h1
@@ -556,14 +558,14 @@ const GitHubProfileCard = () => {
                 : selectedTheme.name === "Ocean Dark"
                 ? "bg-gradient-to-r from-cyan-400 to-blue-500"
                 : "bg-gradient-to-r from-blue-400 to-purple-500"
-            } bg-clip-text text-transparent font-anek-devanagari`}
+            } bg-clip-text text-transparent font-mona-sans`}
           >
             GitAura
           </h1>
           <p
             className={`mt-2 text-lg sm:text-xl ${
               selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
-            } font-anek-devanagari`}
+            } font-mona-sans`}
           >
             Beautiful GitHub profile visualization
           </p>
@@ -581,7 +583,7 @@ const GitHubProfileCard = () => {
                     : selectedTheme.name === "Light"
                     ? "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300"
                     : "bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700 hover:text-white hover:border-gray-600"
-                } transition-all shadow-sm font-anek-devanagari`}
+                } transition-all shadow-sm font-mona-sans`}
               >
                 {theme.name}
               </button>
@@ -590,14 +592,14 @@ const GitHubProfileCard = () => {
           {profile && (
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               {isGenerating ? (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-500 rounded-lg text-white font-anek-devanagari">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-500 rounded-lg text-white font-mona-sans">
                   <span className="animate-pulse">Generating...</span>
                 </div>
               ) : (
                 <>
                   <button
                     onClick={() => handleShare("twitter")}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
                     title="Share on Twitter"
                   >
                     <Twitter className="w-4 h-4" />
@@ -605,7 +607,7 @@ const GitHubProfileCard = () => {
                   </button>
                   <button
                     onClick={() => handleShare("linkedin")}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
                     title="Share on LinkedIn"
                   >
                     <Linkedin className="w-4 h-4" />
@@ -613,7 +615,7 @@ const GitHubProfileCard = () => {
                   </button>
                   <button
                     onClick={handleExportImage}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-anek-devanagari text-sm sm:text-base"
+                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
                     title="Download as Image"
                   >
                     <Download className="w-4 h-4" />
@@ -646,14 +648,14 @@ const GitHubProfileCard = () => {
                 selectedTheme.name === "Light"
                   ? "text-gray-700 placeholder-gray-400 border-gray-300"
                   : "text-gray-100 placeholder-gray-500 border-gray-700"
-              } rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-anek-devanagari shadow-sm text-sm sm:text-base`}
+              } rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mona-sans shadow-sm text-sm sm:text-base`}
             />
             <button
               type="submit"
               disabled={
                 !username.trim() || username === searchedUsername || loading
               }
-              className="absolute right-2 top-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-anek-devanagari text-sm sm:text-base"
+              className="absolute right-2 top-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-mona-sans text-sm sm:text-base"
             >
               {loading ? "Searching..." : "Search"}
             </button>
@@ -673,7 +675,7 @@ const GitHubProfileCard = () => {
           <div
             className={`text-center ${
               selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
-            } mt-20 font-anek-devanagari`}
+            } mt-20 font-mona-sans`}
           >
             <Search
               className={`h-16 w-16 mx-auto mb-4 ${
@@ -723,20 +725,22 @@ const GitHubProfileCard = () => {
                   <div className="w-3 h-3 rounded-full bg-green-500/90" />
                 </div>
                 <div
-                  className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-xs sm:text-sm font-anek-devanagari`}
+                  className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-xs sm:text-sm font-mona-sans`}
                 >
-                  <div
+                    <a
+                    href={`https://github.com/${profile?.login}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`flex items-center gap-2 px-2 sm:px-4 py-0.5 sm:py-1 rounded-md ${
                       selectedTheme.name === "Light"
-                        ? "bg-white/80"
-                        : selectedTheme.name === "Ocean Dark"
-                        ? "bg-cyan-950/50"
-                        : "bg-gray-950/50"
+                      ? "bg-white/80"
+                      : selectedTheme.name === "Ocean Dark"
+                      ? "bg-cyan-950/50"
+                      : "bg-gray-950/50"
                     } border ${selectedTheme.border}`}
-                  >
-                    <span className="opacity-60">github.com/</span>
-                    {profile?.login}
-                  </div>
+                    >
+                    <span className="opacity-60 m-0 p-0">github.com/</span>{profile?.login}
+                    </a>
                 </div>
                 {/* <div className="flex gap-1 sm:gap-2">
                   <button className="opacity-50 hover:opacity-100 transition-opacity">
@@ -769,7 +773,7 @@ const GitHubProfileCard = () => {
                           selectedTheme.name === "Light"
                             ? "text-gray-800"
                             : "text-gray-100"
-                        } mb-1 font-anek-devanagari`}
+                        } mb-1 font-mona-sans`}
                       >
                         {profile.name || profile.login}
                       </h1>
@@ -778,11 +782,11 @@ const GitHubProfileCard = () => {
                           selectedTheme.name === "Light"
                             ? "text-gray-500"
                             : "text-gray-400"
-                        } text-sm sm:text-base mb-1 font-anek-devanagari`}
+                        } text-sm sm:text-base mb-1 font-mona-sans`}
                       >
                         @{profile.login}
                       </p>
-                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-anek-devanagari">
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-mona-sans">
                         <div
                           className={`flex items-center gap-1.5 ${
                             selectedTheme.name === "Light"
@@ -817,7 +821,7 @@ const GitHubProfileCard = () => {
                         selectedTheme.name === "Light"
                           ? "text-gray-800"
                           : "text-gray-100"
-                      } font-anek-devanagari`}
+                      } font-mona-sans`}
                     >
                       {profile.public_repos.toLocaleString()}
                     </div>
@@ -826,7 +830,7 @@ const GitHubProfileCard = () => {
                         selectedTheme.name === "Light"
                           ? "text-gray-500"
                           : "text-gray-400"
-                      } text-xs sm:text-sm font-anek-devanagari`}
+                      } text-xs sm:text-sm font-mona-sans`}
                     >
                       Repositories
                     </div>
@@ -841,7 +845,7 @@ const GitHubProfileCard = () => {
                         selectedTheme.name === "Light"
                           ? "text-gray-700"
                           : "text-gray-200"
-                      } font-anek-devanagari`}
+                      } font-mona-sans`}
                     >
                       <Coffee
                         className={`h-4 w-4 ${
@@ -863,7 +867,7 @@ const GitHubProfileCard = () => {
                         selectedTheme.name === "Light"
                           ? "text-gray-800"
                           : "text-gray-100"
-                      } font-anek-devanagari`}
+                      } font-mona-sans`}
                     >
                       {contributions.length.toLocaleString()} contributions
                     </h2>
@@ -872,7 +876,7 @@ const GitHubProfileCard = () => {
                         selectedTheme.name === "Light"
                           ? "text-gray-500"
                           : "text-gray-400"
-                      } text-xs sm:text-sm font-anek-devanagari`}
+                      } text-xs sm:text-sm font-mona-sans`}
                     >
                       {new Date(profile.created_at).getFullYear()} - Present
                     </div>
@@ -902,7 +906,7 @@ const GitHubProfileCard = () => {
                           selectedTheme.name === "Light"
                             ? "text-gray-500"
                             : "text-gray-400"
-                        } font-anek-devanagari`}
+                        } font-mona-sans`}
                       >
                         Less
                       </span>
@@ -921,7 +925,7 @@ const GitHubProfileCard = () => {
                           selectedTheme.name === "Light"
                             ? "text-gray-500"
                             : "text-gray-400"
-                        } font-anek-devanagari`}
+                        } font-mona-sans`}
                       >
                         More
                       </span>
@@ -936,6 +940,27 @@ const GitHubProfileCard = () => {
       <footer
         className={`text-center fixed bottom-0 w-full py-4 ${selectedTheme.text} ${selectedTheme.background}`}
       >
+
+              <div className="flex justify-center mb-6">
+        <a
+          href="https://github.com/anshkaran7/git-aura"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-colors ${
+        selectedTheme.name === "Light"
+          ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
+          : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+          }`}
+        >
+          <img
+        src="https://img.shields.io/github/stars/anshkaran7/git-aura?style=social"
+        alt="GitHub Stars"
+        className="h-5"
+          />
+          Star us on GitHub
+        </a>
+      </div>
+      
         <p className="text-sm">
           Made with ❤️ by{" "}
           <a
