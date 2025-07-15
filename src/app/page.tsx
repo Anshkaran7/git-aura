@@ -452,8 +452,41 @@ const GitHubProfileCard = () => {
       const shareUrl = new URL(window.location.href);
       shareUrl.searchParams.set("share", currentShareableId);
 
-      const text = `Check out ${searchedUsername}'s GitHub contributions! 🚀`;
+      // Generate image from profile card and upload to imgbb
+      let imageUrl = "";
+      if (profileRef.current) {
+        try {
+          const dataUrl = await toPng(profileRef.current, {
+            cacheBust: true,
+            backgroundColor: undefined,
+            pixelRatio: 2,
+            skipFonts: false,
+          });
 
+          const base64 = dataUrl.split(",")[1];
+          const formData = new FormData();
+          formData.append("image", base64);
+          formData.append("name", `${searchedUsername}-github-profile.png`);
+          const imgbbUrl = `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`;
+          const imgbbRes = await fetch(imgbbUrl, {
+            method: "POST",
+            body: formData,
+          });
+          const imgbbData = await imgbbRes.json();
+          if (imgbbData.success && imgbbData.data) {
+            imageUrl = imgbbData.data.display_url || imgbbData.data.url || "";
+          }
+        } catch (imgErr) {
+          console.error("Image upload failed:", imgErr);
+        }
+      }
+
+      // Add og:image param to shareUrl if imageUrl exists
+      if (imageUrl) {
+        shareUrl.searchParams.set("og_image", imageUrl);
+      }
+
+      const text = `Check out ${searchedUsername}'s GitHub contributions! 🚀`;
       let shareLink = "";
       if (platform === "twitter") {
         shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
