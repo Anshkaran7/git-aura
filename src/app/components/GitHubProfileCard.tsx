@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Search,
   GitBranch,
@@ -53,9 +54,7 @@ interface ContributionDay {
 
 interface GitHubContributions {
   totalContributions: number;
-  weeks: {
-    contributionDays: ContributionDay[];
-  }[];
+  contributionDays: ContributionDay[];
 }
 
 interface Theme {
@@ -122,15 +121,20 @@ interface ShareableProfile {
   id: string;
   username: string;
   profile_data: GitHubProfile;
-  contributions: ContributionDay[];
+  contributions: GitHubContributions;
   created_at: string;
 }
 
 const GitHubProfileCard = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [searchedUsername, setSearchedUsername] = useState("");
   const [profile, setProfile] = useState<GitHubProfile | null>(null);
-  const [contributions, setContributions] = useState<ContributionDay[]>([]);
+  const [contributions, setContributions] = useState<GitHubContributions>({
+    totalContributions: 0,
+    contributionDays: [],
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<Theme>(themes[0]);
@@ -139,13 +143,17 @@ const GitHubProfileCard = () => {
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if we have a share ID in the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const shareId = urlParams.get("share");
+    // Check if we have a share ID or username in the URL using useSearchParams
+    const shareId = searchParams.get("share");
+    const urlUsername = searchParams.get("username");
+
     if (shareId) {
       loadSharedProfile(shareId);
+    } else if (urlUsername) {
+      setUsername(urlUsername); // Set the username in the search input
+      fetchProfile(urlUsername); // Fetch the profile directly
     }
-  }, []);
+  }, [searchParams]); // Add searchParams as dependency
 
   const loadSharedProfile = async (shareId: string) => {
     try {
@@ -159,7 +167,10 @@ const GitHubProfileCard = () => {
 
       if (data) {
         setProfile(data.profile_data);
-        setContributions(data.contributions);
+        setContributions({
+          totalContributions: data.contributions.totalContributions,
+          contributionDays: data.contributions.contributionDays,
+        });
         setSearchedUsername(data.username);
         setShareableId(data.id);
       }
@@ -169,11 +180,11 @@ const GitHubProfileCard = () => {
   };
 
   const generateShareableProfile = async () => {
-    if (!profile || !contributions.length) return null;
+    if (!profile || !contributions.contributionDays.length) return null;
 
     setIsGenerating(true);
     try {
-      // First, generate and upload the image to ImgBB
+      // Always generate a new image
       let imageUrl = null;
       if (profileRef.current) {
         try {
@@ -232,14 +243,24 @@ const GitHubProfileCard = () => {
 
       setShareableId(id);
 
-      // Update URL without refreshing - include image URL if available
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set("share", id);
-      newUrl.searchParams.set("username", searchedUsername);
+      // Create base URL and set parameters
+      const baseUrl = window.location.origin;
+      const params = new URLSearchParams();
+      params.set("share", id);
+      params.set("username", searchedUsername);
+
+      // Only set og_image if we successfully generated a new one
       if (imageUrl) {
-        newUrl.searchParams.set("og_image", imageUrl);
+        params.set("og_image", imageUrl);
+        console.log("✅ Setting new og_image in URL:", imageUrl);
       }
-      window.history.pushState({}, "", newUrl);
+
+      // Update URL with router and wait for it to complete
+      const newUrl = `${baseUrl}/?${params.toString()}`;
+      await router.push(newUrl);
+
+      // Add a small delay to ensure URL is updated
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       return id;
     } catch (err) {
@@ -294,10 +315,15 @@ const GitHubProfileCard = () => {
 
       // Fetch contributions using GraphQL
       console.log("🔍 Fetching contributions...");
+      const today = new Date();
+      const lastYear = new Date();
+      lastYear.setDate(today.getDate() + 1); // Add one day to include today's contributions
+      lastYear.setFullYear(today.getFullYear() - 1);
+
       const graphqlQuery = {
         query: `query($userName:String!) { 
           user(login: $userName){
-            contributionsCollection {
+            contributionsCollection(from: "${lastYear.toISOString()}", to: "${today.toISOString()}") {
               contributionCalendar {
                 totalContributions
                 weeks {
@@ -344,7 +370,10 @@ const GitHubProfileCard = () => {
       );
 
       console.log("📅 First 5 days of activity:", allContributions.slice(0, 5));
-      setContributions(allContributions);
+      setContributions({
+        totalContributions: calendar.totalContributions,
+        contributionDays: allContributions,
+      });
     } catch (err) {
       console.error("❌ Error:", err);
       const errorMessage =
@@ -355,7 +384,7 @@ const GitHubProfileCard = () => {
           : errorMessage
       );
       setProfile(null);
-      setContributions([]);
+      setContributions({ totalContributions: 0, contributionDays: [] });
     } finally {
       setLoading(false);
     }
@@ -363,13 +392,16 @@ const GitHubProfileCard = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Clean up URL parameters after search
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete("og_image");
-    cleanUrl.searchParams.delete("share");
-    cleanUrl.searchParams.delete("username");
-    window.history.replaceState({}, "", cleanUrl);
+
     if (username.trim() && username !== searchedUsername) {
+      // Clear all existing parameters and set only username
+      const params = new URLSearchParams();
+      params.set("username", username.trim());
+
+      // Reset share ID and clear URL
+      setShareableId(null);
+      router.push(`?${params.toString()}`);
+
       fetchProfile(username.trim());
     }
   };
@@ -394,7 +426,7 @@ const GitHubProfileCard = () => {
 
     // Create a map of date to contribution count
     const contributionMap: Record<string, number> = {};
-    contributions.forEach((day) => {
+    contributions.contributionDays.forEach((day) => {
       contributionMap[day.date] = day.contributionCount;
     });
 
@@ -506,27 +538,18 @@ const GitHubProfileCard = () => {
         }
       }
 
-      const shareUrl = new URL(window.location.href);
-      shareUrl.searchParams.set("share", currentShareableId);
-      shareUrl.searchParams.set("username", searchedUsername);
-
-      // Include og_image if it exists in current URL
-      const currentUrl = new URL(window.location.href);
-      const ogImage = currentUrl.searchParams.get("og_image");
-      if (ogImage) {
-        shareUrl.searchParams.set("og_image", ogImage);
-      }
-
+      // Use the current window location which will have all parameters
+      const shareUrl = window.location.href;
       const text = `Check out my GitHub contributions! 🚀`;
 
       let shareLink = "";
       if (platform === "twitter") {
         shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
           text
-        )}&url=${encodeURIComponent(shareUrl.toString())}`;
+        )}&url=${encodeURIComponent(shareUrl)}`;
       } else if (platform === "linkedin") {
         shareLink = `https://www.linkedin.com/sharing/share-offsite/?text=${encodeURIComponent(
-          `${text} ${shareUrl.toString()}`
+          `${text} ${shareUrl}`
         )}`;
       }
 
@@ -548,28 +571,49 @@ const GitHubProfileCard = () => {
     <div
       className={`${selectedTheme.background} p-3 sm:p-6 font-mona-sans transition-colors duration-300 h-screen`}
     >
-
-      <div className="max-w-5xl mx-auto ">
-        <div className="text-center mb-8">
-          <h1
-            className={`text-4xl sm:text-6xl font-bold ${
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1
+              className={`text-2xl sm:text-3xl font-bold ${
+                selectedTheme.name === "Light"
+                  ? "bg-gradient-to-r from-blue-600 to-purple-600"
+                  : selectedTheme.name === "Ocean Dark"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-500"
+                  : "bg-gradient-to-r from-blue-400 to-purple-500"
+              } bg-clip-text text-transparent font-mona-sans`}
+            >
+              GitAura
+            </h1>
+            <p
+              className={`mt-0.5 text-xs sm:text-sm ${
+                selectedTheme.name === "Light"
+                  ? "text-gray-600"
+                  : "text-gray-300"
+              } font-mona-sans`}
+            >
+              Beautiful GitHub profile visualization
+            </p>
+          </div>
+          <a
+            href="https://github.com/anshkaran7/git-aura"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm transition-colors ${
               selectedTheme.name === "Light"
-                ? "bg-gradient-to-r from-blue-600 to-purple-600"
-                : selectedTheme.name === "Ocean Dark"
-                ? "bg-gradient-to-r from-cyan-400 to-blue-500"
-                : "bg-gradient-to-r from-blue-400 to-purple-500"
-            } bg-clip-text text-transparent font-mona-sans`}
+                ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                : "bg-gray-700 hover:bg-gray-600 text-gray-300"
+            }`}
           >
-            GitAura
-          </h1>
-          <p
-            className={`mt-2 text-lg sm:text-xl ${
-              selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
-            } font-mona-sans`}
-          >
-            Beautiful GitHub profile visualization
-          </p>
+            <img
+              src="https://img.shields.io/github/stars/anshkaran7/git-aura?style=social"
+              alt="GitHub Stars"
+              className="h-5"
+            />
+          </a>
         </div>
+
         {/* Theme Selector and Export/Share Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
           <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-0">
@@ -662,6 +706,7 @@ const GitHubProfileCard = () => {
           </div>
         </form>
 
+        {/* Error Message */}
         {error && (
           <div className="bg-red-900/50 text-red-200 p-4 rounded-lg mb-6 border border-red-800">
             <p className="flex items-center gap-2">
@@ -671,6 +716,7 @@ const GitHubProfileCard = () => {
           </div>
         )}
 
+        {/* Empty State */}
         {!profile && !error && !loading && (
           <div
             className={`text-center ${
@@ -688,11 +734,13 @@ const GitHubProfileCard = () => {
           </div>
         )}
 
+        {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center w-full py-24">
             <img src="/loading.gif" alt="Loading..." className="w-32 h-32" />
           </div>
         ) : (
+          /* Profile Card */
           profile && (
             <div
               ref={profileRef}
@@ -727,31 +775,25 @@ const GitHubProfileCard = () => {
                 <div
                   className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-xs sm:text-sm font-mona-sans`}
                 >
-                    <a
+                  <a
                     href={`https://github.com/${profile?.login}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`flex items-center gap-2 px-2 sm:px-4 py-0.5 sm:py-1 rounded-md ${
                       selectedTheme.name === "Light"
-                      ? "bg-white/80"
-                      : selectedTheme.name === "Ocean Dark"
-                      ? "bg-cyan-950/50"
-                      : "bg-gray-950/50"
+                        ? "bg-white/80"
+                        : selectedTheme.name === "Ocean Dark"
+                        ? "bg-cyan-950/50"
+                        : "bg-gray-950/50"
                     } border ${selectedTheme.border}`}
-                    >
-                    <span className="opacity-60 m-0 p-0">github.com/</span>{profile?.login}
-                    </a>
+                  >
+                    <span className="opacity-60 m-0 p-0">github.com/</span>
+                    {profile?.login}
+                  </a>
                 </div>
-                {/* <div className="flex gap-1 sm:gap-2">
-                  <button className="opacity-50 hover:opacity-100 transition-opacity">
-                    <Download className="w-4 h-4" />
-                  </button>
-                  <button className="opacity-50 hover:opacity-100 transition-opacity">
-                    <Settings className="w-4 h-4" />
-                  </button>
-                </div> */}
               </div>
 
+              {/* Profile Content */}
               <div
                 className={`p-4 sm:p-8 ${
                   selectedTheme.name === "Ocean Dark"
@@ -869,7 +911,8 @@ const GitHubProfileCard = () => {
                           : "text-gray-100"
                       } font-mona-sans`}
                     >
-                      {contributions.length.toLocaleString()} contributions
+                      {contributions.totalContributions.toLocaleString()}{" "}
+                      contributions
                     </h2>
                     <div
                       className={`${
@@ -937,30 +980,11 @@ const GitHubProfileCard = () => {
           )
         )}
       </div>
+
+      {/* Footer */}
       <footer
         className={`text-center fixed bottom-0 w-full py-4 ${selectedTheme.text} ${selectedTheme.background}`}
       >
-
-              <div className="flex justify-center mb-6">
-        <a
-          href="https://github.com/anshkaran7/git-aura"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-colors ${
-        selectedTheme.name === "Light"
-          ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
-          : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-          }`}
-        >
-          <img
-        src="https://img.shields.io/github/stars/anshkaran7/git-aura?style=social"
-        alt="GitHub Stars"
-        className="h-5"
-          />
-          Star us on GitHub
-        </a>
-      </div>
-      
         <p className="text-sm">
           Made with ❤️ by{" "}
           <a
