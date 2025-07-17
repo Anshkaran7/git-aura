@@ -511,6 +511,7 @@ const GitHubProfileCard = () => {
             <Leaderboard
               currentUserId={user?.id}
               selectedTheme={selectedTheme}
+              contributions={contributions}
             />
           </div>
         )}

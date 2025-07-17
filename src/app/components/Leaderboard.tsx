@@ -18,6 +18,7 @@ import {
   getBadgeColor,
   getCurrentMonthYear,
 } from "../../lib/utils";
+import { GitHubContributions } from "./types";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -61,14 +62,25 @@ interface LeaderboardProps {
     text: string;
     border: string;
   };
+  contributions: GitHubContributions;
 }
 
-const Leaderboard = ({ currentUserId, selectedTheme }: LeaderboardProps) => {
+const Leaderboard = ({
+  currentUserId,
+  selectedTheme,
+  contributions,
+}: LeaderboardProps) => {
   const [view, setView] = useState<"monthly" | "alltime">("monthly");
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
     []
   );
+  const [monthlyData, setMonthlyData] = useState<{
+    contributions: number;
+    aura: number;
+    activeDays: number;
+  }>({ contributions: 0, aura: 0, activeDays: 0 });
+
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
 
@@ -76,6 +88,41 @@ const Leaderboard = ({ currentUserId, selectedTheme }: LeaderboardProps) => {
     fetchLeaderboardData();
   }, [view, currentMonth]);
 
+  useEffect(() => {
+    calculateMonthlyData();
+  }, [currentMonth, contributions]);
+
+  const calculateMonthlyData = () => {
+    const [year, month] = currentMonth.split("-").map(Number);
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+
+    let monthlyContributions = 0;
+    let activeDays = 0;
+
+    contributions.contributionDays.forEach((day) => {
+      const dayDate = new Date(day.date);
+      if (dayDate >= monthStart && dayDate <= monthEnd) {
+        monthlyContributions += day.contributionCount;
+        if (day.contributionCount > 0) {
+          activeDays++;
+        }
+      }
+    });
+
+    // Calculate monthly aura based on contributions and activity
+    const monthlyAura = Math.round(
+      monthlyContributions * 10 + // 10 points per contribution
+        activeDays * 50 + // 50 points per active day
+        (activeDays / monthEnd.getDate()) * 1000 // Consistency bonus (up to 1000 points)
+    );
+
+    setMonthlyData({
+      contributions: monthlyContributions,
+      aura: monthlyAura,
+      activeDays: activeDays,
+    });
+  };
   const fetchLeaderboardData = async () => {
     setLoading(true);
     try {
@@ -89,14 +136,14 @@ const Leaderboard = ({ currentUserId, selectedTheme }: LeaderboardProps) => {
           .select(
             `
             rank,
-            monthly_aura,
+            total_aura,
             contributions_count,
             users!inner(
               id,
               display_name,
               github_username,
               avatar_url,
-              monthly_aura,
+              total_aura,
               current_streak
             )
           `
@@ -131,7 +178,6 @@ const Leaderboard = ({ currentUserId, selectedTheme }: LeaderboardProps) => {
               display_name,
               github_username,
               avatar_url,
-              total_aura,
               current_streak
             )
           `
@@ -467,7 +513,7 @@ const Leaderboard = ({ currentUserId, selectedTheme }: LeaderboardProps) => {
                       <div
                         className={`text-lg font-bold ${selectedTheme.text}`}
                       >
-                        {formatNumber(entry.aura)} Aura
+                        {formatNumber(entry.aura)}Aura
                       </div>
                       {entry.contributions !== undefined && (
                         <div

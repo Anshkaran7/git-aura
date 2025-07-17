@@ -33,7 +33,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   contributions,
   isCalculatingAura,
 }) => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [monthlyData, setMonthlyData] = useState<{
     contributions: number;
@@ -48,7 +48,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     calculateMonthlyData();
   }, [currentMonth, contributions]);
 
-  const calculateMonthlyData = () => {
+  const calculateMonthlyData = async () => {
     const [year, month] = currentMonth.split("-").map(Number);
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0);
@@ -78,6 +78,44 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       aura: monthlyAura,
       activeDays: activeDays,
     });
+
+    // Save monthly aura to database if user is signed in
+    if (isSignedIn && user?.id) {
+      await saveMonthlyAura(
+        currentMonth,
+        monthlyAura,
+        monthlyContributions,
+        activeDays
+      );
+    }
+  };
+
+  const saveMonthlyAura = async (
+    monthYear: string,
+    monthlyAura: number,
+    contributionsCount: number,
+    activeDays: number
+  ) => {
+    try {
+      const response = await fetch("/api/save-monthly-aura", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          monthYear,
+          monthlyAura,
+          contributionsCount,
+          activeDays,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to save monthly aura");
+      }
+    } catch (error) {
+      console.error("Error saving monthly aura:", error);
+    }
   };
 
   const navigateMonth = (direction: "prev" | "next") => {
