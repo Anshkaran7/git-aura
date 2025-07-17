@@ -1,22 +1,30 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  Search,
-  GitBranch,
-  Users,
-  UserPlus,
-  Calendar,
-  Coffee,
-  Download,
-  Settings,
-  Twitter,
-  Linkedin,
-  Share2,
-} from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { createClient } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
+import { saveUserAura, calculateTotalAura } from "../../lib/aura";
+import { calculateStreak } from "../../lib/utils";
+import Leaderboard from "./Leaderboard";
+import BadgeDisplay from "./BadgeDisplay";
+import Header from "./Header";
+import SearchBar from "./SearchBar";
+import ProfileCard from "./ProfileCard";
+import EmptyState from "./EmptyState";
+import ShareButtons from "./ShareButtons";
+import AuraPanel from "./AuraPanel";
+import { themes } from "./themes";
+import {
+  GitHubProfile,
+  GitHubContributions,
+  ShareableProfile,
+  Theme,
+  ViewType,
+  ContributionDay,
+} from "./types";
+import MontlyContribution from "./MontlyContribution";
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -24,110 +32,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
 
-interface GitHubProfile {
-  login: string;
-  name: string | null;
-  avatar_url: string;
-  bio: string | null;
-  public_repos: number;
-  followers: number;
-  following: number;
-  created_at: string;
-}
-
-interface GitHubCommit {
-  date: string;
-  repo: string;
-  message?: string;
-  sha?: string;
-}
-
-interface GitHubRepo {
-  name: string;
-  pushed_at: string;
-}
-
-interface ContributionDay {
-  contributionCount: number;
-  date: string;
-}
-
-interface GitHubContributions {
-  totalContributions: number;
-  contributionDays: ContributionDay[];
-}
-
-interface Theme {
-  name: string;
-  background: string;
-  cardBackground: string;
-  text: string;
-  border: string;
-  contribution: {
-    level0: string;
-    level1: string;
-    level2: string;
-    level3: string;
-    level4: string;
-  };
-}
-
-const themes: Theme[] = [
-  {
-    name: "Light",
-    background: "bg-gray-50",
-    cardBackground: "bg-white",
-    text: "text-gray-900",
-    border: "border-gray-200",
-    contribution: {
-      level0: "bg-gray-100",
-      level1: "bg-emerald-200",
-      level2: "bg-emerald-400",
-      level3: "bg-emerald-500",
-      level4: "bg-emerald-600",
-    },
-  },
-  {
-    name: "Dark",
-    background: "bg-[#0d1117]",
-    cardBackground: "bg-[#161b22]",
-    text: "text-gray-200",
-    border: "border-gray-800",
-    contribution: {
-      level0: "bg-[#161b22]",
-      level1: "bg-[#0e4429]",
-      level2: "bg-[#006d32]",
-      level3: "bg-[#26a641]",
-      level4: "bg-[#39d353]",
-    },
-  },
-  {
-    name: "Ocean Dark",
-    background: "bg-[#0f172a]",
-    cardBackground: "bg-[#1e293b]",
-    text: "text-[#e2e8f0]",
-    border: "border-[#1e293b]",
-    contribution: {
-      level0: "bg-[#0f172a]",
-      level1: "bg-[#0c4a6e]",
-      level2: "bg-[#0369a1]",
-      level3: "bg-[#0ea5e9]",
-      level4: "bg-[#38bdf8]",
-    },
-  },
-];
-
-interface ShareableProfile {
-  id: string;
-  username: string;
-  profile_data: GitHubProfile;
-  contributions: GitHubContributions;
-  created_at: string;
-}
-
 const GitHubProfileCard = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isSignedIn, user } = useUser();
   const [username, setUsername] = useState("");
   const [searchedUsername, setSearchedUsername] = useState("");
   const [profile, setProfile] = useState<GitHubProfile | null>(null);
@@ -137,23 +45,49 @@ const GitHubProfileCard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<Theme>(themes[0]);
+  const [selectedTheme, setSelectedTheme] = useState<Theme>(themes[1]);
   const [shareableId, setShareableId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewType>("profile");
+  const [userAura, setUserAura] = useState<number>(0);
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
+  const [isCalculatingAura, setIsCalculatingAura] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if we have a share ID or username in the URL using useSearchParams
+    // Check if we have a share ID or username in the URL
     const shareId = searchParams.get("share");
     const urlUsername = searchParams.get("username");
 
     if (shareId) {
       loadSharedProfile(shareId);
     } else if (urlUsername) {
-      setUsername(urlUsername); // Set the username in the search input
-      fetchProfile(urlUsername); // Fetch the profile directly
+      setUsername(urlUsername);
+      fetchProfile(urlUsername);
     }
-  }, [searchParams]); // Add searchParams as dependency
+  }, [searchParams]);
+
+  // Auto-load user's own profile when they sign in
+  useEffect(() => {
+    if (isSignedIn && user) {
+      let githubUsername = null;
+
+      // Check externalAccounts for GitHub
+      if (user.externalAccounts && user.externalAccounts.length > 0) {
+        const githubAccount = user.externalAccounts.find(
+          (account) => account.provider === "github"
+        );
+        if (githubAccount) {
+          githubUsername = githubAccount.username;
+        }
+      }
+
+      if (githubUsername && !profile) {
+        setUsername(githubUsername);
+        fetchProfile(githubUsername);
+      }
+    }
+  }, [isSignedIn, user, profile]);
 
   const loadSharedProfile = async (shareId: string) => {
     try {
@@ -184,11 +118,10 @@ const GitHubProfileCard = () => {
 
     setIsGenerating(true);
     try {
-      // Always generate a new image
+      // Generate image
       let imageUrl = null;
       if (profileRef.current) {
         try {
-          // Generate the profile image
           const dataUrl = await toPng(profileRef.current, {
             cacheBust: true,
             backgroundColor:
@@ -197,11 +130,9 @@ const GitHubProfileCard = () => {
             skipFonts: false,
           });
 
-          // Convert data URL to blob
           const response = await fetch(dataUrl);
           const blob = await response.blob();
 
-          // Upload to ImgBB
           const formData = new FormData();
           formData.append("image", blob);
           formData.append("name", `${searchedUsername}-github-profile`);
@@ -217,12 +148,9 @@ const GitHubProfileCard = () => {
           if (imgbbResponse.ok) {
             const imgbbData = await imgbbResponse.json();
             imageUrl = imgbbData.data.url;
-            console.log("✅ Image uploaded to ImgBB:", imageUrl);
-          } else {
-            console.error("❌ Failed to upload to ImgBB");
           }
         } catch (uploadError) {
-          console.error("❌ Error uploading image:", uploadError);
+          console.error("Error uploading image:", uploadError);
         }
       }
 
@@ -243,23 +171,18 @@ const GitHubProfileCard = () => {
 
       setShareableId(id);
 
-      // Create base URL and set parameters
+      // Update URL
       const baseUrl = window.location.origin;
       const params = new URLSearchParams();
       params.set("share", id);
       params.set("username", searchedUsername);
 
-      // Only set og_image if we successfully generated a new one
       if (imageUrl) {
         params.set("og_image", imageUrl);
-        console.log("✅ Setting new og_image in URL:", imageUrl);
       }
 
-      // Update URL with router and wait for it to complete
       const newUrl = `${baseUrl}/?${params.toString()}`;
       await router.push(newUrl);
-
-      // Add a small delay to ensure URL is updated
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       return id;
@@ -271,12 +194,12 @@ const GitHubProfileCard = () => {
     }
   };
 
-  const fetchProfile = async (user: string) => {
-    if (!user.trim()) return;
+  const fetchProfile = async (username: string) => {
+    if (!username.trim()) return;
 
     setLoading(true);
     setError(null);
-    setSearchedUsername(user);
+    setSearchedUsername(username);
 
     const headers = {
       Accept: "application/json",
@@ -289,7 +212,7 @@ const GitHubProfileCard = () => {
     try {
       // Fetch user profile
       const profileResponse = await fetch(
-        `https://api.github.com/users/${user}`,
+        `https://api.github.com/users/${username}`,
         { headers }
       );
       if (!profileResponse.ok) {
@@ -298,27 +221,18 @@ const GitHubProfileCard = () => {
       }
 
       const profileData = await profileResponse.json();
-      console.log("📊 Profile Data:", {
-        name: profileData.name,
-        login: profileData.login,
-        repos: profileData.public_repos,
-        followers: profileData.followers,
-        following: profileData.following,
-        created_at: profileData.created_at,
-      });
       setProfile(profileData);
 
-      // Update URL with username for better metadata
+      // Update URL with username
       const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set("username", user);
+      newUrl.searchParams.set("username", username);
       window.history.pushState({}, "", newUrl);
 
-      // Fetch contributions using GraphQL
-      console.log("🔍 Fetching contributions...");
+      // Fetch contributions
       const today = new Date();
-      const lastYear = new Date();
-      lastYear.setDate(today.getDate() + 1); // Add one day to include today's contributions
+      const lastYear = new Date(today);
       lastYear.setFullYear(today.getFullYear() - 1);
+      lastYear.setDate(lastYear.getDate() + 1);
 
       const graphqlQuery = {
         query: `query($userName:String!) { 
@@ -336,7 +250,7 @@ const GitHubProfileCard = () => {
             }
           }
         }`,
-        variables: { userName: user },
+        variables: { userName: username },
       };
 
       const contributionsResponse = await fetch(
@@ -353,29 +267,43 @@ const GitHubProfileCard = () => {
       }
 
       const contributionsData = await contributionsResponse.json();
-      console.log("📊 Contributions Response:", contributionsData);
 
       if (contributionsData.errors) {
         throw new Error(contributionsData.errors[0].message);
       }
 
+      if (!contributionsData.data?.user?.contributionsCollection) {
+        throw new Error(
+          "No contributions data found. This might be due to API rate limits or missing GitHub token."
+        );
+      }
+
       const calendar =
         contributionsData.data.user.contributionsCollection
           .contributionCalendar;
-      console.log("📊 Total Contributions:", calendar.totalContributions);
 
-      // Flatten the contributions data
       const allContributions = calendar.weeks.flatMap(
         (week: { contributionDays: ContributionDay[] }) => week.contributionDays
       );
 
-      console.log("📅 First 5 days of activity:", allContributions.slice(0, 5));
-      setContributions({
+      const contributionsObj = {
         totalContributions: calendar.totalContributions,
         contributionDays: allContributions,
-      });
+      };
+
+      setContributions(contributionsObj);
+
+      // Calculate aura
+      if (isSignedIn && user?.id) {
+        await calculateAndSaveAura(profileData, allContributions);
+      } else {
+        const localAura = calculateTotalAura(allContributions);
+        const streak = calculateStreak(allContributions);
+        setUserAura(localAura);
+        setCurrentStreak(streak);
+      }
     } catch (err) {
-      console.error("❌ Error:", err);
+      console.error("Error:", err);
       const errorMessage =
         err instanceof Error ? err.message : "An error occurred";
       setError(
@@ -390,15 +318,38 @@ const GitHubProfileCard = () => {
     }
   };
 
+  const calculateAndSaveAura = async (
+    githubProfile: GitHubProfile,
+    contributionDays: ContributionDay[]
+  ) => {
+    if (!user?.id) return;
+
+    setIsCalculatingAura(true);
+    try {
+      const result = await saveUserAura(
+        user.id,
+        githubProfile,
+        contributionDays
+      );
+      if (result.success) {
+        setUserAura(result.aura);
+        const streak = calculateStreak(contributionDays);
+        setCurrentStreak(streak);
+      }
+    } catch (error) {
+      console.error("Error calculating aura:", error);
+    } finally {
+      setIsCalculatingAura(false);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (username.trim() && username !== searchedUsername) {
-      // Clear all existing parameters and set only username
       const params = new URLSearchParams();
       params.set("username", username.trim());
 
-      // Reset share ID and clear URL
       setShareableId(null);
       router.push(`?${params.toString()}`);
 
@@ -406,122 +357,31 @@ const GitHubProfileCard = () => {
     }
   };
 
-  const generateCommitGrid = () => {
-    const weekdays = ["Mon", "", "Wed", "", "Fri"];
-    const grid = [];
-
-    // Add weekday labels column
-    grid.push(
-      <div
-        key="weekdays"
-        className="flex flex-col gap-[3px] text-xs text-gray-400 pr-2 pt-6"
-      >
-        {weekdays.map((day, i) => (
-          <div key={i} className="h-[10px] flex items-center">
-            {day}
-          </div>
-        ))}
-      </div>
-    );
-
-    // Create a map of date to contribution count
-    const contributionMap: Record<string, number> = {};
-    contributions.contributionDays.forEach((day) => {
-      contributionMap[day.date] = day.contributionCount;
-    });
-
-    // Generate columns (weeks)
-    const today = new Date();
-    const oneYearAgo = new Date(today);
-    oneYearAgo.setFullYear(today.getFullYear() - 1);
-
-    for (let week = 0; week < 53; week++) {
-      const weekCells = [];
-      // Generate cells for each day in the week
-      for (let day = 0; day < 7; day++) {
-        const date = new Date(oneYearAgo);
-        date.setDate(date.getDate() + week * 7 + day);
-        const dateStr = date.toISOString().split("T")[0];
-        const contributionCount = contributionMap[dateStr] || 0;
-
-        weekCells.push(
-          <div
-            key={`${week}-${day}`}
-            className={`w-[10px] h-[10px] rounded-sm ${getContributionColor(
-              contributionCount
-            )} hover:ring-2 hover:ring-gray-400 hover:ring-offset-2 hover:ring-offset-[#0d1117] transition-all`}
-            title={`${date.toDateString()}: ${contributionCount} contributions`}
-          />
-        );
-      }
-      grid.push(
-        <div key={week} className="flex flex-col gap-[3px]">
-          {weekCells}
-        </div>
-      );
-    }
-
-    return <div className="flex gap-[3px]">{grid}</div>;
-  };
-
-  const getMonthLabels = () => {
-    const months = [
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-    ];
-
-    return (
-      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-gray-400 ml-8 mb-2">
-        {months.map((month, i) => (
-          <div key={i}>{month}</div>
-        ))}
-      </div>
-    );
-  };
-
   const handleExportImage = async () => {
     if (!profileRef.current) return;
 
     try {
-      // Generate shareable ID if not exists
       if (!shareableId) {
         const newShareableId = await generateShareableProfile();
-        if (!newShareableId) {
-          console.error("Failed to generate shareable ID");
-          return;
-        }
+        if (!newShareableId) return;
       }
 
       setIsGenerating(true);
-      try {
-        // Use html-to-image for high-quality PNG export
-        const dataUrl = await toPng(profileRef.current, {
-          cacheBust: true,
-          backgroundColor: undefined,
-          pixelRatio: 2,
-          skipFonts: false,
-        });
-        const link = document.createElement("a");
-        link.download = `${searchedUsername}-github-profile.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } finally {
-        setIsGenerating(false);
-      }
+      const dataUrl = await toPng(profileRef.current, {
+        cacheBust: true,
+        backgroundColor: undefined,
+        pixelRatio: 2,
+        skipFonts: false,
+      });
+      const link = document.createElement("a");
+      link.download = `${searchedUsername}-github-profile.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error("Failed to export image:", err);
+    } finally {
       setIsGenerating(false);
     }
   };
@@ -532,13 +392,9 @@ const GitHubProfileCard = () => {
 
       if (!currentShareableId) {
         currentShareableId = await generateShareableProfile();
-        if (!currentShareableId) {
-          console.error("Failed to generate shareable ID");
-          return;
-        }
+        if (!currentShareableId) return;
       }
 
-      // Use the current window location which will have all parameters
       const shareUrl = window.location.href;
       const text = `Check out my GitHub contributions! 🚀`;
 
@@ -559,155 +415,42 @@ const GitHubProfileCard = () => {
     }
   };
 
-  const getContributionColor = (count: number): string => {
-    if (count > 12) return selectedTheme.contribution.level4;
-    if (count > 7) return selectedTheme.contribution.level3;
-    if (count > 3) return selectedTheme.contribution.level2;
-    if (count > 0) return selectedTheme.contribution.level1;
-    return selectedTheme.contribution.level0;
-  };
-
   return (
     <div
-      className={`${selectedTheme.background} p-3 sm:p-6 font-mona-sans transition-colors duration-300 h-screen`}
+      className={`${selectedTheme.background} min-h-screen p-3 sm:p-6 font-mona-sans transition-colors duration-300`}
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1
-              className={`text-2xl sm:text-3xl font-bold ${
-                selectedTheme.name === "Light"
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600"
-                  : selectedTheme.name === "Ocean Dark"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-500"
-                  : "bg-gradient-to-r from-blue-400 to-purple-500"
-              } bg-clip-text text-transparent font-mona-sans`}
-            >
-              GitAura
-            </h1>
-            <p
-              className={`mt-0.5 text-xs sm:text-sm ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-600"
-                  : "text-gray-300"
-              } font-mona-sans`}
-            >
-              Beautiful GitHub profile visualization
-            </p>
-          </div>
-          <a
-            href="https://github.com/anshkaran7/git-aura"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm transition-colors ${
-              selectedTheme.name === "Light"
-                ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-            }`}
-          >
-            <img
-              src="https://img.shields.io/github/stars/anshkaran7/git-aura?style=social"
-              alt="GitHub Stars"
-              className="h-5"
-            />
-          </a>
-        </div>
+      <div className="max-w-6xl mx-auto pb-20">
+        <Header
+          selectedTheme={selectedTheme}
+          setSelectedTheme={setSelectedTheme}
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          userAura={userAura}
+        />
 
-        {/* Theme Selector and Export/Share Buttons */}
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
-          <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-0">
-            {themes.map((theme) => (
-              <button
-                key={theme.name}
-                onClick={() => setSelectedTheme(theme)}
-                className={`px-3 py-1.5 sm:px-4 sm:py-2 font-medium rounded-lg text-sm sm:text-base ${
-                  selectedTheme.name === theme.name
-                    ? "ring-2 ring-blue-500 bg-blue-500 text-white"
-                    : selectedTheme.name === "Light"
-                    ? "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300"
-                    : "bg-gray-800 text-gray-200 border border-gray-700 hover:bg-gray-700 hover:text-white hover:border-gray-600"
-                } transition-all shadow-sm font-mona-sans`}
-              >
-                {theme.name}
-              </button>
-            ))}
-          </div>
-          {profile && (
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              {isGenerating ? (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-500 rounded-lg text-white font-mona-sans">
-                  <span className="animate-pulse">Generating...</span>
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleShare("twitter")}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
-                    title="Share on Twitter"
-                  >
-                    <Twitter className="w-4 h-4" />
-                    Twitter
-                  </button>
-                  <button
-                    onClick={() => handleShare("linkedin")}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
-                    title="Share on LinkedIn"
-                  >
-                    <Linkedin className="w-4 h-4" />
-                    LinkedIn
-                  </button>
-                  <button
-                    onClick={handleExportImage}
-                    className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base"
-                    title="Download as Image"
-                  >
-                    <Download className="w-4 h-4" />
-                    Export
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-4">
-          <div className="relative">
-            <Search
-              className={`absolute left-3 top-3 h-5 w-5 ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-400"
-                  : "text-gray-400/80"
-              }`}
+        {/* Share Buttons - Only show for profile view */}
+        {currentView === "profile" && profile && (
+          <div className="flex justify-end mb-4">
+            <ShareButtons
+              isGenerating={isGenerating}
+              onExportImage={handleExportImage}
+              onShare={handleShare}
             />
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter GitHub username and press Enter"
-              className={`w-full pl-10 pr-24 py-2.5 sm:py-3 ${
-                selectedTheme.cardBackground
-              } ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-700 placeholder-gray-400 border-gray-300"
-                  : "text-gray-100 placeholder-gray-500 border-gray-700"
-              } rounded-lg border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mona-sans shadow-sm text-sm sm:text-base`}
-            />
-            <button
-              type="submit"
-              disabled={
-                !username.trim() || username === searchedUsername || loading
-              }
-              className="absolute right-2 top-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-mona-sans text-sm sm:text-base"
-            >
-              {loading ? "Searching..." : "Search"}
-            </button>
           </div>
-        </form>
+        )}
 
-        {/* Error Message */}
-        {error && (
+        {/* Search Bar - commented out as it was in original */}
+        {/* <SearchBar
+          username={username}
+          setUsername={setUsername}
+          searchedUsername={searchedUsername}
+          loading={loading}
+          selectedTheme={selectedTheme}
+          onSearch={handleSearch}
+        /> */}
+
+        {/* Error Message - Only show on profile view */}
+        {currentView === "profile" && error && (
           <div className="bg-red-900/50 text-red-200 p-4 rounded-lg mb-6 border border-red-800">
             <p className="flex items-center gap-2">
               <span className="text-red-500">⚠️</span>
@@ -716,287 +459,86 @@ const GitHubProfileCard = () => {
           </div>
         )}
 
-        {/* Empty State */}
-        {!profile && !error && !loading && (
-          <div
-            className={`text-center ${
-              selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
-            } mt-20 font-mona-sans`}
-          >
-            <Search
-              className={`h-16 w-16 mx-auto mb-4 ${
-                selectedTheme.name === "Light" ? "opacity-40" : "opacity-30"
-              }`}
+        {/* Content based on current view */}
+        {currentView === "profile" && (
+          <>
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex items-center justify-center w-full py-24">
+                <img
+                  src="/loading.gif"
+                  alt="Loading..."
+                  className="w-32 h-32"
+                />
+              </div>
+            ) : profile ? (
+              <>
+                <ProfileCard
+                  profile={profile}
+                  contributions={contributions}
+                  selectedTheme={selectedTheme}
+                  profileRef={profileRef}
+                />
+                <MontlyContribution
+                  selectedTheme={selectedTheme}
+                  contributions={contributions}
+                />
+                <AuraPanel
+                  selectedTheme={selectedTheme}
+                  userAura={userAura}
+                  currentStreak={currentStreak}
+                  contributions={contributions}
+                  isCalculatingAura={isCalculatingAura}
+                />
+              </>
+            ) : (
+              !error && (
+                <EmptyState
+                  selectedTheme={selectedTheme}
+                  onLoadProfile={(username) => {
+                    setUsername(username);
+                    fetchProfile(username);
+                  }}
+                />
+              )
+            )}
+          </>
+        )}
+
+        {/* Leaderboard View */}
+        {currentView === "leaderboard" && (
+          <div className="mt-8">
+            <Leaderboard
+              currentUserId={user?.id}
+              selectedTheme={selectedTheme}
             />
-            <p className="text-lg">
-              Enter a GitHub username to view their profile
-            </p>
           </div>
         )}
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex items-center justify-center w-full py-24">
-            <img src="/loading.gif" alt="Loading..." className="w-32 h-32" />
-          </div>
-        ) : (
-          /* Profile Card */
-          profile && (
-            <div
-              ref={profileRef}
-              data-profile-card
-              className={`${
-                selectedTheme.cardBackground
-              } rounded-2xl overflow-hidden shadow-lg border ${
-                selectedTheme.border
-              } ${
-                selectedTheme.name === "Ocean Dark"
-                  ? "shadow-cyan-900/20 bg-opacity-90 backdrop-blur-sm"
-                  : selectedTheme.name === "Dark"
-                  ? "shadow-gray-900/30"
-                  : "shadow-gray-200/50"
-              }`}
-            >
-              {/* Browser Window Controls */}
-              <div
-                className={`flex items-center gap-1 px-3 sm:px-4 py-2 sm:py-3 ${
-                  selectedTheme.name === "Light"
-                    ? "bg-gray-50/80"
-                    : selectedTheme.name === "Ocean Dark"
-                    ? "bg-cyan-900/20"
-                    : "bg-gray-900/20"
-                } border-b ${selectedTheme.border}`}
-              >
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/90" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/90" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/90" />
-                </div>
-                <div
-                  className={`flex-1 flex items-center justify-center mx-auto ${selectedTheme.text} text-xs sm:text-sm font-mona-sans`}
-                >
-                  <a
-                    href={`https://github.com/${profile?.login}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`flex items-center gap-2 px-2 sm:px-4 py-0.5 sm:py-1 rounded-md ${
-                      selectedTheme.name === "Light"
-                        ? "bg-white/80"
-                        : selectedTheme.name === "Ocean Dark"
-                        ? "bg-cyan-950/50"
-                        : "bg-gray-950/50"
-                    } border ${selectedTheme.border}`}
-                  >
-                    <span className="opacity-60 m-0 p-0">github.com/</span>
-                    {profile?.login}
-                  </a>
-                </div>
-              </div>
-
-              {/* Profile Content */}
-              <div
-                className={`p-4 sm:p-8 ${
-                  selectedTheme.name === "Ocean Dark"
-                    ? "bg-gradient-to-b from-transparent to-cyan-950/20"
-                    : ""
-                }`}
-              >
-                {/* Profile Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-8 gap-4 sm:gap-0">
-                  <div className="flex items-center gap-3 sm:gap-6">
-                    <img
-                      src={profile.avatar_url}
-                      alt={profile.name || profile.login}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full ring-2 ring-blue-500/30 shadow-md"
-                    />
-                    <div>
-                      <h1
-                        className={`text-xl sm:text-2xl font-semibold ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-800"
-                            : "text-gray-100"
-                        } mb-1 font-mona-sans`}
-                      >
-                        {profile.name || profile.login}
-                      </h1>
-                      <p
-                        className={`${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                        } text-sm sm:text-base mb-1 font-mona-sans`}
-                      >
-                        @{profile.login}
-                      </p>
-                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm font-mona-sans">
-                        <div
-                          className={`flex items-center gap-1.5 ${
-                            selectedTheme.name === "Light"
-                              ? "text-gray-600 hover:text-gray-800"
-                              : "text-gray-300 hover:text-white"
-                          } transition-colors`}
-                        >
-                          <Users className="h-4 w-4" />
-                          <span>
-                            {profile.followers.toLocaleString()} Followers
-                          </span>
-                        </div>
-                        <div
-                          className={`flex items-center gap-1.5 ${
-                            selectedTheme.name === "Light"
-                              ? "text-gray-600 hover:text-gray-800"
-                              : "text-gray-300 hover:text-white"
-                          } transition-colors`}
-                        >
-                          <UserPlus className="h-4 w-4" />
-                          <span>
-                            {profile.following.toLocaleString()} Following
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="text-right mt-3 sm:mt-0">
-                    <div
-                      className={`text-xl sm:text-2xl font-semibold ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-800"
-                          : "text-gray-100"
-                      } font-mona-sans`}
-                    >
-                      {profile.public_repos.toLocaleString()}
-                    </div>
-                    <div
-                      className={`${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                      } text-xs sm:text-sm font-mona-sans`}
-                    >
-                      Repositories
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bio */}
-                {profile.bio && (
-                  <div className="mb-4 sm:mb-8">
-                    <p
-                      className={`flex items-center gap-2 text-sm sm:text-base ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-700"
-                          : "text-gray-200"
-                      } font-mona-sans`}
-                    >
-                      <Coffee
-                        className={`h-4 w-4 ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                        }`}
-                      />
-                      {profile.bio}
-                    </p>
-                  </div>
-                )}
-
-                {/* Contribution section */}
-                <div className="mt-4 sm:mt-8">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-6 gap-2 sm:gap-0">
-                    <h2
-                      className={`text-lg sm:text-xl font-semibold ${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-800"
-                          : "text-gray-100"
-                      } font-mona-sans`}
-                    >
-                      {contributions.totalContributions.toLocaleString()}{" "}
-                      contributions
-                    </h2>
-                    <div
-                      className={`${
-                        selectedTheme.name === "Light"
-                          ? "text-gray-500"
-                          : "text-gray-400"
-                      } text-xs sm:text-sm font-mona-sans`}
-                    >
-                      {new Date(profile.created_at).getFullYear()} - Present
-                    </div>
-                  </div>
-
-                  <div
-                    className={`${
-                      selectedTheme.name === "Light"
-                        ? "bg-white"
-                        : selectedTheme.name === "Ocean Dark"
-                        ? "bg-[#0f172a]/50"
-                        : "bg-[#0d1117]/50"
-                    } rounded-xl p-3 sm:p-6 ${
-                      selectedTheme.border
-                    } border backdrop-blur-sm`}
-                    style={{ overflowX: "auto" }}
-                  >
-                    <div className="min-w-[340px] sm:min-w-0">
-                      {getMonthLabels()}
-                      <div className="overflow-x-auto">
-                        {generateCommitGrid()}
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-end mt-2 sm:mt-4 gap-1 sm:gap-2">
-                      <span
-                        className={`text-xs ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                        } font-mona-sans`}
-                      >
-                        Less
-                      </span>
-                      <div className="flex gap-0.5 sm:gap-1">
-                        {[0, 1, 2, 3, 4].map((level) => (
-                          <div
-                            key={level}
-                            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm ${getContributionColor(
-                              level * 4
-                            )}`}
-                          />
-                        ))}
-                      </div>
-                      <span
-                        className={`text-xs ${
-                          selectedTheme.name === "Light"
-                            ? "text-gray-500"
-                            : "text-gray-400"
-                        } font-mona-sans`}
-                      >
-                        More
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
+        {/* Badges View */}
+        {currentView === "badges" && isSignedIn && user?.id && (
+          <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
         )}
       </div>
 
-      {/* Footer */}
-      <footer
-        className={`text-center fixed bottom-0 w-full py-4 ${selectedTheme.text} ${selectedTheme.background}`}
-      >
-        <p className="text-sm">
-          Made with ❤️ by{" "}
-          <a
-            href="https://karandev.in"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline ${selectedTheme.text}`}
-          >
-            Karan
-          </a>
-        </p>
-      </footer>
+      {/* Footer - Hide on badges view */}
+      {currentView !== "badges" && (
+        <footer
+          className={`text-center fixed bottom-0 w-full py-4 ${selectedTheme.text} ${selectedTheme.background}`}
+        >
+          <p className="text-sm">
+            Made with ❤️ by{" "}
+            <a
+              href="https://karandev.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`underline ${selectedTheme.text}`}
+            >
+              Karan
+            </a>
+          </p>
+        </footer>
+      )}
     </div>
   );
 };
