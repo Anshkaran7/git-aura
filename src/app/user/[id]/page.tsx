@@ -197,7 +197,49 @@ function UserPage() {
 
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
-      const shareUrl = window.location.href;
+      let shareUrl = window.location.href;
+      
+      // Generate and upload image for OG meta tag
+      if (profileRef.current) {
+        setIsGenerating(true);
+        try {
+          const dataUrl = await toPng(profileRef.current, {
+            cacheBust: true,
+            backgroundColor: 
+              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            pixelRatio: 2,
+            skipFonts: false,
+          });
+
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+
+          const formData = new FormData();
+          formData.append("image", blob);
+          formData.append("name", `${profile?.login}-github-profile-og`);
+
+          const uploadResponse = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            const imageUrl = uploadData.url;
+
+            // Add og_image parameter to the current URL
+            const url = new URL(shareUrl);
+            url.searchParams.set("og_image", imageUrl);
+            shareUrl = url.toString();
+          }
+        } catch (uploadError) {
+          console.error("Error uploading OG image:", uploadError);
+          // Continue with sharing even if image upload fails
+        }
+        setIsGenerating(false);
+      }
+
+      // Generate share text and links after image upload is complete
       const text = `Check out ${
         profile?.login || "this user"
       }'s GitHub contributions! 🚀`;
@@ -213,9 +255,11 @@ function UserPage() {
         )}`;
       }
 
+      // Open share window only after everything is ready
       window.open(shareLink, "_blank", "width=600,height=400");
     } catch (err) {
       console.error("Error sharing profile:", err);
+      setIsGenerating(false);
     }
   };
 

@@ -27,14 +27,14 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     grid.push(
       <div
         key="weekdays"
-        className="flex flex-col gap-[2px] sm:gap-[3px] text-xs text-[#7d8590] pr-1 sm:pr-2 pt-4 sm:pt-6 shrink-0"
+        className="flex flex-col gap-[1px] sm:gap-[2px] text-xs text-[#7d8590] pr-1 sm:pr-2 pt-3 sm:pt-4 shrink-0"
       >
         {weekdays.map((day, i) => (
           <div
             key={i}
-            className="h-[8px] sm:h-[10px] md:h-[12px] flex items-center text-xs"
+            className="h-[7px] sm:h-[9px] md:h-[11px] flex items-center text-xs"
           >
-            <span className="hidden sm:inline">{day}</span>
+            <span className="hidden sm:inline text-xs">{day}</span>
             <span className="sm:hidden text-xs">{day.slice(0, 1)}</span>
           </div>
         ))}
@@ -81,7 +81,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
         weekCells.push(
           <div
             key={`${week}-${day}`}
-            className={`w-[8px] h-[8px] sm:w-[10px] sm:h-[10px] md:w-[12px] md:h-[12px] rounded-sm ${getContributionColor(
+            className={`w-[7px] h-[7px] sm:w-[9px] sm:h-[9px] md:w-[11px] md:h-[11px] rounded-sm ${getContributionColor(
               contributionCount
             )} hover:ring-1 sm:hover:ring-2 hover:ring-[#8b949e] hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-[#0d1117] transition-all cursor-pointer touch-manipulation hover:scale-110`}
             title={`${date.toDateString()}: ${contributionCount} contributions`}
@@ -89,13 +89,13 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
         );
       }
       grid.push(
-        <div key={week} className="flex flex-col gap-[2px] sm:gap-[3px]">
+        <div key={week} className="flex flex-col gap-[1px] sm:gap-[2px]">
           {weekCells}
         </div>
       );
     }
 
-    return <div className="flex gap-[2px] sm:gap-[3px]">{grid}</div>;
+    return <div className="flex gap-[1px] sm:gap-[2px] justify-center w-full overflow-hidden">{grid}</div>;
   };
 
   const getMonthLabels = () => {
@@ -115,9 +115,9 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     ];
 
     return (
-      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-[#7d8590] ml-6 sm:ml-8 mb-1 sm:mb-2 overflow-hidden">
+      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-[#7d8590] ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">
         {months.map((month, i) => (
-          <div key={i} className="text-xs truncate">
+          <div key={i} className="text-xs truncate text-center">
             <span className="hidden sm:inline">{month}</span>
             <span className="sm:hidden">{month.slice(0, 1)}</span>
           </div>
@@ -127,11 +127,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   };
 
   return (
-    <div className="w-fit-content px-3 sm:px-0 sm:min-w-0 flex justify-self-center overflow-hidden" style={{ width: "min-content" }}>
-      <div className="bg-[#0d1117] backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 w-full border border-[#21262d] overflow-x-auto shadow-inner">
-        <div className="min-w-max">
+    <div className="w-full flex justify-center">
+      <div className="bg-[#0d1117] backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 border border-[#21262d] shadow-inner max-w-full">
+        <div className="w-full overflow-hidden">
           {getMonthLabels()}
-          <div className="pb-2">{generateCommitGrid()}</div>
+          <div className="pb-2 w-full overflow-hidden">{generateCommitGrid()}</div>
         </div>
         <div className="flex items-center justify-between sm:justify-end mt-2 sm:mt-3 md:mt-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-1 sm:gap-2 text-xs">
@@ -142,7 +142,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
               {[0, 1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
-                  className={`w-[8px] h-[8px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 rounded-sm ${getContributionColor(
+                  className={`w-[7px] h-[7px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 rounded-sm ${getContributionColor(
                     level * 4
                   )}`}
                 />

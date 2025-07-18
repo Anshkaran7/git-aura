@@ -157,13 +157,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <div className="w-min-content px-3 sm:px-0 sm:min-w-0">
-              <ContributionGrid
-                contributions={contributions}
-                selectedTheme={selectedTheme}
-              />
-            </div>
+          <div className="w-full">
+            <ContributionGrid
+              contributions={contributions}
+              selectedTheme={selectedTheme}
+            />
           </div>
         </div>
       </div>

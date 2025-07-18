@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
+import { createClient } from "@supabase/supabase-js";
+import { nanoid } from "nanoid";
 import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
@@ -15,11 +17,18 @@ import { themes } from "./themes";
 import {
   GitHubProfile,
   GitHubContributions,
+  ShareableProfile,
   Theme,
   ViewType,
   ContributionDay,
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+);
 
 interface GitHubProfileCardProps {
   initialUsername?: string;
@@ -41,6 +50,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<Theme>(themes[0]);
+  const [shareableId, setShareableId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>("profile");
   const [userAura, setUserAura] = useState<number>(0);
@@ -49,10 +59,13 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if we have a username in the URL or props
+    // Check if we have a share ID or username in the URL or props
+    const shareId = searchParams.get("share");
     const urlUsername = searchParams.get("username") || initialUsername;
 
-    if (urlUsername && urlUsername !== searchedUsername && !loading) {
+    if (shareId) {
+      loadSharedProfile(shareId);
+    } else if (urlUsername && urlUsername !== searchedUsername && !loading) {
       setUsername(urlUsername);
       fetchProfile(urlUsername);
     }
@@ -64,7 +77,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       isSignedIn &&
       user &&
       !searchParams.get("username") &&
-      !initialUsername
+      !initialUsername &&
+      !searchParams.get("share")
     ) {
       let githubUsername = null;
 
@@ -89,6 +103,108 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       }
     }
   }, [isSignedIn, user, searchParams]);
+
+  const loadSharedProfile = async (shareId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("github_profiles")
+        .select("*")
+        .eq("id", shareId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfile(data.profile_data);
+        setContributions({
+          totalContributions: data.contributions.totalContributions,
+          contributionDays: data.contributions.contributionDays,
+        });
+        setSearchedUsername(data.username);
+        setShareableId(data.id);
+      }
+    } catch (err) {
+      console.error("Error loading shared profile:", err);
+    }
+  };
+
+  const generateShareableProfile = async () => {
+    if (!profile || !contributions.contributionDays.length) return null;
+
+    setIsGenerating(true);
+    try {
+      // Generate image
+      let imageUrl = null;
+      if (profileRef.current) {
+        try {
+          const dataUrl = await toPng(profileRef.current, {
+            cacheBust: true,
+            backgroundColor:
+              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            pixelRatio: 2,
+            skipFonts: false,
+          });
+
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+
+          const formData = new FormData();
+          formData.append("image", blob);
+          formData.append("name", `${searchedUsername}-github-profile`);
+
+          const uploadResponse = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            imageUrl = uploadData.url;
+          }
+        } catch (uploadError) {
+          console.error("Error uploading image:", uploadError);
+        }
+      }
+
+      const id = nanoid(10);
+      const shareableProfile: ShareableProfile = {
+        id,
+        username: searchedUsername,
+        profile_data: profile,
+        contributions,
+        created_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from("github_profiles")
+        .insert(shareableProfile);
+
+      if (error) throw error;
+
+      setShareableId(id);
+
+      // Update URL
+      const baseUrl = window.location.origin;
+      const params = new URLSearchParams();
+      params.set("share", id);
+      params.set("username", searchedUsername);
+
+      if (imageUrl) {
+        params.set("og_image", imageUrl);
+      }
+
+      const newUrl = `${baseUrl}/?${params.toString()}`;
+      await router.push(newUrl);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return id;
+    } catch (err) {
+      console.error("Error generating shareable profile:", err);
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const fetchProfile = async (username: string) => {
     if (!username.trim()) return;
@@ -192,6 +308,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     e.preventDefault();
 
     if (username.trim() && username.trim() !== searchedUsername && !loading) {
+      setShareableId(null);
+
       // Navigate to the new route structure
       if (initialUsername) {
         // If we're already in a username route, just fetch the new profile
@@ -207,6 +325,11 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     if (!profileRef.current) return;
 
     try {
+      if (!shareableId) {
+        const newShareableId = await generateShareableProfile();
+        if (!newShareableId) return;
+      }
+
       setIsGenerating(true);
       const dataUrl = await toPng(profileRef.current, {
         cacheBust: true,
@@ -227,67 +350,29 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
-      // Construct the base share URL in the format /user/[username]
-      let shareUrl = `${window.location.origin}/user/${searchedUsername}`;
+
       
-      // Generate and upload image for OG meta tag
-      if (profileRef.current) {
-        setIsGenerating(true);
-        try {
-          const dataUrl = await toPng(profileRef.current, {
-            cacheBust: true,
-            backgroundColor: 
-              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
-            pixelRatio: 2,
-            skipFonts: false,
-          });
+      let shareableUsername = window.location.pathname.split("/")[1];
 
-          const response = await fetch(dataUrl);
-          const blob = await response.blob();
-
-          const formData = new FormData();
-          formData.append("image", blob);
-          formData.append("name", `${searchedUsername}-github-profile-og`);
-
-          const uploadResponse = await fetch("/api/upload-image", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (uploadResponse.ok) {
-            const uploadData = await uploadResponse.json();
-            const imageUrl = uploadData.url;
-
-            // Add og_image parameter to the share URL
-            shareUrl = `${shareUrl}?og_image=${encodeURIComponent(imageUrl)}`;
-          }
-        } catch (uploadError) {
-          console.error("Error uploading OG image:", uploadError);
-          // Continue with sharing even if image upload fails
-        }
-        setIsGenerating(false);
-      }
-
-      // Generate share text and links after image upload is complete
+      const shareUrl = window.location.href;
       const text = `Check out my GitHub contributions! 🚀`;
 
       let shareLink = "";
       if (platform === "twitter") {
-        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          text
+        )}&url=${encodeURIComponent(shareUrl)}`;
       } else if (platform === "linkedin") {
         shareLink = `https://www.linkedin.com/sharing/share-offsite/?text=${encodeURIComponent(
           `${text} ${shareUrl}`
         )}`;
       }
 
-      // Open share window only after everything is ready
       window.open(shareLink, "_blank", "width=600,height=400");
     } catch (err) {
       console.error("Error sharing profile:", err);
-      setIsGenerating(false);
     }
   };
 
