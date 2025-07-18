@@ -104,9 +104,9 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         },
         body: JSON.stringify({
           monthYear,
-          monthlyAura,
           contributionsCount,
           activeDays,
+          allContributions: contributions.contributionDays, // Send all contributions for total aura calculation
         }),
       });
 

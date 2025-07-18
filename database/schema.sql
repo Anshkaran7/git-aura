@@ -186,7 +186,12 @@ CREATE OR REPLACE FUNCTION update_user_aura_and_ranks(
   p_monthly_aura FLOAT,
   p_contributions_count INTEGER
 ) RETURNS VOID AS $$
+DECLARE
+  current_month TEXT;
 BEGIN
+  -- Get current month in YYYY-MM format
+  current_month := to_char(current_date, 'YYYY-MM');
+
   -- Start transaction
   BEGIN
     -- Update or insert monthly leaderboard entry
@@ -197,7 +202,7 @@ BEGIN
       total_aura = EXCLUDED.total_aura,
       contributions_count = EXCLUDED.contributions_count;
 
-    -- Update global leaderboard with total aura from all months
+    -- Calculate all-time total from last 12 months only
     WITH user_totals AS (
       SELECT 
         user_id,
@@ -205,6 +210,8 @@ BEGIN
         SUM(contributions_count) as total_contributions
       FROM monthly_leaderboards
       WHERE user_id = p_user_id
+      AND (month_year || '-01')::date > ((current_month || '-01')::date - interval '11 months')
+      AND (month_year || '-01')::date <= (current_month || '-01')::date
       GROUP BY user_id
     )
     INSERT INTO global_leaderboard (user_id, total_aura, rank)
@@ -213,8 +220,9 @@ BEGIN
       total_aura,
       0
     FROM user_totals
-    ON CONFLICT (user_id)
-    DO UPDATE SET total_aura = EXCLUDED.total_aura;
+    ON CONFLICT (user_id) 
+    DO UPDATE SET 
+      total_aura = EXCLUDED.total_aura;
 
     -- Update monthly ranks for the specific month
     WITH ranked_monthly AS (
@@ -230,7 +238,7 @@ BEGIN
     WHERE ml.user_id = rm.user_id
       AND ml.month_year = p_month_year;
 
-    -- Update global ranks
+    -- Update global ranks based on all-time total
     WITH ranked_global AS (
       SELECT 
         user_id,
@@ -245,4 +253,21 @@ BEGIN
   -- Commit transaction
   END;
 END;
-$$ LANGUAGE plpgsql; 
+$$ LANGUAGE plpgsql;
+
+-- Add year column and update table structure if not exists
+DO $$ 
+BEGIN
+  -- Add columns if they don't exist
+  BEGIN
+    ALTER TABLE global_leaderboard 
+      ADD COLUMN year TEXT,
+      ADD COLUMN yearly_aura FLOAT DEFAULT 0,
+      ADD CONSTRAINT global_leaderboard_year_user_unique UNIQUE (user_id, year);
+  EXCEPTION
+    WHEN duplicate_column THEN 
+      NULL;
+  END;
+END $$;
+
+
