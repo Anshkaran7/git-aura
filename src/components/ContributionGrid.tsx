@@ -127,7 +127,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-fit-content px-3 sm:px-0 sm:min-w-0 flex justify-self-center" style={{ width: "min-content" }}>
       <div className="bg-[#0d1117] backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 w-full border border-[#21262d] overflow-x-auto shadow-inner">
         <div className="min-w-max">
           {getMonthLabels()}

@@ -64,9 +64,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
       </div>
 
       {/* Profile Content */}
-      <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-[#161b21] to-[#0d1117]">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-[#161b21] to-[#0d1117] ">
         {/* Profile Header */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between sm:items-start gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
             <img
               src={profile.avatar_url}
@@ -131,7 +131,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
 
           <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <div className="min-w-[640px] px-3 sm:px-0 sm:min-w-0">
+            <div className="w-min-content px-3 sm:px-0 sm:min-w-0">
               <ContributionGrid
                 contributions={contributions}
                 selectedTheme={selectedTheme}
