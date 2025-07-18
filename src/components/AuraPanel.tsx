@@ -16,7 +16,7 @@ import {
   getAuraStatus,
   getStreakMessage,
   getCurrentMonthYear,
-} from "@/lib/utils";
+} from "@/lib/utils2";
 
 interface AuraPanelProps {
   selectedTheme: Theme;
@@ -122,99 +122,67 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   const monthlyAuraStatus = getMonthlyAuraStatus(monthlyData.aura);
 
   return (
-    <div
-      className={`${selectedTheme.cardBackground} rounded-2xl p-6 border ${selectedTheme.border} shadow-lg mt-8`}
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h3
-          className={`text-xl font-bold ${selectedTheme.text} flex items-center gap-2`}
-        >
-          <TrendingUp className="w-5 h-5 text-blue-500" />
-          Aura Analysis
+    <div className="bg-[#161b21] backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-2xl mt-4 sm:mt-6 md:mt-8 mx-1 sm:mx-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
+          <span className="truncate">Aura Analysis</span>
         </h3>
         {isCalculatingAura && (
-          <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-            <span
-              className={`text-sm ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-600"
-                  : "text-gray-400"
-              }`}
-            >
-              Calculating...
-            </span>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-[#7d8590]"></div>
+            <span className="text-sm text-[#7d8590]">Calculating...</span>
           </div>
         )}
       </div>
 
       {/* Monthly View Toggle and Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-blue-500" />
-          <span className={`text-sm font-medium ${selectedTheme.text}`}>
+          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590]" />
+          <span className="text-sm font-medium text-white">
             Monthly Analysis
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
           <button
             onClick={() => navigateMonth("prev")}
-            className={`p-1 rounded-md ${
-              selectedTheme.name === "Light"
-                ? "hover:bg-gray-100"
-                : "hover:bg-gray-700"
-            }`}
+            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
           </button>
-          <span
-            className={`px-3 py-1 text-sm font-medium ${selectedTheme.text}`}
-          >
+          <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white whitespace-nowrap bg-[#0d1117] backdrop-blur-sm rounded border border-[#21262d]">
             {formatMonthYear(currentMonth)}
           </span>
           <button
             onClick={() => navigateMonth("next")}
-            className={`p-1 rounded-md ${
-              selectedTheme.name === "Light"
-                ? "hover:bg-gray-100"
-                : "hover:bg-gray-700"
-            }`}
+            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={currentMonth >= getCurrentMonthYear()}
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
           </button>
         </div>
       </div>
 
       {/* Monthly Aura Status Card */}
-      <div className="mb-6">
-        <div
-          className={`p-6 rounded-xl border-2 border-dashed ${
-            selectedTheme.name === "Light"
-              ? "bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
-              : "bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-blue-500/30"
-          }`}
-        >
+      <div className="mb-4 sm:mb-6">
+        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border-2 border-dashed bg-gradient-to-r from-[#0d1117] to-[#161b21] border-[#30363d] backdrop-blur-sm">
           <div className="text-center">
-            <h4 className={`text-lg font-bold ${monthlyAuraStatus.color} mb-2`}>
+            <h4
+              className={`text-base sm:text-lg font-bold ${monthlyAuraStatus.color} mb-2`}
+            >
               {monthlyAuraStatus.level}
             </h4>
-            <p
-              className={`text-lg mb-3 ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-700"
-                  : "text-gray-200"
-              }`}
-            >
+            <p className="text-sm sm:text-base md:text-lg mb-3 text-gray-200">
               {formatMonthYear(currentMonth)} Performance
             </p>
-            <div className="flex items-center justify-center gap-4 text-sm">
-              <span className={`${monthlyAuraStatus.color} font-semibold`}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
+              <span
+                className={`${monthlyAuraStatus.color} font-semibold whitespace-nowrap`}
+              >
                 {formatNumber(monthlyData.aura)} Monthly Aura
               </span>
-              <span
-                className={`text-green-500 font-semibold flex items-center gap-1`}
-              >
+              <span className="text-gray-300 font-semibold flex items-center gap-1 whitespace-nowrap">
                 📊 {monthlyData.activeDays} Active Days
               </span>
             </div>
@@ -223,91 +191,51 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       </div>
 
       {/* Monthly Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div
-          className={`p-4 rounded-lg ${
-            selectedTheme.name === "Light" ? "bg-blue-50" : "bg-blue-900/20"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Zap className="w-4 h-4 text-blue-500" />
-            <span
-              className={`text-sm font-medium ${
-                selectedTheme.name === "Light"
-                  ? "text-blue-700"
-                  : "text-blue-300"
-              }`}
-            >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
               Monthly Aura
             </span>
           </div>
-          <div className={`text-2xl font-bold ${selectedTheme.text}`}>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
             {formatNumber(monthlyData.aura)}
           </div>
         </div>
 
-        <div
-          className={`p-4 rounded-lg ${
-            selectedTheme.name === "Light" ? "bg-green-50" : "bg-green-900/20"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <GitBranch className="w-4 h-4 text-green-500" />
-            <span
-              className={`text-sm font-medium ${
-                selectedTheme.name === "Light"
-                  ? "text-green-700"
-                  : "text-green-300"
-              }`}
-            >
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+            <GitBranch className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
               Contributions
             </span>
           </div>
-          <div className={`text-2xl font-bold ${selectedTheme.text}`}>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
             {monthlyData.contributions}
           </div>
         </div>
 
-        <div
-          className={`p-4 rounded-lg ${
-            selectedTheme.name === "Light" ? "bg-orange-50" : "bg-orange-900/20"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-orange-500" />
-            <span
-              className={`text-sm font-medium ${
-                selectedTheme.name === "Light"
-                  ? "text-orange-700"
-                  : "text-orange-300"
-              }`}
-            >
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
               Active Days
             </span>
           </div>
-          <div className={`text-2xl font-bold ${selectedTheme.text}`}>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
             {monthlyData.activeDays}
           </div>
         </div>
 
-        <div
-          className={`p-4 rounded-lg ${
-            selectedTheme.name === "Light" ? "bg-purple-50" : "bg-purple-900/20"
-          }`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-purple-500" />
-            <span
-              className={`text-sm font-medium ${
-                selectedTheme.name === "Light"
-                  ? "text-purple-700"
-                  : "text-purple-300"
-              }`}
-            >
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
               Consistency
             </span>
           </div>
-          <div className={`text-2xl font-bold ${selectedTheme.text}`}>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
             {Math.round(
               (monthlyData.activeDays /
                 new Date(
@@ -323,32 +251,28 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       </div>
 
       {/* Overall Aura Status Card */}
-      <div className="mb-6">
-        <div
-          className={`p-6 rounded-xl border ${selectedTheme.border} ${
-            selectedTheme.name === "Light" ? "bg-gray-50/50" : "bg-gray-900/20"
-          }`}
-        >
+      <div className="mb-4 sm:mb-6">
+        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#21262d] bg-[#0d1117] backdrop-blur-sm">
           <div className="text-center">
-            <div className="text-4xl mb-2">{auraStatus.emoji}</div>
-            <h4 className={`text-lg font-bold ${auraStatus.color} mb-2`}>
+            <div className="text-2xl sm:text-3xl md:text-4xl mb-2">
+              {auraStatus.emoji}
+            </div>
+            <h4
+              className={`text-base sm:text-lg font-bold ${auraStatus.color} mb-2`}
+            >
               {auraStatus.level}
             </h4>
-            <p
-              className={`text-lg mb-3 ${
-                selectedTheme.name === "Light"
-                  ? "text-gray-700"
-                  : "text-gray-200"
-              }`}
-            >
+            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-gray-200">
               {auraStatus.message}
             </p>
-            <div className="flex items-center justify-center gap-4 text-sm">
-              <span className={`${auraStatus.color} font-semibold`}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
+              <span
+                className={`${auraStatus.color} font-semibold whitespace-nowrap`}
+              >
                 {formatNumber(userAura)} Total Aura
               </span>
               <span
-                className={`${streakStatus.color} font-semibold flex items-center gap-1`}
+                className={`${streakStatus.color} font-semibold flex items-center gap-1 whitespace-nowrap`}
               >
                 {streakStatus.emoji} {currentStreak} Day Streak
               </span>
@@ -358,27 +282,19 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       </div>
 
       {!isSignedIn && (
-        <div
-          className={`mt-6 p-6 rounded-lg border-2 border-dashed ${selectedTheme.border} text-center`}
-        >
-          <div className="text-4xl mb-3">🚀</div>
-          <h4
-            className={`text-lg font-bold mb-3 ${
-              selectedTheme.name === "Light" ? "text-gray-800" : "text-gray-200"
-            }`}
-          >
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 md:p-6 rounded-lg border-2 border-dashed border-[#30363d] text-center bg-[#0d1117] backdrop-blur-sm">
+          <div className="text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3">
+            🚀
+          </div>
+          <h4 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 text-white">
             Ready to join the aura game?
           </h4>
-          <p
-            className={`mb-4 ${
-              selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-400"
-            }`}
-          >
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base px-2 text-gray-400">
             Sign in to save your aura, earn epic badges, and dominate the
             leaderboard! 💪
           </p>
           <SignInButton mode="modal">
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 font-semibold">
+            <button className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-gray-700 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-500 transition-all transform hover:scale-105 active:scale-95 font-semibold text-sm sm:text-base touch-manipulation border border-gray-600/50 shadow-lg">
               🔥 Start My Aura Journey
             </button>
           </SignInButton>

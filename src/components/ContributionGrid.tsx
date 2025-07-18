@@ -12,11 +12,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   selectedTheme,
 }) => {
   const getContributionColor = (count: number): string => {
-    if (count > 12) return selectedTheme.contribution.level4;
-    if (count > 7) return selectedTheme.contribution.level3;
-    if (count > 3) return selectedTheme.contribution.level2;
-    if (count > 0) return selectedTheme.contribution.level1;
-    return selectedTheme.contribution.level0;
+    if (count > 12) return "bg-[#39d353]"; // High activity - bright green like GitHub
+    if (count > 7) return "bg-[#26a641]"; // Good activity - medium green
+    if (count > 3) return "bg-[#006d32]"; // Moderate activity - darker green
+    if (count > 0) return "bg-[#0e4429]"; // Low activity - dark green
+    return "bg-[#161b22]"; // No activity - dark black like GitHub
   };
 
   const generateCommitGrid = () => {
@@ -27,11 +27,15 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     grid.push(
       <div
         key="weekdays"
-        className="flex flex-col gap-[3px] text-xs text-gray-400 pr-2 pt-6"
+        className="flex flex-col gap-[2px] sm:gap-[3px] text-xs text-[#7d8590] pr-1 sm:pr-2 pt-4 sm:pt-6 shrink-0"
       >
         {weekdays.map((day, i) => (
-          <div key={i} className="h-[10px] flex items-center">
-            {day}
+          <div
+            key={i}
+            className="h-[8px] sm:h-[10px] md:h-[12px] flex items-center text-xs"
+          >
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden text-xs">{day.slice(0, 1)}</span>
           </div>
         ))}
       </div>
@@ -77,21 +81,21 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
         weekCells.push(
           <div
             key={`${week}-${day}`}
-            className={`w-[10px] h-[10px] rounded-sm ${getContributionColor(
+            className={`w-[8px] h-[8px] sm:w-[10px] sm:h-[10px] md:w-[12px] md:h-[12px] rounded-sm ${getContributionColor(
               contributionCount
-            )} hover:ring-2 hover:ring-gray-400 hover:ring-offset-2 hover:ring-offset-[#0d1117] transition-all cursor-pointer`}
+            )} hover:ring-1 sm:hover:ring-2 hover:ring-[#8b949e] hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-[#0d1117] transition-all cursor-pointer touch-manipulation hover:scale-110`}
             title={`${date.toDateString()}: ${contributionCount} contributions`}
           />
         );
       }
       grid.push(
-        <div key={week} className="flex flex-col gap-[3px]">
+        <div key={week} className="flex flex-col gap-[2px] sm:gap-[3px]">
           {weekCells}
         </div>
       );
     }
 
-    return <div className="flex gap-[3px]">{grid}</div>;
+    return <div className="flex gap-[2px] sm:gap-[3px]">{grid}</div>;
   };
 
   const getMonthLabels = () => {
@@ -111,57 +115,43 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     ];
 
     return (
-      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-gray-400 ml-8 mb-2">
+      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-[#7d8590] ml-6 sm:ml-8 mb-1 sm:mb-2 overflow-hidden">
         {months.map((month, i) => (
-          <div key={i}>{month}</div>
+          <div key={i} className="text-xs truncate">
+            <span className="hidden sm:inline">{month}</span>
+            <span className="sm:hidden">{month.slice(0, 1)}</span>
+          </div>
         ))}
       </div>
     );
   };
 
   return (
-    <div className="w-full flex justify-center">
-      <div
-        className={`${
-          selectedTheme.name === "Light"
-            ? "bg-white"
-            : selectedTheme.name === "Ocean Dark"
-            ? "bg-[#0f172a]/50"
-            : "bg-[#0d1117]/50"
-        } rounded-xl p-3 sm:p-6 ${
-          selectedTheme.border
-        }  w-full border backdrop-blur-sm`}
-        style={{ overflowX: "auto", width: "max-content" }}
-      >
-        <div className="min-w-max w-full">
+    <div className="w-full">
+      <div className="bg-[#0d1117] backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 w-full border border-[#21262d] overflow-x-auto shadow-inner">
+        <div className="min-w-max">
           {getMonthLabels()}
-          <div className="overflow-x-auto">{generateCommitGrid()}</div>
+          <div className="pb-2">{generateCommitGrid()}</div>
         </div>
-        <div className="flex items-center justify-end mt-2 sm:mt-4 gap-1 sm:gap-2">
-          <span
-            className={`text-xs ${
-              selectedTheme.name === "Light" ? "text-gray-500" : "text-gray-400"
-            } font-mona-sans`}
-          >
-            Less
-          </span>
-          <div className="flex gap-0.5 sm:gap-1">
-            {[0, 1, 2, 3, 4].map((level) => (
-              <div
-                key={level}
-                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm ${getContributionColor(
-                  level * 4
-                )}`}
-              />
-            ))}
+        <div className="flex items-center justify-between sm:justify-end mt-2 sm:mt-3 md:mt-4 gap-2 sm:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 text-xs">
+            <span className="text-[#7d8590] font-mona-sans whitespace-nowrap">
+              Less
+            </span>
+            <div className="flex gap-0.5 sm:gap-1">
+              {[0, 1, 2, 3, 4].map((level) => (
+                <div
+                  key={level}
+                  className={`w-[8px] h-[8px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 rounded-sm ${getContributionColor(
+                    level * 4
+                  )}`}
+                />
+              ))}
+            </div>
+            <span className="text-[#7d8590] font-mona-sans whitespace-nowrap">
+              More
+            </span>
           </div>
-          <span
-            className={`text-xs ${
-              selectedTheme.name === "Light" ? "text-gray-500" : "text-gray-400"
-            } font-mona-sans`}
-          >
-            More
-          </span>
         </div>
       </div>
     </div>

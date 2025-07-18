@@ -38,84 +38,39 @@ function MontlyContribution({
   const monthlyContributions = calculateMonthlyContributions();
 
   return (
-    <div className="mt-4 flex flex-col gap-4">
+    <div className="mt-3 sm:mt-4 md:mt-6 flex flex-col gap-3 sm:gap-4 mx-1 sm:mx-0">
       {/* Total Contributions Card */}
-      <div
-        className={`${
-          selectedTheme.name === "Light"
-            ? "bg-white"
-            : selectedTheme.name === "Ocean Dark"
-            ? "bg-[#0f172a]/50"
-            : "bg-[#0d1117]/50"
-        } rounded-xl p-4 ${selectedTheme.border} border backdrop-blur-sm`}
-      >
+      <div className="bg-[#161b21] backdrop-blur-xl rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-lg">
         <div className="text-center">
-          <h3
-            className={`text-lg font-semibold ${
-              selectedTheme.name === "Light" ? "text-gray-800" : "text-gray-200"
-            }`}
-          >
+          <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white">
             Total Contributions:{" "}
-            {contributions.totalContributions.toLocaleString()}
+            <span className="block sm:inline">
+              {contributions.totalContributions.toLocaleString()}
+            </span>
           </h3>
         </div>
       </div>
 
       {/* Monthly Breakdown Card */}
-      <div
-        className={`${
-          selectedTheme.name === "Light"
-            ? "bg-white"
-            : selectedTheme.name === "Ocean Dark"
-            ? "bg-[#0f172a]/50"
-            : "bg-[#0d1117]/50"
-        } rounded-xl p-4 ${selectedTheme.border} border backdrop-blur-sm`}
-      >
+      <div className="bg-[#161b21] backdrop-blur-xl rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-lg">
         <div>
-          <h4
-            className={`text-md font-medium mb-3 ${
-              selectedTheme.name === "Light" ? "text-gray-700" : "text-gray-300"
-            }`}
-          >
-            Monthly Breakdown (Last 12 Months)
+          <h4 className="text-sm sm:text-base md:text-lg font-medium mb-3 sm:mb-4 text-[#e6edf3]">
+            Monthly Breakdown{" "}
+            <span className="block sm:inline">(Last 12 Months)</span>
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-4 gap-2 sm:gap-3">
             {monthlyContributions.map(({ month, count }) => (
               <div
                 key={month}
-                className={`p-3 rounded-lg ${
-                  selectedTheme.name === "Light"
-                    ? "bg-gray-50 border border-gray-200"
-                    : selectedTheme.name === "Ocean Dark"
-                    ? "bg-[#1e293b]/50 border border-slate-600/30"
-                    : "bg-[#161b22]/50 border border-gray-700/30"
-                } backdrop-blur-sm`}
+                className="p-2 sm:p-3 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:scale-105 transition-all touch-manipulation hover:bg-[#161b21]"
               >
-                <div
-                  className={`text-sm font-medium ${
-                    selectedTheme.name === "Light"
-                      ? "text-gray-600"
-                      : "text-gray-400"
-                  }`}
-                >
+                <div className="text-xs sm:text-sm font-medium mb-1 text-[#7d8590] truncate">
                   {month}
                 </div>
-                <div
-                  className={`text-lg font-bold ${
-                    selectedTheme.name === "Light"
-                      ? "text-gray-800"
-                      : "text-gray-200"
-                  }`}
-                >
+                <div className="text-base sm:text-lg md:text-xl font-bold text-white truncate">
                   {count}
                 </div>
-                <div
-                  className={`text-xs ${
-                    selectedTheme.name === "Light"
-                      ? "text-gray-500"
-                      : "text-gray-500"
-                  }`}
-                >
+                <div className="text-xs text-[#7d8590] truncate">
                   {count > 100
                     ? "🔥 High"
                     : count > 50

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { calculateStreak, getCurrentMonthYear } from "./utils";
+import { calculateStreak, getCurrentMonthYear } from "./utils2";
 
 // Initialize Supabase client with service role for server-side operations
 

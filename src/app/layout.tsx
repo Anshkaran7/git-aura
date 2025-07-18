@@ -125,9 +125,9 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "default",
     "apple-mobile-web-app-title": "GitHub Profile Visualizer",
     "application-name": "GitHub Profile Visualizer",
-    "msapplication-TileColor": "#0d1117",
+    "msapplication-TileColor": "#0a0a0a",
     "msapplication-config": "/browserconfig.xml",
-    "theme-color": "#0d1117",
+    "theme-color": "#0a0a0a",
     "color-scheme": "dark light",
   },
 };
@@ -179,23 +179,27 @@ export default function RootLayout({
       appearance={{
         baseTheme: dark,
         variables: {
-          colorPrimary: "#3b82f6",
-          colorBackground: "#0d1117",
-          colorInputBackground: "#161b22",
-          colorInputText: "#f0f6fc",
+          colorPrimary: "#d4d4d8", // Light gray primary
+          colorBackground: "#0a0a0a", // Deep black background
+          colorInputBackground: "#1a1a1a", // Dark gray inputs
+          colorInputText: "#f5f5f5", // Light text
+          colorText: "#ffffff", // White text
+          colorTextSecondary: "#a3a3a3", // Gray secondary text
         },
         elements: {
-          card: "bg-[#161b22] border border-gray-800",
+          card: "bg-[#0f0f0f] border border-gray-800",
           headerTitle: "text-white",
-          headerSubtitle: "text-gray-300",
+          headerSubtitle: "text-gray-400",
           socialButtonsBlockButton:
-            "bg-[#21262d] border border-gray-700 text-white hover:bg-[#30363d]",
-          formButtonPrimary: "bg-blue-600 hover:bg-blue-700",
-          footerActionLink: "text-blue-400 hover:text-blue-300",
+            "bg-[#1a1a1a] border border-gray-700 text-white hover:bg-[#262626]",
+          formButtonPrimary: "bg-gray-200 hover:bg-white text-black",
+          footerActionLink: "text-gray-300 hover:text-white",
+          formFieldInput: "bg-[#1a1a1a] border-gray-700 text-white",
+          formFieldLabel: "text-gray-300",
         },
       }}
     >
-      <html lang="en" className="scroll-smooth">
+      <html lang="en" className="dark scroll-smooth">
         <head>
           {/* Preconnect to external domains for performance */}
           <link rel="preconnect" href="https://api.github.com" />

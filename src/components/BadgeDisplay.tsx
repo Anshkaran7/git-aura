@@ -187,26 +187,28 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center py-12 sm:py-16 md:py-20">
+        <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (!badge) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[300px] sm:min-h-[400px] px-4">
         <div
-          className={`text-center py-20 ${
+          className={`text-center py-12 sm:py-16 md:py-20 ${
             selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-400"
           }`}
         >
-          <Award className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p className="text-lg">Join the Leaderboard!</p>
-          <p className="text-sm">
+          <Award className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
+          <p className="text-base sm:text-lg md:text-xl mb-2">
+            Join the Leaderboard!
+          </p>
+          <p className="text-sm sm:text-base max-w-sm mx-auto px-2">
             Connect your GitHub and contribute code to earn a position badge!
           </p>
-          <div className="mt-4 text-xs opacity-75">
+          <div className="mt-3 sm:mt-4 text-xs sm:text-sm opacity-75">
             Your badge will appear here once you're on the leaderboard
           </div>
         </div>
@@ -215,7 +217,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-[300px] sm:min-h-[400px] px-3 sm:px-4">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -225,43 +227,47 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           damping: 20,
           delay: 0.1,
         }}
-        className="relative"
+        className="relative max-w-sm w-full"
       >
         {/* Badge Container */}
         <div
-          className={`relative p-8 ${
+          className={`relative p-4 sm:p-6 md:p-8 ${
             selectedTheme.cardBackground
-          } rounded-3xl border-4 ${getRarityColor(
+          } rounded-2xl sm:rounded-3xl border-2 sm:border-4 ${getRarityColor(
             badge.rarity
-          )} shadow-2xl ${getRarityGlow(badge.rarity)} backdrop-blur-sm`}
+          )} shadow-xl sm:shadow-2xl ${getRarityGlow(
+            badge.rarity
+          )} backdrop-blur-sm mx-2 sm:mx-0`}
         >
           {/* Position Number (Top Right) */}
-          <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-            <span className="text-white font-bold text-lg">
+          <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 md:-top-4 md:-right-4 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 sm:border-4 border-white shadow-lg">
+            <span className="text-white font-bold text-xs sm:text-sm md:text-lg">
               #{badge.position}
             </span>
           </div>
 
           {/* Badge Icon */}
           <div
-            className={`w-32 h-32 bg-gradient-to-br ${badge.color} rounded-full flex items-center justify-center mb-6 mx-auto shadow-xl`}
+            className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br ${badge.color} rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-xl`}
           >
-            <div className="text-white">{badge.icon}</div>
+            <div className="text-white scale-75 sm:scale-90 md:scale-100">
+              {badge.icon}
+            </div>
           </div>
 
           {/* Badge Info */}
           <div className="text-center">
             <h2
-              className={`text-2xl font-bold mb-2 ${
+              className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 ${
                 selectedTheme.name === "Light" ? "text-gray-800" : "text-white"
-              }`}
+              } px-2`}
             >
               {badge.name}
             </h2>
 
             {/* Rarity */}
             <div
-              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-3 ${
+              className={`inline-flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 ${
                 badge.rarity === "legendary"
                   ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
                   : badge.rarity === "epic"
@@ -272,7 +278,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
               }`}
             >
               <div
-                className={`w-2 h-2 rounded-full ${
+                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                   badge.rarity === "legendary"
                     ? "bg-yellow-500"
                     : badge.rarity === "epic"
@@ -282,29 +288,31 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
                     : "bg-gray-500"
                 }`}
               />
-              {badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1)}
+              <span className="truncate">
+                {badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1)}
+              </span>
             </div>
 
             <p
-              className={`text-lg ${
+              className={`text-sm sm:text-base md:text-lg ${
                 selectedTheme.name === "Light"
                   ? "text-gray-600"
                   : "text-gray-300"
-              } max-w-sm mx-auto leading-relaxed`}
+              } max-w-xs sm:max-w-sm mx-auto leading-relaxed px-2`}
             >
               {badge.description}
             </p>
 
             {/* Current Status */}
             <div
-              className={`mt-4 p-3 rounded-lg ${
+              className={`mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg ${
                 selectedTheme.name === "Light"
                   ? "bg-blue-50 border border-blue-200"
                   : "bg-blue-900/20 border border-blue-500/30"
               }`}
             >
               <p
-                className={`text-sm font-medium ${
+                className={`text-xs sm:text-sm font-medium ${
                   selectedTheme.name === "Light"
                     ? "text-blue-700"
                     : "text-blue-300"
