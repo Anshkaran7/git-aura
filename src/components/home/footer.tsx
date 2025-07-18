@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Github, Twitter, MessageCircle, Heart, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 interface HeroStats {
   totalDevelopers: number;
@@ -18,6 +19,7 @@ interface HeroStats {
 
 export const Footer = () => {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const [stats, setStats] = useState<HeroStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -69,6 +71,14 @@ export const Footer = () => {
       return (num / 1000).toFixed(1) + "K";
     }
     return num.toString();
+  };
+
+  const handleStartJourney = () => {
+    if (isSignedIn) {
+      router.push("/leaderboard");
+    } else {
+      router.push("/sign-in");
+    }
   };
 
   return (
@@ -159,6 +169,7 @@ export const Footer = () => {
               variant="default"
               size="default"
               className="w-full sm:w-auto px-4 sm:px-8 py-2"
+              onClick={handleStartJourney}
             >
               <Github className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
               Start Your Git Aura Journey
