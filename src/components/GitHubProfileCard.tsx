@@ -9,10 +9,9 @@ import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
 import BadgeDisplay from "./BadgeDisplay";
-import SearchBar from "./SearchBar";
 import ProfileCard from "./ProfileCard";
 import EmptyState from "./EmptyState";
-import ShareButtons from "./ShareButtons";
+// import ShareButtons from "./ShareButtons";
 import AuraPanel from "./AuraPanel";
 import { themes } from "./themes";
 import {
@@ -353,12 +352,10 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
-      let currentShareableId = shareableId;
 
-      if (!currentShareableId) {
-        currentShareableId = await generateShareableProfile();
-        if (!currentShareableId) return;
-      }
+      // http://localhost:3000/user/Anshkaran7
+      //Anshkaran7 is the username
+      let shareableUsername = window.location.pathname.split("/")[1];
 
       const shareUrl = window.location.href;
       const text = `Check out my GitHub contributions! 🚀`;
