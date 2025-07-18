@@ -63,6 +63,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
       </div>
 
+  {/* download and share Profile Content */}
+      
+
       {/* Profile Content */}
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-[#161b21] to-[#0d1117] ">
         {/* Profile Header */}

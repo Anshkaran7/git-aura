@@ -9,7 +9,6 @@ import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
 import BadgeDisplay from "./BadgeDisplay";
-import Header from "./Header";
 import SearchBar from "./SearchBar";
 import ProfileCard from "./ProfileCard";
 import EmptyState from "./EmptyState";
@@ -384,26 +383,6 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   return (
     <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
-        {/* Share Buttons - Only show for profile view */}
-        {/* {currentView === "profile" && profile && (
-          <div className="flex flex-col sm:flex-row justify-end mb-3 sm:mb-4 md:mb-6">
-            <ShareButtons
-              isGenerating={isGenerating}
-              onExportImage={handleExportImage}
-              onShare={handleShare}
-            />
-          </div>
-        )} */}
-
-        {/* Search Bar - commented out as it was in original */}
-        {/* <SearchBar
-          username={username}
-          setUsername={setUsername}
-          searchedUsername={searchedUsername}
-          loading={loading}
-          selectedTheme={selectedTheme}
-          onSearch={handleSearch}
-        /> */}
 
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
