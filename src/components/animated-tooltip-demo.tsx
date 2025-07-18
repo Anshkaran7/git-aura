@@ -159,29 +159,29 @@ export default function TopAuraUsers() {
   };
 
   return (
-    <section className="py-20 bg-background relative overflow-hidden">
+    <section className="py-12 sm:py-20 bg-background relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-10 left-1/4 w-72 h-72 bg-muted/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-10 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      <div className="container mx-auto px-6 text-center relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
         {/* Section Header */}
-        <div className="max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 bg-card backdrop-blur-sm border border-border rounded-full px-4 py-2 mb-6">
-            <Trophy className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">
+        <div className="max-w-3xl mx-auto mb-8 sm:mb-16">
+          <div className="inline-flex items-center gap-2 bg-card backdrop-blur-sm border border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 sm:mb-6">
+            <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
               Hall of Fame
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
             {getMonthName(monthYear)}'s{" "}
             <span className="text-highlight">Aura Legends</span> 👑
           </h2>
 
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             {loading ? (
               "Loading the month's top performers..."
             ) : topUsers.length === 0 ? (
@@ -206,18 +206,18 @@ export default function TopAuraUsers() {
         </div>
 
         {/* Animated Tooltip Component */}
-        <div className="flex flex-row items-center justify-center mb-12 w-full min-h-[80px]">
+        <div className="flex flex-row items-center justify-center mb-8 sm:mb-12 w-full min-h-[60px] sm:min-h-[80px]">
           {loading ? (
-            <div className="flex items-center gap-4">
-              <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-              <span className="text-muted-foreground">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin text-primary" />
+              <span className="text-sm sm:text-base text-muted-foreground">
                 Loading top performers...
               </span>
             </div>
           ) : topUsers.length === 0 ? (
             <div className="text-center">
-              <div className="text-6xl mb-4">🚀</div>
-              <p className="text-muted-foreground">
+              <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🚀</div>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 No champions yet this month.
                 <br />
                 <span className="text-primary font-semibold">
@@ -231,23 +231,23 @@ export default function TopAuraUsers() {
         </div>
 
         {/* Call to Action */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 sm:mb-12">
           {isSignedIn ? (
             <Badge
               variant="outline"
-              className="text-sm px-4 py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors"
+              className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors w-full sm:w-auto text-center"
               onClick={handleGoToProfile}
             >
-              <Github className="w-4 h-4 mr-2" />
+              <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               View Your Aura Dashboard
             </Badge>
           ) : (
             <SignInButton mode="modal">
               <Badge
                 variant="outline"
-                className="text-sm px-4 py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors"
+                className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors w-full sm:w-auto text-center"
               >
-                <Zap className="w-4 h-4 mr-2" />
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Join the Elite - Connect Your GitHub
               </Badge>
             </SignInButton>
@@ -255,38 +255,38 @@ export default function TopAuraUsers() {
         </div>
 
         {/* Stats */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="text-2xl font-bold text-primary mb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto px-4">
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
               {loading ? (
-                <RefreshCw className="w-6 h-6 animate-spin" />
+                <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
               ) : (
                 `${stats.totalAuraPoints.toLocaleString()}${
                   stats.totalAuraPoints === 0 ? "" : "+"
                 }`
               )}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Total Aura Points{" "}
               {monthYear ? `(${getMonthName(monthYear)})` : "This Month"}
             </div>
           </div>
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="text-2xl font-bold text-primary mb-2">
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
               {loading ? (
-                <RefreshCw className="w-6 h-6 animate-spin" />
+                <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
               ) : (
                 `${stats.totalParticipants.toLocaleString()}${
                   stats.totalParticipants === 0 ? "" : "+"
                 }`
               )}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Active Competitors
             </div>
           </div>
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="text-2xl font-bold text-primary mb-2">
+          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
               {(() => {
                 const now = new Date();
                 const nextMonth = new Date(
@@ -299,7 +299,7 @@ export default function TopAuraUsers() {
                 return `${daysLeft} days`;
               })()}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground">
               Until Next Reset
             </div>
           </div>
@@ -307,15 +307,15 @@ export default function TopAuraUsers() {
 
         {/* Error Message */}
         {error && (
-          <div className="mt-8 bg-red-900/20 border border-red-800 rounded-lg p-4 max-w-md mx-auto">
-            <p className="text-red-400 text-sm text-center">
+          <div className="mt-6 sm:mt-8 bg-red-900/20 border border-red-800 rounded-lg p-3 sm:p-4 max-w-md mx-auto">
+            <p className="text-xs sm:text-sm text-red-400 text-center">
               ⚠️ {error}
               <br />
               <button
                 onClick={fetchTopUsers}
-                className="text-primary hover:text-primary/80 underline mt-2 inline-flex items-center gap-1"
+                className="text-primary hover:text-primary/80 underline mt-2 inline-flex items-center gap-1 text-xs sm:text-sm"
               >
-                <RefreshCw className="w-3 h-3" />
+                <RefreshCw className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 Try again
               </button>
             </p>

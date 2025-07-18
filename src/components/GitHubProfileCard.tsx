@@ -382,8 +382,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   };
 
   return (
-    <div className="bg-black min-h-screen px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6 lg:px-8 lg:py-8 font-mona-sans transition-colors duration-300">
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl xl:max-w-7xl 2xl:max-w-8xl mx-auto pb-16 sm:pb-20 md:pb-24">
+    <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
+      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
         {/* Share Buttons - Only show for profile view */}
         {/* {currentView === "profile" && profile && (
           <div className="flex flex-col sm:flex-row justify-end mb-3 sm:mb-4 md:mb-6">
@@ -408,8 +408,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
           <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-3 sm:p-4 md:p-5 rounded-lg mb-4 sm:mb-6 border border-gray-700/50 mx-1 sm:mx-0">
-            <p className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-sm sm:text-base">
-              <span className="text-red-400 text-lg">⚠️</span>
+            <p className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm">
+              <span className="text-red-400 text-base sm:text-lg">⚠️</span>
               <span className="flex-1">{error}</span>
             </p>
           </div>
@@ -420,8 +420,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {/* Loading State */}
             {loading ? (
-              <div className="flex items-center justify-center w-full py-16 sm:py-20 md:py-24">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
+              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
+                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
               </div>
             ) : profile ? (
               <>
@@ -464,7 +464,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         )}
 
         {/* Leaderboard View */}
-        {currentView === "leaderboard" && (
+        {/* {currentView === "leaderboard" && (
           <div className="mt-4 sm:mt-6 md:mt-8">
             <Leaderboard
               currentUserId={user?.id}
@@ -472,20 +472,20 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
               contributions={contributions}
             />
           </div>
-        )}
+        )} */}
 
         {/* Badges View */}
-        {currentView === "badges" && isSignedIn && user?.id && (
+        {/* {currentView === "badges" && isSignedIn && user?.id && (
           <div className="mt-4 sm:mt-6 md:mt-8">
             <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Footer - Hide on badges view */}
       {currentView !== "badges" && (
-        <footer className="text-center fixed bottom-0 left-0 right-0 py-3 sm:py-4 px-2 sm:px-4 text-gray-300 bg-black/80 backdrop-blur-sm border-t border-gray-800/50">
-          <p className="text-xs sm:text-sm md:text-base max-w-screen-xl mx-auto">
+        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-black/80 backdrop-blur-sm border-t border-gray-800/50">
+          <p className="text-[10px] sm:text-xs md:text-sm max-w-screen-xl mx-auto text-center">
             Made with ❤️ by{" "}
             <a
               href="https://karandev.in"

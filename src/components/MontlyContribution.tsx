@@ -24,7 +24,6 @@ function MontlyContribution({
       monthlyData[monthName] += day.contributionCount;
     });
 
-    // Convert to array and sort by date
     return Object.entries(monthlyData)
       .map(([month, count]) => ({ month, count }))
       .sort((a, b) => {
@@ -32,19 +31,19 @@ function MontlyContribution({
         const dateB = new Date(b.month + " 1");
         return dateB.getTime() - dateA.getTime();
       })
-      .slice(0, 12); // Get last 12 months
+      .slice(0, 12);
   };
 
   const monthlyContributions = calculateMonthlyContributions();
 
   return (
-    <div className="mt-3 sm:mt-4 md:mt-6 flex flex-col gap-3 sm:gap-4 mx-1 sm:mx-0">
+    <div className="mt-3 sm:mt-4 md:mt-6 flex flex-col gap-2 sm:gap-3 md:gap-4 mx-1 sm:mx-0">
       {/* Total Contributions Card */}
       <div className="bg-[#161b21] backdrop-blur-xl rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-lg">
         <div className="text-center">
           <h3 className="text-base sm:text-lg md:text-xl font-semibold text-white">
             Total Contributions:{" "}
-            <span className="block sm:inline">
+            <span className="block sm:inline mt-1 sm:mt-0">
               {contributions.totalContributions.toLocaleString()}
             </span>
           </h3>
@@ -54,30 +53,32 @@ function MontlyContribution({
       {/* Monthly Breakdown Card */}
       <div className="bg-[#161b21] backdrop-blur-xl rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-lg">
         <div>
-          <h4 className="text-sm sm:text-base md:text-lg font-medium mb-3 sm:mb-4 text-[#e6edf3]">
+          <h4 className="text-sm sm:text-base md:text-lg font-medium mb-3 sm:mb-4 text-[#e6edf3] text-center sm:text-left">
             Monthly Breakdown{" "}
-            <span className="block sm:inline">(Last 12 Months)</span>
+            <span className="block sm:inline text-xs sm:text-sm text-[#7d8590] mt-1 sm:mt-0">
+              (Last 12 Months)
+            </span>
           </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-4 gap-2 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 sm:gap-3">
             {monthlyContributions.map(({ month, count }) => (
               <div
                 key={month}
-                className="p-2 sm:p-3 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:scale-105 transition-all touch-manipulation hover:bg-[#161b21]"
+                className="p-2 sm:p-3 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:scale-[1.02] transition-all touch-manipulation hover:bg-[#161b21] group"
               >
-                <div className="text-xs sm:text-sm font-medium mb-1 text-[#7d8590] truncate">
+                <div className="text-xs sm:text-sm font-medium mb-1 text-[#7d8590] truncate group-hover:text-[#e6edf3] transition-colors">
                   {month}
                 </div>
                 <div className="text-base sm:text-lg md:text-xl font-bold text-white truncate">
-                  {count}
+                  {count.toLocaleString()}
                 </div>
-                <div className="text-xs text-[#7d8590] truncate">
+                <div className="text-[10px] sm:text-xs text-[#7d8590] truncate mt-0.5 group-hover:text-[#e6edf3] transition-colors">
                   {count > 100
-                    ? "🔥 High"
+                    ? "🔥 High Activity"
                     : count > 50
-                    ? "⚡ Good"
+                    ? "⚡ Good Progress"
                     : count > 20
                     ? "📈 Active"
-                    : "💤 Low"}
+                    : "💤 Low Activity"}
                 </div>
               </div>
             ))}

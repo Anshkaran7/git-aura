@@ -72,88 +72,105 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-card border-t border-border relative overflow-hidden">
+    <footer className="bg-card border-t border-border relative overflow-hidden py-8 sm:py-12">
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-muted/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-0 right-1/4 w-72 h-72 bg-accent/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-muted/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-accent/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto  py-12 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Brand Section */}
-        <div className="flex flex-row items-center justify-between">
-          <div className="text-start mb-8">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="text-start w-full lg:w-auto">
             <div className="flex items-center justify-start gap-2 mb-4">
               <div className="p-2 rounded-lg bg-muted border border-border">
-                <Zap className="w-5 h-5 text-primary" />
+                <Zap className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg text-highlight">
+                <span className="font-bold text-base sm:text-lg text-highlight">
                   Git Aura
                 </span>
               </div>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-4 max-w-md mx-auto text-start">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 max-w-md text-start">
               Stop being a commit ghost and start building your developer street
               cred. Turn your green squares into actual flexing rights.
             </p>
-            <div className="flex items-center justify-start gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {loading ? (
                 <>
                   <Badge
                     variant="outline"
-                    className="text-xs border-border animate-pulse"
+                    className="text-xs border-border animate-pulse whitespace-nowrap"
                   >
                     Loading...
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="text-xs border-border animate-pulse"
+                    className="text-xs border-border animate-pulse whitespace-nowrap"
                   >
                     Loading...
                   </Badge>
                 </>
               ) : stats ? (
                 <>
-                  <Badge variant="outline" className="text-xs border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-border whitespace-nowrap"
+                  >
                     {formatNumber(stats.totalDevelopers)}+ Developers
                   </Badge>
-                  <Badge variant="outline" className="text-xs border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-border whitespace-nowrap"
+                  >
                     {formatNumber(stats.totalAuraPoints)}+ Aura Points
                   </Badge>
                 </>
               ) : (
                 <>
-                  <Badge variant="outline" className="text-xs border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-border whitespace-nowrap"
+                  >
                     10K+ Developers
                   </Badge>
-                  <Badge variant="outline" className="text-xs border-border">
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-border whitespace-nowrap"
+                  >
                     50M+ Aura Points
                   </Badge>
                 </>
               )}
             </div>
           </div>
-          <div className="text-center mb-8 p-6 rounded-xl bg-card border border-border">
-            <h3 className="text-xl font-bold mb-3">Ready to Stop Being Mid?</h3>
-            <p className="text-muted-foreground mb-4 max-w-2xl mx-auto text-sm">
+          <div className="text-start lg:text-center w-full lg:w-auto p-4 sm:p-6 rounded-xl bg-card border border-border">
+            <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">
+              Ready to Stop Being Mid?
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4 max-w-2xl mx-auto">
               Join hundreds of developers who've already discovered their true
               Git Aura. Warning: Results may cause excessive confidence in code
               reviews.
             </p>
-            <Button variant="default" size="lg" className="px-8">
-              <Github className="w-5 h-5 mr-2" />
+            <Button
+              variant="default"
+              size="default"
+              className="w-full sm:w-auto px-4 sm:px-8 py-2"
+            >
+              <Github className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
               Start Your Git Aura Journey
             </Button>
           </div>
         </div>
-        {/* Final CTA */}
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-border">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4 md:mb-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-6 mt-6 border-t border-border">
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-0 text-center sm:text-left">
             <span>Made with</span>
-            <Heart className="w-4 h-4 text-red-500 fill-current" />
+            <Heart className="w-3 sm:w-4 h-3 sm:h-4 text-red-500 fill-current" />
             <span>by Karan, for developers who want to flex</span>
           </div>
 

@@ -39,38 +39,41 @@ export const FeaturesSection = () => {
 
   return (
     <section
-      className="py-24 bg-background relative overflow-hidden"
+      className="py-12 sm:py-24 bg-background relative overflow-hidden"
       id="features"
     >
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-72 h-72 bg-muted/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 border-border text-primary">
+        <div className="text-center mb-8 sm:mb-16">
+          <Badge
+            variant="outline"
+            className="mb-4 border-border text-primary text-xs sm:text-sm"
+          >
             🔥 Core Features That Actually Matter
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Features Overview{" "}
             <span className="text-highlight">(The Good Stuff)</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             Stop being a commit ghost and start building your developer street
             cred with features that actually matter
           </p>
         </div>
 
         {/* Features Grid - Optimized for 4 features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
           {features.map((feature, index) => (
             <Card
               key={index}
               className={`
-                group relative p-6 hover:scale-105 transition-all duration-300 
+                group relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
                 border border-border bg-gradient-to-br ${feature.gradient}
                 hover:shadow-lg hover:shadow-primary/5
                 animate-in fade-in-50 slide-in-from-bottom-10
@@ -84,19 +87,19 @@ export const FeaturesSection = () => {
 
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
-                    <feature.icon className="w-6 h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                  <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
+                    <feature.icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <Badge variant="secondary" className="text-xs shrink-0">
                     {feature.badge}
                   </Badge>
                 </div>
 
-                <h3 className="text-xl font-semibold mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
+                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
                   {feature.title}
                 </h3>
 
-                <p className="text-muted-foreground leading-relaxed text-sm">
+                <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm">
                   {feature.description}
                 </p>
               </div>
@@ -105,13 +108,13 @@ export const FeaturesSection = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
-          <p className="text-muted-foreground mb-6">
+        <div className="text-center mt-8 sm:mt-16">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             Ready to discover if you're a coding legend or just another
             "console.log" warrior?
           </p>
-          <div className="inline-flex items-center gap-2 text-primary">
-            <Zap className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 text-primary text-sm sm:text-base">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="font-medium">Get roasted in under 30 seconds</span>
           </div>
         </div>

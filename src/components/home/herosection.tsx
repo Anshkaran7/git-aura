@@ -84,26 +84,24 @@ export const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-background overflow-hidden">
+    <section className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center bg-background overflow-hidden py-12 sm:py-0">
       <div className="absolute w-full h-full z-30 pointer-events-auto">
         <Squares
           speed={0.3}
-          squareSize={40}
-          direction="diagonal" // up, down, left, right, diagonal
+          squareSize={20}
+          direction="diagonal"
           borderColor="#ffffff15"
           hoverFillColor="#00ff25"
         />
       </div>
 
-      {/* Background Effects */}
-
-      <div className="container mx-auto px-6 text-center relative z-40 pointer-events-none inset-0">
+      <div className="container mx-auto px-4 sm:px-6 text-center relative z-40 pointer-events-none">
         {/* Main Content */}
         <div className="max-w-4xl mx-auto slide-up">
           {/* Badge */}
-          <div className="inline-flex items-center bg-muted/50 border-2 border-border rounded-full px-4 py-2 mb-4">
-            <Zap className="w-4 h-4 text-white" />
-            <span className="text-sm font-medium z-50 ">
+          <div className="inline-flex items-center bg-muted/50 border-2 border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 text-xs sm:text-sm">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            <span className="font-medium z-50 ml-2">
               {isSignedIn
                 ? `Welcome back, ${user?.firstName || "Developer"}! 🚀`
                 : loading
@@ -117,7 +115,7 @@ export const HeroSection = () => {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight z-50">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight z-50">
             {isSignedIn ? (
               <>
                 Ready to Level Up Your{" "}
@@ -126,14 +124,15 @@ export const HeroSection = () => {
             ) : (
               <>
                 Your GitHub Contributions Are{" "}
-                <span className="text-highlight">Weak</span>?<br />
+                <span className="text-highlight">Weak</span>?
+                <br className="hidden sm:block" />
                 Let's Fix That <span className="text-highlight">Aura</span> 💀
               </>
             )}
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4">
             {isSignedIn ? (
               <>
                 Your GitHub profile is connected! Time to see your developer
@@ -161,12 +160,12 @@ export const HeroSection = () => {
           </p>
 
           {/* Stats Row */}
-          <div className="flex flex-wrap justify-center gap-8 mb-12">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8 sm:mb-12 text-sm sm:text-base">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Github className="w-5 h-5 text-primary" />
+              <Github className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               <span className="font-semibold text-foreground">
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin inline" />
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
                 ) : stats.totalDevelopers > 0 ? (
                   `${formatNumber(stats.totalDevelopers)}+`
                 ) : (
@@ -176,10 +175,10 @@ export const HeroSection = () => {
               Developers
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Trophy className="w-5 h-5 text-primary" />
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               <span className="font-semibold text-foreground">
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin inline" />
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
                 ) : stats.totalAuraPoints > 0 ? (
                   `${formatNumber(stats.totalAuraPoints)}+`
                 ) : (
@@ -189,10 +188,10 @@ export const HeroSection = () => {
               Aura Points
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Star className="w-5 h-5 text-primary" />
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               <span className="font-semibold text-foreground">
                 {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin inline" />
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
                 ) : stats.totalBadges > 0 ? (
                   `${formatNumber(stats.totalBadges)}+`
                 ) : (
@@ -204,56 +203,51 @@ export const HeroSection = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col z-50 sm:flex-row gap-4 justify-center items-center pointer-events-auto">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pointer-events-auto px-4">
             {isSignedIn ? (
               <>
-                {/* Go to Dashboard */}
                 <Button
                   variant="default"
                   size="lg"
-                  className="text-lg px-8 py-6 w-full cursor-pointer sm:w-auto cursor-pointer"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleGoToProfile}
                 >
-                  <Github className="w-5 h-5 mr-2" />
+                  <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   View My Aura Dashboard
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
 
-                {/* Demo Button */}
                 <Button
                   variant="secondary"
                   size="lg"
-                  style={{ cursor: "pointer" }}
-                  className="text-lg px-8 py-6 w-full sm:w-auto cursor-pointer"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleShowDemoProfile}
                 >
-                  <Trophy className="w-5 h-5 mr-2" />
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   See Pro Profile Example
                 </Button>
               </>
             ) : (
               <>
-                {/* Connect GitHub */}
                 <SignInButton mode="modal">
                   <Button
                     variant="default"
                     size="lg"
-                    className="text-lg px-8 py-6 w-full sm:w-auto group cursor-pointer"
+                    className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto group cursor-pointer"
                   >
-                    <Github className="w-5 h-5 mr-2 cursor-pointer group-hover:rotate-12 transition-transform" />
+                    <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2 cursor-pointer group-hover:rotate-12 transition-transform" />
                     Connect GitHub & Get Roasted
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </SignInButton>
 
-                {/* Demo Button */}
                 <Button
                   variant="secondary"
                   size="lg"
-                  className="text-lg px-8 py-6 w-full cursor-pointer sm:w-auto"
+                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleShowDemoProfile}
                 >
-                  <Trophy className="w-5 h-5 mr-2" />
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Show Me a Pro Profile
                 </Button>
               </>
@@ -261,7 +255,7 @@ export const HeroSection = () => {
           </div>
 
           {/* Social Proof */}
-          <p className="text-sm text-muted-foreground mt-8">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-6 sm:mt-8 px-4">
             {isSignedIn ? (
               <>
                 🎉 You're now part of the GitHub Aura elite!
@@ -283,21 +277,21 @@ export const HeroSection = () => {
         </div>
       </div>
 
-      {/* Floating Elements */}
-      <div className="absolute top-20 right-20 floating">
-        <div className="w-3 h-3 bg-primary rounded-full shadow-card"></div>
+      {/* Floating Elements - Adjusted for mobile */}
+      <div className="absolute top-10 sm:top-20 right-10 sm:right-20 floating">
+        <div className="w-2 sm:w-3 h-2 sm:h-3 bg-primary rounded-full shadow-card"></div>
       </div>
       <div
-        className="absolute bottom-32 left-20 floating"
+        className="absolute bottom-16 sm:bottom-32 left-10 sm:left-20 floating"
         style={{ animationDelay: "1s" }}
       >
-        <div className="w-2 h-2 bg-accent rounded-full shadow-card"></div>
+        <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-accent rounded-full shadow-card"></div>
       </div>
       <div
-        className="absolute top-1/2 right-32 floating"
+        className="absolute top-1/2 right-16 sm:right-32 floating"
         style={{ animationDelay: "2s" }}
       >
-        <div className="w-4 h-4 bg-muted rounded-full shadow-card"></div>
+        <div className="w-3 sm:w-4 h-3 sm:h-4 bg-muted rounded-full shadow-card"></div>
       </div>
     </section>
   );

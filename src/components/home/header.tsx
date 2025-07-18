@@ -19,11 +19,12 @@ export const Header = ({
   const { isSignedIn, user } = useUser();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      setIsScrolled(scrollPosition > 50); // Change after 50px scroll
+      setIsScrolled(scrollPosition > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -40,15 +41,15 @@ export const Header = ({
         return;
       }
     }
-    // Fallback to profile page if no GitHub username found
     router.push("/profile");
   };
 
   return (
     <header
-      className={`fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 backdrop-blur-lg transition-all duration-500 ease-linear ${
+      className={`fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 
+      backdrop-blur-lg transition-all duration-500 ease-linear ${
         isScrolled
-          ? "w-[80%] rounded-2xl mt-8 border border-border"
+          ? "w-[90%] md:w-[80%] rounded-2xl mt-8 border border-border"
           : "w-full border-b border-border"
       }`}
     >
@@ -57,72 +58,56 @@ export const Header = ({
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="p-2 rounded-lg bg-muted border border-border">
-              <Zap className="w-5 h-5 text-primary" />
+            <div className="p-1.5 sm:p-2 rounded-lg bg-muted border border-border">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-highlight">Git Aura</span>
-              {/* <span className="text-xs text-muted-foreground -mt-1">
-                Checker
-              </span> */}
+              <span className="font-bold text-base sm:text-lg text-highlight">
+                Git Aura
+              </span>
             </div>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Navigation - Desktop */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             {leaderboard && (
               <>
                 <a
                   href="#features"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Features
                 </a>
                 <a
                   href="#how-it-works"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   How It Works
                 </a>
               </>
             )}
 
-            {isSignedIn &&
-              (profile ? (
-                <a
-                  href={`/${user?.username}/leaderboard`}
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Leaderboard
-                </a>
-              ) : (
-                <a
-                  href="/leaderboard"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Leaderboard
-                </a>
-              ))}
-
-            {/* <a
-              href="#faq"
-              className="text-muted-foreground hover:text-primary transition-colors"
+            {/* {isSignedIn && ( */}
+            <a
+              href={profile ? `/${user?.username}/leaderboard` : "/leaderboard"}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
-              FAQ
-            </a> */}
+              Leaderboard
+            </a>
+            {/* )} */}
           </nav>
 
           {/* CTA Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isSignedIn ? (
               <>
                 {/* User Profile Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex items-center gap-2"
+                  className="hidden sm:flex items-center gap-2 h-8 px-2 sm:px-3"
                   onClick={handleGoToProfile}
                 >
                   {user?.imageUrl ? (
@@ -134,7 +119,7 @@ export const Header = ({
                   ) : (
                     <User className="w-4 h-4" />
                   )}
-                  <span className="hidden md:inline">
+                  <span className="hidden md:inline text-sm">
                     {user?.firstName || "Profile"}
                   </span>
                 </Button>
@@ -145,15 +130,21 @@ export const Header = ({
                     variant="default"
                     size="sm"
                     onClick={handleGoToProfile}
+                    className="h-8 px-3 text-sm"
                   >
                     <Github className="w-4 h-4 mr-2" />
-                    Dashboard
+                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="sm:hidden">View</span>
                   </Button>
                 )}
 
                 {/* Sign Out */}
                 <SignOutButton>
-                  <Button variant="ghost" size="sm" className="hidden md:flex">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:flex h-8 px-3 text-sm"
+                  >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </Button>
@@ -161,29 +152,74 @@ export const Header = ({
               </>
             ) : (
               <>
-                {/* Sign In Button */}
-                {/* <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm" className="hidden sm:flex">
-                    Sign In
-                  </Button>
-                </SignInButton> */}
-
                 {/* Connect GitHub Button */}
                 <SignInButton mode="modal">
-                  <Button variant="default" size="sm">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-8 px-3 text-sm whitespace-nowrap"
+                  >
                     <Github className="w-4 h-4 mr-2" />
-                    Connect GitHub
+                    <span className="hidden sm:inline">Connect GitHub</span>
+                    <span className="sm:hidden">Connect</span>
                   </Button>
                 </SignInButton>
               </>
             )}
 
-            {/* Mobile Menu */}
-            <Button variant="ghost" size="sm" className="md:hidden">
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden h-8 w-8 px-0"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
               <Menu className="w-4 h-4" />
             </Button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-border">
+            <nav className="flex flex-col gap-2">
+              {leaderboard && (
+                <>
+                  <a
+                    href="#features"
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                  >
+                    Features
+                  </a>
+                  <a
+                    href="#how-it-works"
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                  >
+                    How It Works
+                  </a>
+                </>
+              )}
+              {isSignedIn && (
+                <a
+                  href={
+                    profile ? `/${user?.username}/leaderboard` : "/leaderboard"
+                  }
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  Leaderboard
+                </a>
+              )}
+              {isSignedIn && (
+                <SignOutButton>
+                  <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
+                    <LogOut className="w-4 h-4 inline mr-2" />
+                    Sign Out
+                  </button>
+                </SignOutButton>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

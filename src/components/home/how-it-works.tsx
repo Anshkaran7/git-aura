@@ -51,7 +51,7 @@ export const HowItWorks = () => {
 
   return (
     <section
-      className="py-24 bg-card relative overflow-hidden"
+      className="py-12 sm:py-24 bg-card relative overflow-hidden"
       id="how-it-works"
     >
       {/* Background Grid */}
@@ -63,28 +63,31 @@ export const HowItWorks = () => {
             linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
           `,
-            backgroundSize: "50px 50px",
+            backgroundSize: "25px 25px",
           }}
         ></div>
       </div>
 
-      <div className="container mx-auto px-6 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-4 border-border text-primary">
+        <div className="text-center mb-8 sm:mb-16">
+          <Badge
+            variant="outline"
+            className="mb-4 border-border text-primary text-xs sm:text-sm"
+          >
             ⚡ Simple 3-Step Process (No Cap)
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             How It Works <span className="text-highlight">(The Magic)</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             From zero to hero in three simple steps. Even a junior developer
             could figure this out.
           </p>
         </div>
 
         {/* Steps */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8 sm:mb-16">
           {steps.map((step, index) => (
             <div key={index} className="relative">
               {/* Connection Line */}
@@ -94,37 +97,45 @@ export const HowItWorks = () => {
                 </div>
               )}
 
-              <Card className="card-hover p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border">
+              <Card className="card-hover p-4 sm:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border">
                 {/* Step Number */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="text-6xl font-bold  text-primary">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <div className="text-4xl sm:text-6xl font-bold text-primary">
                     {step.number}
                   </div>
                   <div
-                    className={`p-4 rounded-xl bg-muted border border-border text-primary`}
+                    className={`p-3 sm:p-4 rounded-xl bg-muted border border-border text-primary`}
                   >
-                    <step.icon className={`w-8 h-8 text-primary`} />
+                    <step.icon
+                      className={`w-6 h-6 sm:w-8 sm:h-8 text-primary`}
+                    />
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="space-y-4">
-                  <h3 className="text-2xl font-bold text-foreground">
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="text-xl sm:text-2xl font-bold text-foreground">
                     {step.title}
                   </h3>
 
-                  <p className={`font-medium text-primary`}>{step.subtitle}</p>
+                  <p
+                    className={`font-medium text-sm sm:text-base text-primary`}
+                  >
+                    {step.subtitle}
+                  </p>
 
-                  <p className="text-muted-foreground">{step.description}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    {step.description}
+                  </p>
 
                   {/* Details List */}
-                  <ul className="space-y-2 pt-4">
+                  <ul className="space-y-2 pt-3 sm:pt-4">
                     {step.details.map((detail, detailIndex) => (
                       <li
                         key={detailIndex}
-                        className="flex items-center gap-2 text-sm text-muted-foreground"
+                        className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-muted"></div>
+                        <div className="w-1 sm:w-1.5 h-1 sm:h-1.5 rounded-full bg-muted"></div>
                         {detail}
                       </li>
                     ))}
@@ -136,23 +147,31 @@ export const HowItWorks = () => {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center">
-          <div className="max-w-2xl mx-auto mb-8">
-            <h3 className="text-2xl font-bold mb-4">
+        <div className="text-center px-4">
+          <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
               Ready to find out if you're actually good or just think you are?
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
               Join the ranks of developers who stopped pretending and started
               proving their worth.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="default" size="lg" className="px-8">
-              <Github className="w-5 h-5 mr-2" />
+            <Button
+              variant="default"
+              size="lg"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
+            >
+              <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Start Your Aura Journey
             </Button>
-            <Button variant="secondary" size="lg" className="px-8">
+            <Button
+              variant="secondary"
+              size="lg"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
+            >
               I'm Scared, Let Me Browse First
             </Button>
           </div>
