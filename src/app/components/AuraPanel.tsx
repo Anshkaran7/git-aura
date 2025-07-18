@@ -79,44 +79,11 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       activeDays: activeDays,
     });
 
-    // Save monthly aura to database if user is signed in
-    if (isSignedIn && user?.id) {
-      await saveMonthlyAura(
-        currentMonth,
-        monthlyAura,
-        monthlyContributions,
-        activeDays
-      );
-    }
+    // Monthly aura is now automatically saved in the background via the profile API
+    // No need to make separate API calls here
   };
 
-  const saveMonthlyAura = async (
-    monthYear: string,
-    monthlyAura: number,
-    contributionsCount: number,
-    activeDays: number
-  ) => {
-    try {
-      const response = await fetch("/api/save-monthly-aura", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          monthYear,
-          contributionsCount,
-          activeDays,
-          allContributions: contributions.contributionDays, // Send all contributions for total aura calculation
-        }),
-      });
 
-      if (!response.ok) {
-        console.error("Failed to save monthly aura");
-      }
-    } catch (error) {
-      console.error("Error saving monthly aura:", error);
-    }
-  };
 
   const navigateMonth = (direction: "prev" | "next") => {
     const [year, month] = currentMonth.split("-").map(Number);

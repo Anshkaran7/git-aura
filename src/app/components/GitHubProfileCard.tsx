@@ -61,15 +61,15 @@ const GitHubProfileCard = () => {
 
     if (shareId) {
       loadSharedProfile(shareId);
-    } else if (urlUsername) {
+    } else if (urlUsername && urlUsername !== searchedUsername && !loading) {
       setUsername(urlUsername);
       fetchProfile(urlUsername);
     }
   }, [searchParams]);
 
-  // Auto-load user's own profile when they sign in
+  // Auto-load user's own profile when they sign in (only if no URL username exists)
   useEffect(() => {
-    if (isSignedIn && user) {
+    if (isSignedIn && user && !searchParams.get("username") && !searchParams.get("share")) {
       let githubUsername = null;
 
       // Check externalAccounts for GitHub
@@ -82,12 +82,12 @@ const GitHubProfileCard = () => {
         }
       }
 
-      if (githubUsername && !profile) {
+      if (githubUsername && !profile && githubUsername !== searchedUsername && !loading) {
         setUsername(githubUsername);
         fetchProfile(githubUsername);
       }
     }
-  }, [isSignedIn, user, profile]);
+  }, [isSignedIn, user, searchParams]);
 
   const loadSharedProfile = async (shareId: string) => {
     try {
@@ -137,17 +137,14 @@ const GitHubProfileCard = () => {
           formData.append("image", blob);
           formData.append("name", `${searchedUsername}-github-profile`);
 
-          const imgbbResponse = await fetch(
-            `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
+          const uploadResponse = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
 
-          if (imgbbResponse.ok) {
-            const imgbbData = await imgbbResponse.json();
-            imageUrl = imgbbData.data.url;
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            imageUrl = uploadData.url;
           }
         } catch (uploadError) {
           console.error("Error uploading image:", uploadError);
@@ -196,109 +193,47 @@ const GitHubProfileCard = () => {
 
   const fetchProfile = async (username: string) => {
     if (!username.trim()) return;
+    
+    // Prevent duplicate calls for the same username or if already loading
+    if (loading || searchedUsername === username.trim()) {
+      console.log('Skipping duplicate fetchProfile call for:', username);
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setSearchedUsername(username);
 
-    const headers = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(process.env.NEXT_PUBLIC_GITHUB_TOKEN && {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}`,
-      }),
-    };
-
     try {
-      // Fetch user profile
-      const profileResponse = await fetch(
-        `https://api.github.com/users/${username}`,
-        { headers }
-      );
-      if (!profileResponse.ok) {
-        const errorData = await profileResponse.json();
-        throw new Error(errorData.message || "User not found");
+      // Fetch user profile and contributions in a single call
+      // Include userId for authenticated users to enable background aura saving
+      const url = new URL(`/api/github/profile/${username}`, window.location.origin);
+      if (isSignedIn && user?.id) {
+        url.searchParams.set('userId', user.id);
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch GitHub data");
       }
 
-      const profileData = await profileResponse.json();
+      const { profile: profileData, contributions: contributionsData } = await response.json();
+      
       setProfile(profileData);
+      setContributions(contributionsData);
 
       // Update URL with username
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("username", username);
       window.history.pushState({}, "", newUrl);
 
-      // Fetch contributions
-      const today = new Date();
-      const lastYear = new Date(today);
-      lastYear.setFullYear(today.getFullYear() - 1);
-      lastYear.setDate(lastYear.getDate() + 1);
-
-      const graphqlQuery = {
-        query: `query($userName:String!) { 
-          user(login: $userName){
-            contributionsCollection(from: "${lastYear.toISOString()}", to: "${today.toISOString()}") {
-              contributionCalendar {
-                totalContributions
-                weeks {
-                  contributionDays {
-                    contributionCount
-                    date
-                  }
-                }
-              }
-            }
-          }
-        }`,
-        variables: { userName: username },
-      };
-
-      const contributionsResponse = await fetch(
-        "https://api.github.com/graphql",
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify(graphqlQuery),
-        }
-      );
-
-      if (!contributionsResponse.ok) {
-        throw new Error("Failed to fetch contributions");
-      }
-
-      const contributionsData = await contributionsResponse.json();
-
-      if (contributionsData.errors) {
-        throw new Error(contributionsData.errors[0].message);
-      }
-
-      if (!contributionsData.data?.user?.contributionsCollection) {
-        throw new Error(
-          "No contributions data found. This might be due to API rate limits or missing GitHub token."
-        );
-      }
-
-      const calendar =
-        contributionsData.data.user.contributionsCollection
-          .contributionCalendar;
-
-      const allContributions = calendar.weeks.flatMap(
-        (week: { contributionDays: ContributionDay[] }) => week.contributionDays
-      );
-
-      const contributionsObj = {
-        totalContributions: calendar.totalContributions,
-        contributionDays: allContributions,
-      };
-
-      setContributions(contributionsObj);
-
       // Calculate aura
       if (isSignedIn && user?.id) {
-        await calculateAndSaveAura(profileData, allContributions);
+        await calculateAndSaveAura(profileData, contributionsData.contributionDays);
       } else {
-        const localAura = calculateTotalAura(allContributions);
-        const streak = calculateStreak(allContributions);
+        const localAura = calculateTotalAura(contributionsData.contributionDays);
+        const streak = calculateStreak(contributionsData.contributionDays);
         setUserAura(localAura);
         setCurrentStreak(streak);
       }
@@ -346,7 +281,7 @@ const GitHubProfileCard = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (username.trim() && username !== searchedUsername) {
+    if (username.trim() && username.trim() !== searchedUsername && !loading) {
       const params = new URLSearchParams();
       params.set("username", username.trim());
 
@@ -496,8 +431,10 @@ const GitHubProfileCard = () => {
                 <EmptyState
                   selectedTheme={selectedTheme}
                   onLoadProfile={(username) => {
-                    setUsername(username);
-                    fetchProfile(username);
+                    if (username !== searchedUsername && !loading) {
+                      setUsername(username);
+                      fetchProfile(username);
+                    }
                   }}
                 />
               )

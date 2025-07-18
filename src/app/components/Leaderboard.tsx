@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy,
@@ -12,18 +12,12 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
 import {
   formatNumber,
   getBadgeColor,
   getCurrentMonthYear,
 } from "../../lib/utils";
 import { GitHubContributions } from "./types";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
 
 interface User {
   id: string;
@@ -83,6 +77,7 @@ const Leaderboard = ({
 
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
+  const requestInProgress = useRef(false);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -124,130 +119,51 @@ const Leaderboard = ({
     });
   };
   const fetchLeaderboardData = async () => {
+    // Prevent duplicate calls
+    if (requestInProgress.current) {
+      return;
+    }
+
+    requestInProgress.current = true;
     setLoading(true);
     try {
-      let query;
-      let userRankQuery;
-
+      let response;
+      
       if (view === "monthly") {
-        // Fetch monthly leaderboard - show monthly aura only
-        const { data: monthlyData } = await supabase
-          .from("monthly_leaderboards")
-          .select(
-            `
-            rank,
-            total_aura,
-            contributions_count,
-            users!inner(
-              id,
-              display_name,
-              github_username,
-              avatar_url,
-              total_aura,
-              current_streak
-            )
-          `
-          )
-          .eq("month_year", currentMonth)
-          .order("rank", { ascending: true })
-          .limit(100);
-
-        query = monthlyData;
-
-        // Get current user's rank for this month
-        if (currentUserId) {
-          const { data: userRankData } = await supabase
-            .from("monthly_leaderboards")
-            .select("rank")
-            .eq("month_year", currentMonth)
-            .eq("user_id", currentUserId)
-            .single();
-
-          setUserRank(userRankData?.rank || null);
-        }
-      } else {
-        // Fetch all-time leaderboard - show total aura
-        const { data: alltimeData } = await supabase
-          .from("global_leaderboard")
-          .select(
-            `
-            rank,
-            total_aura,
-            users!inner(
-              id,
-              display_name,
-              github_username,
-              avatar_url,
-              current_streak
-            )
-          `
-          )
-          .order("rank", { ascending: true })
-          .limit(100);
-
-        query = alltimeData;
-
-        // Get current user's all-time rank
-        if (currentUserId) {
-          const { data: userRankData } = await supabase
-            .from("global_leaderboard")
-            .select("rank")
-            .eq("user_id", currentUserId)
-            .single();
-
-          setUserRank(userRankData?.rank || null);
-        }
-      }
-
-      if (query) {
-        // Fetch badges for each user
-        const userIds = query.map((entry: any) => entry.users.id);
-        const { data: badgesData } = await supabase
-          .from("user_badges")
-          .select(
-            `
-            user_id,
-            month_year,
-            rank,
-            badges!inner(
-              id,
-              name,
-              description,
-              icon,
-              color,
-              rarity
-            )
-          `
-          )
-          .in("user_id", userIds);
-
-        // Transform data
-        const transformedData: LeaderboardEntry[] = query.map((entry: any) => {
-          const userBadges =
-            badgesData?.filter(
-              (badge: any) => badge.user_id === entry.users.id
-            ) || [];
-
-          return {
-            rank: entry.rank,
-            user: entry.users,
-            aura: entry.total_aura || 0,
-            contributions:
-              view === "monthly" ? entry.contributions_count : undefined,
-            badges: userBadges.map((ub: any) => ({
-              ...ub.badges,
-              month_year: ub.month_year,
-              rank: ub.rank,
-            })),
-          };
+        // Fetch monthly leaderboard via API
+        const params = new URLSearchParams({
+          monthYear: currentMonth,
+          ...(currentUserId && { userId: currentUserId }),
         });
-
-        setLeaderboardData(transformedData);
+        
+        response = await fetch(`/api/leaderboard/monthly?${params}`);
+      } else {
+        // Fetch all-time leaderboard via API
+        const params = new URLSearchParams({
+          ...(currentUserId && { userId: currentUserId }),
+        });
+        
+        response = await fetch(`/api/leaderboard/alltime?${params}`);
       }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setLeaderboardData(data.leaderboard || []);
+      setUserRank(data.userRank || null);
+
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
     } finally {
       setLoading(false);
+      requestInProgress.current = false;
     }
   };
 

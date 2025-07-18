@@ -1,0 +1,114 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+);
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    const limit = parseInt(searchParams.get("limit") || "100");
+
+    // Fetch all-time leaderboard data
+    const { data: alltimeData, error: alltimeError } = await supabaseAdmin
+      .from("global_leaderboard")
+      .select(
+        `
+        rank,
+        total_aura,
+        users!inner(
+          id,
+          display_name,
+          github_username,
+          avatar_url,
+          current_streak
+        )
+      `
+      )
+      .order("rank", { ascending: true })
+      .limit(limit);
+
+    if (alltimeError) {
+      console.error("Error fetching all-time leaderboard:", alltimeError);
+      return NextResponse.json(
+        { error: "Failed to fetch all-time leaderboard" },
+        { status: 500 }
+      );
+    }
+
+    // Get user rank if userId is provided
+    let userRank = null;
+    if (userId) {
+      const { data: userRankData, error: rankError } = await supabaseAdmin
+        .from("global_leaderboard")
+        .select("rank")
+        .eq("user_id", userId)
+        .single();
+
+      if (!rankError && userRankData) {
+        userRank = userRankData.rank;
+      }
+    }
+
+    // Fetch badges for users in the leaderboard
+    let badges: any[] = [];
+    if (alltimeData && alltimeData.length > 0) {
+      const userIds = alltimeData.map((entry: any) => entry.users.id);
+      const { data: badgesData, error: badgesError } = await supabaseAdmin
+        .from("user_badges")
+        .select(
+          `
+          user_id,
+          month_year,
+          rank,
+          badges!inner(
+            id,
+            name,
+            description,
+            icon,
+            color,
+            rarity
+          )
+        `
+        )
+        .in("user_id", userIds);
+
+      if (!badgesError && badgesData) {
+        badges = badgesData;
+      }
+    }
+
+    // Transform the data to match the frontend expectations
+    const transformedData = alltimeData?.map((entry: any) => {
+      const userBadges = badges.filter(
+        (badge: any) => badge.user_id === entry.users.id
+      );
+
+      return {
+        rank: entry.rank,
+        user: entry.users,
+        aura: entry.total_aura,
+        badges: userBadges.map((ub: any) => ({
+          ...ub.badges,
+          month_year: ub.month_year,
+          rank: ub.rank,
+        })),
+      };
+    }) || [];
+
+    return NextResponse.json({
+      leaderboard: transformedData,
+      userRank,
+    });
+
+  } catch (error) {
+    console.error("Error in all-time leaderboard API:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+} 
