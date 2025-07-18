@@ -169,7 +169,6 @@ function OrganizationStructuredData() {
     />
   );
 }
-
 export default function RootLayout({
   children,
 }: Readonly<{

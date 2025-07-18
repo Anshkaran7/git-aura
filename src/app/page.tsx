@@ -44,8 +44,7 @@ export async function generateMetadata({
 
   // Base URL for canonical and OG URLs
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    "https://git-aura.karandev.in";
+    process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
 
   // Enhanced shared profile metadata
   if (shareId && !username) {
@@ -421,7 +420,7 @@ export default async function Page({ searchParams }: PageProps) {
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400">
-                Loading GitHub profile...
+                Loading GitHub profile....
               </p>
             </div>
           </div>
