@@ -5,8 +5,8 @@ import { useUser } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { createClient } from "@supabase/supabase-js";
 import { nanoid } from "nanoid";
-import { saveUserAura, calculateTotalAura } from "../../lib/aura";
-import { calculateStreak } from "../../lib/utils";
+import { saveUserAura, calculateTotalAura } from "@/lib/aura";
+import { calculateStreak } from "@/lib/utils";
 import Leaderboard from "./Leaderboard";
 import BadgeDisplay from "./BadgeDisplay";
 import Header from "./Header";
@@ -69,7 +69,12 @@ const GitHubProfileCard = () => {
 
   // Auto-load user's own profile when they sign in (only if no URL username exists)
   useEffect(() => {
-    if (isSignedIn && user && !searchParams.get("username") && !searchParams.get("share")) {
+    if (
+      isSignedIn &&
+      user &&
+      !searchParams.get("username") &&
+      !searchParams.get("share")
+    ) {
       let githubUsername = null;
 
       // Check externalAccounts for GitHub
@@ -82,7 +87,12 @@ const GitHubProfileCard = () => {
         }
       }
 
-      if (githubUsername && !profile && githubUsername !== searchedUsername && !loading) {
+      if (
+        githubUsername &&
+        !profile &&
+        githubUsername !== searchedUsername &&
+        !loading
+      ) {
         setUsername(githubUsername);
         fetchProfile(githubUsername);
       }
@@ -193,10 +203,10 @@ const GitHubProfileCard = () => {
 
   const fetchProfile = async (username: string) => {
     if (!username.trim()) return;
-    
+
     // Prevent duplicate calls for the same username or if already loading
     if (loading || searchedUsername === username.trim()) {
-      console.log('Skipping duplicate fetchProfile call for:', username);
+      console.log("Skipping duplicate fetchProfile call for:", username);
       return;
     }
 
@@ -207,19 +217,23 @@ const GitHubProfileCard = () => {
     try {
       // Fetch user profile and contributions in a single call
       // Include userId for authenticated users to enable background aura saving
-      const url = new URL(`/api/github/profile/${username}`, window.location.origin);
+      const url = new URL(
+        `/api/github/profile/${username}`,
+        window.location.origin
+      );
       if (isSignedIn && user?.id) {
-        url.searchParams.set('userId', user.id);
+        url.searchParams.set("userId", user.id);
       }
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch GitHub data");
       }
 
-      const { profile: profileData, contributions: contributionsData } = await response.json();
-      
+      const { profile: profileData, contributions: contributionsData } =
+        await response.json();
+
       setProfile(profileData);
       setContributions(contributionsData);
 
@@ -230,9 +244,14 @@ const GitHubProfileCard = () => {
 
       // Calculate aura
       if (isSignedIn && user?.id) {
-        await calculateAndSaveAura(profileData, contributionsData.contributionDays);
+        await calculateAndSaveAura(
+          profileData,
+          contributionsData.contributionDays
+        );
       } else {
-        const localAura = calculateTotalAura(contributionsData.contributionDays);
+        const localAura = calculateTotalAura(
+          contributionsData.contributionDays
+        );
         const streak = calculateStreak(contributionsData.contributionDays);
         setUserAura(localAura);
         setCurrentStreak(streak);

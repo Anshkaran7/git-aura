@@ -12,11 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import {
-  formatNumber,
-  getBadgeColor,
-  getCurrentMonthYear,
-} from "../../lib/utils";
+import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils";
 import { GitHubContributions } from "./types";
 
 interface User {
@@ -128,21 +124,21 @@ const Leaderboard = ({
     setLoading(true);
     try {
       let response;
-      
+
       if (view === "monthly") {
         // Fetch monthly leaderboard via API
         const params = new URLSearchParams({
           monthYear: currentMonth,
           ...(currentUserId && { userId: currentUserId }),
         });
-        
+
         response = await fetch(`/api/leaderboard/monthly?${params}`);
       } else {
         // Fetch all-time leaderboard via API
         const params = new URLSearchParams({
           ...(currentUserId && { userId: currentUserId }),
         });
-        
+
         response = await fetch(`/api/leaderboard/alltime?${params}`);
       }
 
@@ -151,14 +147,13 @@ const Leaderboard = ({
       }
 
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
 
       setLeaderboardData(data.leaderboard || []);
       setUserRank(data.userRank || null);
-
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
     } finally {
@@ -404,9 +399,11 @@ const Leaderboard = ({
                   <div className="flex items-center gap-4">
                     {/* Badges */}
                     <div className="flex items-center gap-1">
-                      {entry.badges.slice(0, 3).map((badge) => (
+                      {entry.badges.slice(0, 3).map((badge, index) => (
                         <div
-                          key={`${badge.id}-${badge.month_year || ""}-${badge.rank || ""}`}
+                          key={`${entry.user.id}-${badge.id}-${
+                            badge.month_year || "no-month"
+                          }-${badge.rank || "no-rank"}-${index}`}
                           className={`relative group cursor-pointer`}
                           title={`${badge.name}: ${badge.description}`}
                         >
@@ -424,19 +421,6 @@ const Leaderboard = ({
                           )}
                         </div>
                       ))}
-                      {entry.badges.length > 3 && (
-                        <div
-                          className={`w-8 h-8 rounded-full ${
-                            selectedTheme.name === "Light"
-                              ? "bg-gray-200"
-                              : "bg-gray-700"
-                          } flex items-center justify-center text-xs font-medium ${
-                            selectedTheme.text
-                          }`}
-                        >
-                          +{entry.badges.length - 3}
-                        </div>
-                      )}
                     </div>
 
                     {/* Stats */}

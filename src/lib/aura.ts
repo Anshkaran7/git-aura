@@ -285,9 +285,6 @@ async function checkAndAwardBadges(
   contributionDays: ContributionDay[]
 ) {
   const monthYear = getCurrentMonthYear();
-  const monthlyContributions = contributionDays
-    .filter((day) => day.date.startsWith(monthYear))
-    .reduce((sum, day) => sum + day.contributionCount, 0);
 
   // Get all available badges
   const { data: badges } = await supabaseAdmin
@@ -313,15 +310,6 @@ async function checkAndAwardBadges(
 
     // Check criteria
     if (criteria.total_aura && totalAura >= criteria.total_aura) {
-      shouldAward = true;
-    }
-    if (criteria.streak && currentStreak >= criteria.streak) {
-      shouldAward = true;
-    }
-    if (
-      criteria.monthly_contributions &&
-      monthlyContributions >= criteria.monthly_contributions
-    ) {
       shouldAward = true;
     }
 

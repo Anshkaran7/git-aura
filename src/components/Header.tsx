@@ -4,7 +4,7 @@ import { useUser, SignInButton, UserButton } from "@clerk/nextjs";
 import { Search, Trophy, Target, LogIn } from "lucide-react";
 import { Theme, ViewType } from "./types";
 import { themes } from "./themes";
-import { formatNumber, getAuraStatus } from "../../lib/utils";
+import { formatNumber, getAuraStatus } from "@/lib/utils";
 
 interface HeaderProps {
   selectedTheme: Theme;

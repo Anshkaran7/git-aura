@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import GitHubProfileCard from "./components/GitHubProfileCard";
+import GitHubProfileCard from "@/components/GitHubProfileCard";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

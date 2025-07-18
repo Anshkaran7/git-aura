@@ -16,7 +16,7 @@ import {
   getAuraStatus,
   getStreakMessage,
   getCurrentMonthYear,
-} from "../../lib/utils";
+} from "@/lib/utils";
 
 interface AuraPanelProps {
   selectedTheme: Theme;
@@ -82,8 +82,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     // Monthly aura is now automatically saved in the background via the profile API
     // No need to make separate API calls here
   };
-
-
 
   const navigateMonth = (direction: "prev" | "next") => {
     const [year, month] = currentMonth.split("-").map(Number);

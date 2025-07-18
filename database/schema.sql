@@ -85,11 +85,6 @@ create table if not exists public.global_leaderboard (
 -- Insert default badges
 insert into public.badges (name, description, icon, color, rarity, is_monthly, criteria) values
 ('Monthly Champion', 'Top contributor of the month', '🏆', '#FFD700', 'legendary', true, '{"rank": 1}'),
-('Monthly Runner-up', 'Second highest contributor of the month', '🥈', '#C0C0C0', 'epic', true, '{"rank": 2}'),
-('Monthly Bronze', 'Third highest contributor of the month', '🥉', '#CD7F32', 'rare', true, '{"rank": 3}'),
-('Streak Master', '30+ day contribution streak', '🔥', '#FF4500', 'epic', false, '{"streak": 30}'),
-('Century Club', '100+ contributions in a month', '💯', '#8A2BE2', 'rare', false, '{"monthly_contributions": 100}'),
-('Daily Grinder', '365+ day contribution streak', '⚡', '#00FF00', 'legendary', false, '{"streak": 365}'),
 ('Code Warrior', '1000+ total aura points', '⚔️', '#DC143C', 'epic', false, '{"total_aura": 1000}'),
 ('Aura Legend', '5000+ total aura points', '👑', '#800080', 'legendary', false, '{"total_aura": 5000}');
 
