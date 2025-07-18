@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Search,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
 import { GitHubContributions } from "./types";
@@ -77,11 +78,12 @@ const Leaderboard = ({
 
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
+  const [userNotInLeaderboard, setUserNotInLeaderboard] = useState(false);
   const requestInProgress = useRef(false);
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [view, currentMonth]);
+  }, [view, currentMonth, currentUserId]);
 
   useEffect(() => {
     calculateMonthlyData();
@@ -140,6 +142,7 @@ const Leaderboard = ({
       activeDays: activeDays,
     });
   };
+
   const fetchLeaderboardData = async () => {
     // Prevent duplicate calls
     if (requestInProgress.current) {
@@ -148,6 +151,8 @@ const Leaderboard = ({
 
     requestInProgress.current = true;
     setLoading(true);
+    setUserNotInLeaderboard(false);
+
     try {
       let response;
 
@@ -179,9 +184,25 @@ const Leaderboard = ({
       }
 
       setLeaderboardData(data.leaderboard || []);
-      setUserRank(data.userRank || null);
+
+      // Handle user rank - check if user exists in leaderboard
+      if (currentUserId) {
+        if (data.userRank && data.userRank > 0) {
+          setUserRank(data.userRank);
+          setUserNotInLeaderboard(false);
+        } else {
+          // User not found in leaderboard - they haven't participated yet
+          setUserRank(null);
+          setUserNotInLeaderboard(true);
+        }
+      } else {
+        setUserRank(null);
+        setUserNotInLeaderboard(false);
+      }
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
+      setUserRank(null);
+      setUserNotInLeaderboard(false);
     } finally {
       setLoading(false);
       requestInProgress.current = false;
@@ -344,15 +365,29 @@ const Leaderboard = ({
         )}
       </div>
 
-      {/* Current User Rank */}
-      {currentUserId && userRank && (
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg bg-gray-900/40 backdrop-blur-sm border border-gray-700/50 border-l-4 border-l-yellow-500">
-          <div className="flex items-center gap-2">
-            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
-            <span className="text-xs sm:text-sm font-medium text-white">
-              Your current rank: #{userRank}
-            </span>
-          </div>
+      {/* Current User Rank or Status */}
+      {currentUserId && (
+        <div className="mb-3 sm:mb-4">
+          {userRank && userRank > 0 ? (
+            <div className="p-2 sm:p-3 rounded-lg bg-gray-900/40 backdrop-blur-sm border border-gray-700/50 border-l-4 border-l-yellow-500">
+              <div className="flex items-center gap-2">
+                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
+                <span className="text-xs sm:text-sm font-medium text-white">
+                  Your current rank: #{userRank}
+                </span>
+              </div>
+            </div>
+          ) : userNotInLeaderboard ? (
+            <div className="p-2 sm:p-3 rounded-lg bg-blue-900/20 backdrop-blur-sm border border-blue-700/50 border-l-4 border-l-blue-500">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
+                <span className="text-xs sm:text-sm font-medium text-blue-200">
+                  You haven't joined this {view === "monthly" ? "month's" : ""}{" "}
+                  leaderboard yet. Start contributing to get ranked!
+                </span>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -392,9 +427,7 @@ const Leaderboard = ({
                     {/* Avatar and Info */}
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-none">
                       <a
-                        href={`https://github.com/${entry.user.github_username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/user/${entry.user.github_username}`}
                         className="hover:opacity-80 transition-opacity shrink-0"
                       >
                         <img
@@ -405,17 +438,13 @@ const Leaderboard = ({
                       </a>
                       <div className="flex flex-col min-w-0 flex-1">
                         <a
-                          href={`https://github.com/${entry.user.github_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`/user/${entry.user.github_username}`}
                           className="font-semibold text-sm sm:text-base text-white hover:underline truncate"
                         >
                           {entry.user.display_name}
                         </a>
                         <a
-                          href={`https://github.com/${entry.user.github_username}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`/user/${entry.user.github_username}`}
                           className="text-xs sm:text-sm truncate text-gray-400 hover:text-gray-200"
                         >
                           @{entry.user.github_username}
