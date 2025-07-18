@@ -318,7 +318,7 @@ function CustomLeaderboard({ username }: { username: string }) {
 
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-none">
                       <a
-                        href={`/${entry.user.github_username}`}
+                        href={`/user/${entry.user.github_username}`}
                         className="hover:opacity-80 transition-opacity shrink-0"
                       >
                         <img
@@ -329,13 +329,13 @@ function CustomLeaderboard({ username }: { username: string }) {
                       </a>
                       <div className="flex flex-col min-w-0 flex-1">
                         <a
-                          href={`/${entry.user.github_username}`}
+                          href={`/user/${entry.user.github_username}`}
                           className="font-semibold text-sm sm:text-base text-white hover:underline truncate"
                         >
                           {entry.user.display_name}
                         </a>
                         <a
-                          href={`/${entry.user.github_username}`}
+                          href={`/user/${entry.user.github_username}`}
                           className="text-xs sm:text-sm truncate text-[#7d8590] hover:text-[#e6edf3]"
                         >
                           @{entry.user.github_username}

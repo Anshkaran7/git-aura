@@ -1,6 +1,18 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// Define routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  "/[username]/(.*)", // User profile pages and sub-pages
+]);
+
+export default clerkMiddleware((auth, req) => {
+  // For protected routes, we'll handle authorization at the page level
+  // This middleware ensures the user is tracked by Clerk
+  if (isProtectedRoute(req)) {
+    // Let the page components handle the authorization logic
+    // Middleware just ensures Clerk auth context is available
+  }
+});
 
 export const config = {
   matcher: [

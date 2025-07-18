@@ -1,6 +1,8 @@
 import Header from "@/components/Header";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 interface LayoutProps {
   children: ReactNode;
@@ -238,6 +240,29 @@ export default async function UsernameLayout({
   params,
 }: LayoutProps) {
   const { username } = await params;
+
+  // Authentication and authorization checks
+  const { userId } = await auth();
+
+  // Require authentication
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  // Get current user data
+  const user = await currentUser();
+
+  // Only allow access to own profile
+  if (user?.username !== username) {
+    // If user has a username, redirect to their own profile
+    if (user?.username) {
+      redirect(`/${user.username}`);
+    } else {
+      // If no username set, redirect to sign-in to complete setup
+      redirect("/sign-in");
+    }
+  }
+
   let userData = null;
 
   // Fetch user data for structured data if we have a username

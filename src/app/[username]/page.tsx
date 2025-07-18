@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import GitHubProfileCard from "@/components/GitHubProfileCard";
 import { Header } from "@/components/home/header";
 
@@ -9,6 +11,29 @@ interface PageProps {
 
 export default async function ProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params;
+
+  // Get authentication state
+  const { userId } = await auth();
+
+  // Require authentication
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
+  // Get current user data
+  const user = await currentUser();
+
+  // Only allow access to own profile
+  // Users can only view their own profile page
+  if (user?.username !== username) {
+    // If user has a username, redirect to their own profile
+    if (user?.username) {
+      redirect(`/${user.username}`);
+    } else {
+      // If no username set, redirect to sign-in to complete setup
+      redirect("/sign-in");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black">
