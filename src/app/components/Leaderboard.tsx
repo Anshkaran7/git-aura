@@ -448,24 +448,39 @@ const Leaderboard = ({
 
                     {/* Avatar and Info */}
                     <div className="flex items-center gap-3">
-                      <img
-                        src={entry.user.avatar_url}
-                        alt={entry.user.display_name}
-                        className="w-10 h-10 rounded-full ring-2 ring-blue-500/30"
-                      />
-                      <div>
-                        <div className={`font-semibold ${selectedTheme.text}`}>
+                      <a
+                        href={`https://github.com/${entry.user.github_username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <img
+                          src={entry.user.avatar_url}
+                          alt={entry.user.display_name}
+                          className="w-10 h-10 rounded-full ring-2 ring-blue-500/30"
+                        />
+                      </a>
+                      <div className="flex flex-col">
+                        <a
+                          href={`https://github.com/${entry.user.github_username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`font-semibold ${selectedTheme.text} hover:underline`}
+                        >
                           {entry.user.display_name}
-                        </div>
-                        <div
+                        </a>
+                        <a
+                          href={`https://github.com/${entry.user.github_username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className={`text-sm ${
                             selectedTheme.name === "Light"
-                              ? "text-gray-500"
-                              : "text-gray-400"
+                              ? "text-gray-500 hover:text-gray-700"
+                              : "text-gray-400 hover:text-gray-200"
                           }`}
                         >
                           @{entry.user.github_username}
-                        </div>
+                        </a>
                       </div>
                     </div>
                   </div>
