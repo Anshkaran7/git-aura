@@ -1,4 +1,3 @@
-import Header from "@/components/Header";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";

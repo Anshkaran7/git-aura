@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Github, Menu, Zap, User, LogOut } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -18,6 +18,7 @@ export const Header = ({
 }) => {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -42,6 +43,22 @@ export const Header = ({
       }
     }
     router.push("/profile");
+  };
+
+  const handleNavigateToProfile = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const targetPath = profile ? `/${user?.username}` : "/profile";
+    if (pathname !== targetPath) {
+      router.push(targetPath);
+    }
+  };
+
+  const handleNavigateToLeaderboard = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const targetPath = profile ? `/${user?.username}/leaderboard` : "/leaderboard";
+    if (pathname !== targetPath) {
+      router.push(targetPath);
+    }
   };
 
   return (
@@ -90,8 +107,19 @@ export const Header = ({
             )}
 
             {/* {isSignedIn && ( */}
+              {pathname !== "/" && (
+                <a
+                href={profile ? `/${user?.username}` : "/profile"}
+                onClick={handleNavigateToProfile}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                My Profile
+              </a>
+              )}
+
             <a
               href={profile ? `/${user?.username}/leaderboard` : "/leaderboard"}
+              onClick={handleNavigateToLeaderboard}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Leaderboard
@@ -125,7 +153,7 @@ export const Header = ({
                 </Button>
 
                 {/* Go to Dashboard */}
-                {dashboard && (
+                {dashboard && pathname === "/" && (
                   <Button
                     variant="default"
                     size="sm"
@@ -199,11 +227,21 @@ export const Header = ({
                   </a>
                 </>
               )}
+              {isSignedIn && pathname !== "/" && (
+                <a
+                  href={profile ? `/${user?.username}` : "/profile"}
+                  onClick={handleNavigateToProfile}
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  My Profile
+                </a>
+              )}
               {isSignedIn && (
                 <a
                   href={
                     profile ? `/${user?.username}/leaderboard` : "/leaderboard"
                   }
+                  onClick={handleNavigateToLeaderboard}
                   className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
                 >
                   Leaderboard
