@@ -55,7 +55,7 @@ export const Header = ({
 
   const handleNavigateToLeaderboard = (e: React.MouseEvent) => {
     e.preventDefault();
-    const targetPath = profile ? `/${user?.username}/leaderboard` : "/leaderboard";
+    const targetPath = isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard";
     if (pathname !== targetPath) {
       router.push(targetPath);
     }
@@ -118,7 +118,7 @@ export const Header = ({
               )}
 
             <a
-              href={profile ? `/${user?.username}/leaderboard` : "/leaderboard"}
+              href={isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"}
               onClick={handleNavigateToLeaderboard}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
@@ -239,7 +239,7 @@ export const Header = ({
               {isSignedIn && (
                 <a
                   href={
-                    profile ? `/${user?.username}/leaderboard` : "/leaderboard"
+                    isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
                   }
                   onClick={handleNavigateToLeaderboard}
                   className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
