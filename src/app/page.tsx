@@ -45,7 +45,7 @@ export async function generateMetadata({
   // Base URL for canonical and OG URLs
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL ||
-    "https://github-profile-visualizer.vercel.app";
+    "https://git-aura.karandev.in";
 
   // Enhanced shared profile metadata
   if (shareId && !username) {

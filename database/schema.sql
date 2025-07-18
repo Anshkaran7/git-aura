@@ -178,3 +178,71 @@ begin
   return total_aura;
 end;
 $$ language plpgsql; 
+
+-- Function to update user aura and recalculate ranks in a single transaction
+CREATE OR REPLACE FUNCTION update_user_aura_and_ranks(
+  p_user_id TEXT,
+  p_month_year TEXT,
+  p_monthly_aura FLOAT,
+  p_contributions_count INTEGER
+) RETURNS VOID AS $$
+BEGIN
+  -- Start transaction
+  BEGIN
+    -- Update or insert monthly leaderboard entry
+    INSERT INTO monthly_leaderboards (user_id, month_year, total_aura, contributions_count, rank)
+    VALUES (p_user_id, p_month_year, p_monthly_aura, p_contributions_count, 0)
+    ON CONFLICT (user_id, month_year) 
+    DO UPDATE SET 
+      total_aura = EXCLUDED.total_aura,
+      contributions_count = EXCLUDED.contributions_count;
+
+    -- Update global leaderboard with total aura from all months
+    WITH user_totals AS (
+      SELECT 
+        user_id,
+        SUM(total_aura) as total_aura,
+        SUM(contributions_count) as total_contributions
+      FROM monthly_leaderboards
+      WHERE user_id = p_user_id
+      GROUP BY user_id
+    )
+    INSERT INTO global_leaderboard (user_id, total_aura, rank)
+    SELECT 
+      user_id,
+      total_aura,
+      0
+    FROM user_totals
+    ON CONFLICT (user_id)
+    DO UPDATE SET total_aura = EXCLUDED.total_aura;
+
+    -- Update monthly ranks for the specific month
+    WITH ranked_monthly AS (
+      SELECT 
+        user_id,
+        RANK() OVER (ORDER BY total_aura DESC) as new_rank
+      FROM monthly_leaderboards
+      WHERE month_year = p_month_year
+    )
+    UPDATE monthly_leaderboards ml
+    SET rank = rm.new_rank
+    FROM ranked_monthly rm
+    WHERE ml.user_id = rm.user_id
+      AND ml.month_year = p_month_year;
+
+    -- Update global ranks
+    WITH ranked_global AS (
+      SELECT 
+        user_id,
+        RANK() OVER (ORDER BY total_aura DESC) as new_rank
+      FROM global_leaderboard
+    )
+    UPDATE global_leaderboard gl
+    SET rank = rg.new_rank
+    FROM ranked_global rg
+    WHERE gl.user_id = rg.user_id;
+
+  -- Commit transaction
+  END;
+END;
+$$ LANGUAGE plpgsql; 

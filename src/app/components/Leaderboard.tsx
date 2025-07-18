@@ -490,7 +490,7 @@ const Leaderboard = ({
                     <div className="flex items-center gap-1">
                       {entry.badges.slice(0, 3).map((badge) => (
                         <div
-                          key={badge.id}
+                          key={`${badge.id}-${badge.month_year || ""}-${badge.rank || ""}`}
                           className={`relative group cursor-pointer`}
                           title={`${badge.name}: ${badge.description}`}
                         >
