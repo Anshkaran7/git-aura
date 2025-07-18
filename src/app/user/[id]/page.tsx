@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, SignInButton } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { createClient } from "@supabase/supabase-js";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
@@ -27,7 +27,7 @@ const supabase = createClient(
 
 function UserPage() {
   const params = useParams();
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const userId = params.id as string;
 
   const [profile, setProfile] = useState<GitHubProfile | null>(null);
@@ -42,13 +42,51 @@ function UserPage() {
   const [userAura, setUserAura] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
+  const [isUserRegistered, setIsUserRegistered] = useState<boolean | null>(
+    null
+  );
+  const [checkingRegistration, setCheckingRegistration] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (userId) {
-      fetchUserProfile(userId);
+    if (userId && isLoaded) {
+      checkUserRegistration(userId);
     }
-  }, [userId]);
+  }, [userId, isLoaded]);
+
+  const checkUserRegistration = async (username: string) => {
+    setCheckingRegistration(true);
+    try {
+      // Check if user exists in our users table (meaning they're registered)
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id, github_username")
+        .eq("github_username", username)
+        .single();
+
+      if (userError && userError.code !== "PGRST116") {
+        console.error("Error checking user registration:", userError);
+        setIsUserRegistered(false);
+        return;
+      }
+
+      // User found = registered
+      if (userData) {
+        setIsUserRegistered(true);
+        // Only fetch profile if user is registered
+        await fetchUserProfile(username);
+      } else {
+        // User not found = not registered
+        setIsUserRegistered(false);
+      }
+    } catch (err) {
+      console.error("Error checking registration:", err);
+      setIsUserRegistered(false);
+    } finally {
+      setCheckingRegistration(false);
+      setLoading(false);
+    }
+  };
 
   const fetchUserProfile = async (username: string) => {
     if (!username.trim()) return;
@@ -181,6 +219,70 @@ function UserPage() {
     }
   };
 
+  // Show loading while checking Clerk auth status or user registration
+  if (!isLoaded || checkingRegistration) {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="pt-20">
+          <Header leaderboard={false} profile={true} />
+          <div className="flex items-center justify-center w-full py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth required message if user is not registered
+  if (isUserRegistered === false) {
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="pt-20">
+          <Header leaderboard={false} profile={true} />
+          <div className="max-w-4xl mx-auto px-4 py-20">
+            <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-8 rounded-lg border border-gray-700/50 text-center">
+              <div className="mb-6">
+                <span className="text-6xl mb-4 block">🔒</span>
+                <h2 className="text-2xl font-bold mb-4">User Not Found</h2>
+                <p className="text-gray-400 mb-6">
+                  The user{" "}
+                  <span className="text-white font-mono">@{userId}</span> is not
+                  registered on our platform.
+                  {!isSignedIn && " You need to sign in to view user profiles."}
+                </p>
+              </div>
+
+              {!isSignedIn ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500">
+                    Sign in with GitHub to join our community and view profiles
+                  </p>
+                  <SignInButton mode="modal">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                      Sign In to Continue
+                    </button>
+                  </SignInButton>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-500">
+                    Only registered users can be viewed on our platform
+                  </p>
+                  <button
+                    onClick={() => window.history.back()}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black">
       <div className="pt-20">
@@ -227,7 +329,8 @@ function UserPage() {
                 selectedTheme={selectedTheme}
                 onLoadProfile={(username) => {
                   if (username !== userId && !loading) {
-                    fetchUserProfile(username);
+                    // Redirect to new user page
+                    window.location.href = `/user/${username}`;
                   }
                 }}
               />
