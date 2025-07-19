@@ -10,7 +10,6 @@ type MonthlyLeaderboardWithRelations = Prisma.MonthlyLeaderboardGetPayload<{
         displayName: true;
         githubUsername: true;
         avatarUrl: true;
-        totalAura: true;
         currentStreak: true;
         userBadges: {
           include: {
@@ -36,15 +35,15 @@ export async function GET(request: NextRequest) {
 
     if (!monthYear) {
       return NextResponse.json(
-        { error: "monthYear parameter is required" },
+        { error: "Month and year are required" },
         { status: 400 }
       );
     }
 
-    // Fetch monthly leaderboard data
+    // Fetch all monthly leaderboard data for the specified month
     const monthlyData = await prisma.monthlyLeaderboard.findMany({
       where: {
-        monthYear,
+        monthYear: monthYear,
       },
       include: {
         user: {
@@ -53,7 +52,6 @@ export async function GET(request: NextRequest) {
             displayName: true,
             githubUsername: true,
             avatarUrl: true,
-            totalAura: true,
             currentStreak: true,
             userBadges: {
               include: {
@@ -63,19 +61,21 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      orderBy: {
+        totalAura: "desc",
+      },
     });
 
-    // Transform the data to match the frontend expectations
-    const transformedData = monthlyData.map((entry) => ({
-      rank: 0, // Will be calculated on frontend
+    // Transform and add ranks to the data
+    const transformedData = monthlyData.map((entry, index) => ({
+      rank: index + 1, // Calculate rank based on position
       user: {
         id: entry.user.id,
-        github_username: entry.user.githubUsername || "",
         display_name: entry.user.displayName || entry.user.githubUsername || "",
+        github_username: entry.user.githubUsername || "",
         avatar_url:
           entry.user.avatarUrl ||
           `https://github.com/${entry.user.githubUsername}.png`,
-        total_aura: entry.user.totalAura || 0,
         current_streak: entry.user.currentStreak || 0,
       },
       aura: entry.totalAura,
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
             ub
           ): ub is UserBadgeWithBadge & {
             badge: NonNullable<UserBadgeWithBadge["badge"]>;
-          } => ub.badge !== null
+          } => ub.badge !== null && ub.monthYear === monthYear
         )
         .map((ub) => ({
           id: ub.badge.id,
@@ -100,9 +100,26 @@ export async function GET(request: NextRequest) {
         })),
     }));
 
+    // Find user's rank if userId is provided
+    let userRank = null;
+    if (userId) {
+      const userIndex = transformedData.findIndex(
+        (entry) => entry.user.id === userId
+      );
+      userRank = userIndex !== -1 ? userIndex + 1 : null;
+    }
+
     return NextResponse.json({
       leaderboard: transformedData,
-      monthYear,
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: transformedData.length,
+        hasNextPage: false,
+        hasPrevPage: false,
+        limit: transformedData.length,
+      },
+      userRank,
     });
   } catch (error) {
     console.error("Error in monthly leaderboard API:", error);

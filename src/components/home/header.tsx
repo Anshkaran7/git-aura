@@ -7,6 +7,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export const Header = ({
   leaderboard = false,
@@ -168,8 +169,15 @@ export const Header = ({
             href="/"
             className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="p-1.5 sm:p-2 rounded-lg bg-muted border border-border">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <div className=" bg-muted border-[1px] border-border rounded-lg">
+              <Image
+                src="/logo.png"
+                alt="Git Aura"
+                width={1000}
+                height={1000}
+                loading="lazy"
+                className="w-12 h-12 rounded-lg text-primary"
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-base sm:text-lg text-highlight">

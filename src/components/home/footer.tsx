@@ -5,6 +5,7 @@ import { Github, Twitter, MessageCircle, Heart, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
+import Image from "next/image";
 
 interface HeroStats {
   totalDevelopers: number;
@@ -74,11 +75,7 @@ export const Footer = () => {
   };
 
   const handleStartJourney = () => {
-    if (isSignedIn) {
-      router.push("/leaderboard");
-    } else {
-      router.push("/sign-in");
-    }
+    router.push("/sign-in");
   };
 
   return (
@@ -94,8 +91,15 @@ export const Footer = () => {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
           <div className="text-start w-full lg:w-auto">
             <div className="flex items-center justify-start gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-muted border border-border">
-                <Zap className="w-4 sm:w-5 h-4 sm:h-5 text-primary" />
+              <div className=" bg-muted border-[1px] border-border rounded-lg">
+                <Image
+                  src="/logo.png"
+                  alt="Git Aura"
+                  width={1000}
+                  height={1000}
+                  loading="lazy"
+                  className="w-12 h-12 rounded-lg text-primary"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-base sm:text-lg text-highlight">

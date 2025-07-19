@@ -1,147 +1,147 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { fetchGitHubProfile } from "@/lib/github-fetch";
-import { fetchGitHubContributions } from "@/lib/github-contributions";
-import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId: clerkUserId } = await auth();
+    const { userId } = await auth();
 
-    if (!clerkUserId) {
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { githubUsername, displayName, avatarUrl } = body;
+    // Get the user's GitHub data from the request body
+    const { githubData } = await request.json();
 
-    if (!githubUsername) {
+    if (!githubData) {
       return NextResponse.json(
-        { error: "GitHub username is required" },
+        { error: "GitHub data is required" },
         { status: 400 }
       );
     }
 
-    // Fetch complete GitHub profile data
-    console.log(
-      `[Sync User] Fetching GitHub profile for username: ${githubUsername}`
-    );
-    const githubResult = await fetchGitHubProfile(githubUsername);
-
-    let githubData = null;
-    let githubId = null;
-    let actualEmail = `${githubUsername}@github.local`; // Fallback email
-    let actualDisplayName = displayName || githubUsername;
-    let actualAvatarUrl =
-      avatarUrl || `https://github.com/${githubUsername}.png`;
-
-    if (githubResult.success && githubResult.data) {
-      githubData = githubResult.data;
-      githubId = githubResult.data.id.toString();
-
-      // Use GitHub email if available
-      if (githubResult.data.email) {
-        actualEmail = githubResult.data.email;
-      }
-
-      // Use GitHub display name if available
-      if (githubResult.data.name) {
-        actualDisplayName = displayName || githubResult.data.name;
-      }
-
-      // Use GitHub avatar URL
-      actualAvatarUrl = avatarUrl || githubResult.data.avatar_url;
-
-      console.log(
-        `✅ [Sync User] Successfully fetched GitHub profile for ${githubUsername}`
-      );
-    } else {
-      console.warn(
-        `⚠️ [Sync User] Failed to fetch GitHub profile for ${githubUsername}:`,
-        githubResult.error
-      );
-    }
-
-    // Create or update user with complete GitHub data
+    // First, ensure the user exists in our database
     const user = await prisma.user.upsert({
-      where: { githubUsername },
+      where: { id: userId },
+      update: {
+        githubUsername: githubData.username,
+        displayName: githubData.name || githubData.username,
+        avatarUrl: githubData.avatar_url,
+        updatedAt: new Date(),
+      },
       create: {
-        email: actualEmail,
-        githubUsername,
-        githubId: githubId,
-        displayName: actualDisplayName,
-        avatarUrl: actualAvatarUrl,
-        githubData: githubData ? (githubData as any) : undefined,
+        id: userId,
+        email: `${githubData.username}@github.local`, // Required field
+        githubUsername: githubData.username,
+        displayName: githubData.name || githubData.username,
+        avatarUrl: githubData.avatar_url,
         totalAura: 0,
         currentStreak: 0,
-        longestStreak: 0,
-        lastContributionDate: new Date(),
-      },
-      update: {
-        email: actualEmail,
-        githubId: githubId,
-        displayName: actualDisplayName,
-        avatarUrl: actualAvatarUrl,
-        githubData: githubData ? (githubData as any) : undefined,
-        updatedAt: new Date(),
       },
     });
 
-    // Calculate and store aura for the user
-    console.log(
-      `[Sync User] Starting aura calculation for user: ${githubUsername}`
+    // Calculate total contributions and aura
+    const contributionsResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/github/contributions/${githubData.username}`
     );
 
-    const contributionsResult = await fetchGitHubContributions(githubUsername);
-
-    if (contributionsResult.success && contributionsResult.data) {
-      const auraResult = await calculateAndStoreUserAura(
-        user.id,
-        githubUsername,
-        contributionsResult.data.contributionDays
-      );
-
-      if (auraResult.success) {
-        console.log(
-          `✅ [Sync User] Successfully calculated aura for ${githubUsername}: ${auraResult.totalAura} total aura`
-        );
-      } else {
-        console.error(
-          `❌ [Sync User] Failed to calculate aura for ${githubUsername}:`,
-          auraResult.error
-        );
-      }
-    } else {
-      console.warn(
-        `⚠️ [Sync User] Failed to fetch contributions for ${githubUsername}:`,
-        contributionsResult.error
-      );
+    if (!contributionsResponse.ok) {
+      throw new Error("Failed to fetch GitHub contributions");
     }
 
-    console.log(
-      `✅ [Sync User] Successfully synced user: ${user.githubUsername}`
-    );
+    const contributionsData = await contributionsResponse.json();
+    const totalContributions = contributionsData.totalContributions || 0;
+
+    // Get the current month's contributions
+    const now = new Date();
+    const currentMonthYear = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    const monthlyContributions = contributionsData.contributionDays
+      .filter((day: { date: string }) => {
+        const date = new Date(day.date);
+        return (
+          date.getFullYear() === now.getFullYear() &&
+          date.getMonth() === now.getMonth()
+        );
+      })
+      .reduce(
+        (sum: number, day: { contributionCount: number }) =>
+          sum + day.contributionCount,
+        0
+      );
+
+    // Calculate aura based on contributions
+    const monthlyAura = monthlyContributions * 10; // 10 points per contribution
+    const totalAura = totalContributions * 10; // 10 points per contribution
+
+    // Update monthly leaderboard
+    await prisma.monthlyLeaderboard.upsert({
+      where: {
+        userId_monthYear: {
+          userId: user.id,
+          monthYear: currentMonthYear,
+        },
+      },
+      update: {
+        totalAura: monthlyAura,
+        rank: 0, // Rank will be updated by a separate cron job
+      },
+      create: {
+        userId: user.id,
+        monthYear: currentMonthYear,
+        totalAura: monthlyAura,
+        rank: 0, // Rank will be updated by a separate cron job
+      },
+    });
+
+    // Update global leaderboard
+    await prisma.globalLeaderboard.upsert({
+      where: { userId: user.id },
+      update: {
+        totalAura: totalAura,
+        rank: 0, // Rank will be updated by a separate cron job
+      },
+      create: {
+        userId: user.id,
+        totalAura: totalAura,
+        rank: 0, // Rank will be updated by a separate cron job
+      },
+    });
+
+    // Update user's total aura
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        totalAura: totalAura,
+      },
+    });
+
+    // Return the updated user data
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: {
+        monthlyLeaderboard: {
+          where: { monthYear: currentMonthYear },
+        },
+        globalLeaderboard: true,
+      },
+    });
 
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        githubUsername: user.githubUsername,
-        githubId: user.githubId,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        email: user.email,
-        githubData: user.githubData,
-        totalAura: user.totalAura,
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
+        ...updatedUser,
+        monthlyAura,
+        totalContributions,
+        monthlyContributions,
       },
     });
   } catch (error) {
-    console.error("Error in sync-user:", error);
+    console.error("Error syncing user:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to sync user data" },
       { status: 500 }
     );
   }
