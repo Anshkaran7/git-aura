@@ -14,6 +14,7 @@ import {
   Search,
   X,
   AlertCircle,
+  HeartHandshake,
 } from "lucide-react";
 import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
 import { GitHubContributions } from "./types";
@@ -46,6 +47,15 @@ interface Badge {
   rank?: number;
 }
 
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  limit: number;
+}
+
 interface LeaderboardProps {
   currentUserId?: string;
   selectedTheme: {
@@ -65,11 +75,20 @@ const Leaderboard = ({
 }: LeaderboardProps) => {
   const [view, setView] = useState<"monthly" | "alltime">("monthly");
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
+  const [currentPage, setCurrentPage] = useState(1);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
     []
   );
   const [filteredData, setFilteredData] = useState<LeaderboardEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 20,
+  });
   const [monthlyData, setMonthlyData] = useState<{
     contributions: number;
     aura: number;
@@ -79,11 +98,12 @@ const Leaderboard = ({
   const [loading, setLoading] = useState(true);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [userNotInLeaderboard, setUserNotInLeaderboard] = useState(false);
+  const [userOutOfTop100, setUserOutOfTop100] = useState(false);
   const requestInProgress = useRef(false);
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [view, currentMonth, currentUserId]);
+  }, [view, currentMonth, currentUserId, currentPage]);
 
   useEffect(() => {
     calculateMonthlyData();
@@ -92,6 +112,11 @@ const Leaderboard = ({
   useEffect(() => {
     filterLeaderboard();
   }, [searchQuery, leaderboardData]);
+
+  // Reset to page 1 when view or month changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [view, currentMonth]);
 
   const filterLeaderboard = () => {
     if (!searchQuery.trim()) {
@@ -152,6 +177,7 @@ const Leaderboard = ({
     requestInProgress.current = true;
     setLoading(true);
     setUserNotInLeaderboard(false);
+    setUserOutOfTop100(false);
 
     try {
       let response;
@@ -160,6 +186,8 @@ const Leaderboard = ({
         // Fetch monthly leaderboard via API
         const params = new URLSearchParams({
           monthYear: currentMonth,
+          page: currentPage.toString(),
+          limit: "20",
           ...(currentUserId && { userId: currentUserId }),
         });
 
@@ -167,6 +195,8 @@ const Leaderboard = ({
       } else {
         // Fetch all-time leaderboard via API
         const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: "20",
           ...(currentUserId && { userId: currentUserId }),
         });
 
@@ -184,25 +214,44 @@ const Leaderboard = ({
       }
 
       setLeaderboardData(data.leaderboard || []);
+      setPagination(
+        data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+          limit: 20,
+        }
+      );
 
       // Handle user rank - check if user exists in leaderboard
       if (currentUserId) {
         if (data.userRank && data.userRank > 0) {
           setUserRank(data.userRank);
-          setUserNotInLeaderboard(false);
+          if (data.userRank > 100) {
+            setUserOutOfTop100(true);
+            setUserNotInLeaderboard(false);
+          } else {
+            setUserOutOfTop100(false);
+            setUserNotInLeaderboard(false);
+          }
         } else {
           // User not found in leaderboard - they haven't participated yet
           setUserRank(null);
           setUserNotInLeaderboard(true);
+          setUserOutOfTop100(false);
         }
       } else {
         setUserRank(null);
         setUserNotInLeaderboard(false);
+        setUserOutOfTop100(false);
       }
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
       setUserRank(null);
       setUserNotInLeaderboard(false);
+      setUserOutOfTop100(false);
     } finally {
       setLoading(false);
       requestInProgress.current = false;
@@ -253,6 +302,12 @@ const Leaderboard = ({
       date.getMonth() + 1
     ).padStart(2, "0")}`;
     setCurrentMonth(newMonthYear);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   const formatMonthYear = (monthYear: string) => {
@@ -368,13 +423,30 @@ const Leaderboard = ({
       {/* Current User Rank or Status */}
       {currentUserId && (
         <div className="mb-3 sm:mb-4">
-          {userRank && userRank > 0 ? (
+          {userRank && userRank > 0 && userRank <= 100 ? (
             <div className="p-2 sm:p-3 rounded-lg bg-gray-900/40 backdrop-blur-sm border border-gray-700/50 border-l-4 border-l-yellow-500">
               <div className="flex items-center gap-2">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
                 <span className="text-xs sm:text-sm font-medium text-white">
                   Your current rank: #{userRank}
                 </span>
+              </div>
+            </div>
+          ) : userOutOfTop100 ? (
+            <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-orange-900/20 to-red-900/20 backdrop-blur-sm border border-orange-700/50 border-l-4 border-l-orange-500">
+              <div className="flex items-start gap-3">
+                <HeartHandshake className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mt-0.5 shrink-0" />
+                <div>
+                  <h3 className="text-sm sm:text-base font-semibold text-orange-200 mb-1">
+                    Time to Level Up! 💪
+                  </h3>
+                  <p className="text-xs sm:text-sm text-orange-300/90 leading-relaxed">
+                    You're currently ranked #{userRank}. The top 100 developers
+                    are crushing it! Start contributing more, maintain
+                    consistency, and climb your way up. Every commit counts
+                    toward your coding journey! 🚀
+                  </p>
+                </div>
               </div>
             </div>
           ) : userNotInLeaderboard ? (
@@ -391,12 +463,25 @@ const Leaderboard = ({
         </div>
       )}
 
+      {/* Pagination Info */}
+      {!searchQuery && pagination.totalCount > 0 && (
+        <div className="flex items-center justify-between mb-4 text-xs sm:text-sm text-gray-400">
+          <span>
+            Showing {Math.min(pagination.limit, pagination.totalCount)} of top
+            100 developers
+          </span>
+          <span>
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+        </div>
+      )}
+
       {/* Leaderboard List */}
       <div className="space-y-3">
         <AnimatePresence>
           {filteredData.map((entry, index) => (
             <motion.div
-              key={`${entry.user.id}-${view}-${currentMonth}`}
+              key={`${entry.user.id}-${view}-${currentMonth}-${currentPage}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -501,6 +586,59 @@ const Leaderboard = ({
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Pagination Controls */}
+      {!searchQuery && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-700/50">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={!pagination.hasPrevPage}
+            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from(
+              { length: Math.min(5, pagination.totalPages) },
+              (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      pageNum === currentPage
+                        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
+                        : "bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              }
+            )}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={!pagination.hasNextPage}
+            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {filteredData.length === 0 && !loading && (
         <div className="text-center py-6 sm:py-8">

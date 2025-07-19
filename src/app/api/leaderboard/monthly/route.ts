@@ -11,7 +11,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const monthYear = searchParams.get("monthYear");
     const userId = searchParams.get("userId");
-    const limit = parseInt(searchParams.get("limit") || "100");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Ensure we don't go beyond top 100 users
+    const maxLimit = Math.min(100, offset + limit);
 
     if (!monthYear) {
       return NextResponse.json(
@@ -20,7 +27,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch monthly leaderboard data
+    // Get total count of users in this month's leaderboard (up to 100)
+    const { count: totalCount, error: countError } = await supabaseAdmin
+      .from("monthly_leaderboards")
+      .select("*", { count: "exact", head: true })
+      .eq("month_year", monthYear)
+      .lte("rank", 100);
+
+    if (countError) {
+      console.error("Error getting total count:", countError);
+    }
+
+    // Fetch monthly leaderboard data with pagination
     const { data: monthlyData, error: monthlyError } = await supabaseAdmin
       .from("monthly_leaderboards")
       .select(
@@ -39,8 +57,9 @@ export async function GET(request: NextRequest) {
       `
       )
       .eq("month_year", monthYear)
+      .lte("rank", 100) // Only show top 100 users
       .order("rank", { ascending: true })
-      .limit(limit);
+      .range(offset, maxLimit - 1);
 
     if (monthlyError) {
       console.error("Error fetching monthly leaderboard:", monthlyError);
@@ -94,30 +113,43 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the frontend expectations
-    const transformedData = monthlyData?.map((entry: any) => {
-      const userBadges = badges.filter(
-        (badge: any) => badge.user_id === entry.users.id
-      );
+    const transformedData =
+      monthlyData?.map((entry: any) => {
+        const userBadges = badges.filter(
+          (badge: any) => badge.user_id === entry.users.id
+        );
 
-      return {
-        rank: entry.rank,
-        user: entry.users,
-        aura: entry.total_aura,
-        contributions: entry.contributions_count,
-        badges: userBadges.map((ub: any) => ({
-          ...ub.badges,
-          month_year: ub.month_year,
-          rank: ub.rank,
-        })),
-      };
-    }) || [];
+        return {
+          rank: entry.rank,
+          user: entry.users,
+          aura: entry.total_aura,
+          contributions: entry.contributions_count,
+          badges: userBadges.map((ub: any) => ({
+            ...ub.badges,
+            month_year: ub.month_year,
+            rank: ub.rank,
+          })),
+        };
+      }) || [];
+
+    // Calculate pagination info
+    const totalPages = Math.ceil((totalCount || 0) / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       leaderboard: transformedData,
       userRank,
       monthYear,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount: totalCount || 0,
+        hasNextPage,
+        hasPrevPage,
+        limit,
+      },
     });
-
   } catch (error) {
     console.error("Error in monthly leaderboard API:", error);
     return NextResponse.json(
@@ -125,4 +157,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
