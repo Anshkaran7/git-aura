@@ -12,6 +12,7 @@ import ProfileCard from "@/components/ProfileCard";
 import AuraPanel from "@/components/AuraPanel";
 import EmptyState from "@/components/EmptyState";
 import { themes } from "@/components/themes";
+
 import {
   GitHubProfile,
   GitHubContributions,
@@ -24,6 +25,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
+
+
 
 function UserPage() {
   const params = useParams();
