@@ -54,6 +54,49 @@ function UserPage() {
     }
   }, [userId, isLoaded]);
 
+  // Handle dynamic OG image meta tags
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const ogImage = url.searchParams.get("og_image");
+      
+      if (ogImage && profile) {
+        // Update existing meta tags or create new ones
+        updateMetaTags(ogImage, profile.login);
+      }
+    }
+  }, [profile]);
+
+  const updateMetaTags = (imageUrl: string, username: string) => {
+    // Update OG image
+    updateMetaTag("property", "og:image", imageUrl);
+    updateMetaTag("property", "og:image:width", "1200");
+    updateMetaTag("property", "og:image:height", "630");
+    updateMetaTag("property", "og:image:alt", `${username}'s GitHub Profile Statistics`);
+    
+    // Update Twitter card image
+    updateMetaTag("name", "twitter:image", imageUrl);
+    updateMetaTag("name", "twitter:image:alt", `${username}'s GitHub Profile Statistics`);
+    
+    // Update title and description
+    updateMetaTag("property", "og:title", `${username}'s GitHub Profile | GitHub Profile Visualizer`);
+    updateMetaTag("property", "og:description", `Check out ${username}'s GitHub contributions, statistics, and coding activity.`);
+    updateMetaTag("name", "twitter:title", `${username}'s GitHub Profile | GitHub Profile Visualizer`);
+    updateMetaTag("name", "twitter:description", `Check out ${username}'s GitHub contributions, statistics, and coding activity.`);
+  };
+
+  const updateMetaTag = (attributeName: string, attributeValue: string, content: string) => {
+    let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`) as HTMLMetaElement;
+    
+    if (!metaTag) {
+      metaTag = document.createElement("meta");
+      metaTag.setAttribute(attributeName, attributeValue);
+      document.head.appendChild(metaTag);
+    }
+    
+    metaTag.content = content;
+  };
+
   const checkUserRegistration = async (username: string) => {
     setCheckingRegistration(true);
     try {
@@ -198,7 +241,49 @@ function UserPage() {
 
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
-      const shareUrl = window.location.href;
+      let shareUrl = window.location.href;
+      
+      // Generate and upload image for OG meta tag
+      if (profileRef.current) {
+        setIsGenerating(true);
+        try {
+          const dataUrl = await toPng(profileRef.current, {
+            cacheBust: true,
+            backgroundColor: 
+              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            pixelRatio: 2,
+            skipFonts: false,
+          });
+
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+
+          const formData = new FormData();
+          formData.append("image", blob);
+          formData.append("name", `${profile?.login}-github-profile-og`);
+
+          const uploadResponse = await fetch("/api/upload-image", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            const imageUrl = uploadData.url;
+
+            // Add og_image parameter to the current URL
+            const url = new URL(shareUrl);
+            url.searchParams.set("og_image", imageUrl);
+            shareUrl = url.toString();
+          }
+        } catch (uploadError) {
+          console.error("Error uploading OG image:", uploadError);
+          // Continue with sharing even if image upload fails
+        }
+        setIsGenerating(false);
+      }
+
+      // Generate share text and links after image upload is complete
       const text = `Check out ${
         profile?.login || "this user"
       }'s GitHub contributions! 🚀`;
@@ -214,9 +299,11 @@ function UserPage() {
         )}`;
       }
 
+      // Open share window only after everything is ready
       window.open(shareLink, "_blank", "width=600,height=400");
     } catch (err) {
       console.error("Error sharing profile:", err);
+      setIsGenerating(false);
     }
   };
 

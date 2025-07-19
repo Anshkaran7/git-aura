@@ -61,9 +61,33 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             </span>
           </a>
         </div>
+
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={handleShareTwitter}
+            className="p-1.5 sm:p-2 rounded-md bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] transition-colors text-white"
+            title="Share on Twitter"
+          >
+            <Twitter className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleShareLinkedin}
+            className="p-1.5 sm:p-2 rounded-md bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86] transition-colors text-white"
+            title="Share on LinkedIn"
+          >
+            <Linkedin className="w-4 h-4" />
+          </button>
+            <button
+              onClick={handleDownload}
+              className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white"
+              title="Download as Image"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          </div>
+
       </div>
 
-  {/* download and share Profile Content */}
       
 
       {/* Profile Content */}
@@ -133,13 +157,11 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <div className="w-min-content px-3 sm:px-0 sm:min-w-0">
-              <ContributionGrid
-                contributions={contributions}
-                selectedTheme={selectedTheme}
-              />
-            </div>
+          <div className="w-full">
+            <ContributionGrid
+              contributions={contributions}
+              selectedTheme={selectedTheme}
+            />
           </div>
         </div>
       </div>
