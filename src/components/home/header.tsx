@@ -66,7 +66,7 @@ export const Header = ({
         }
       } catch (error) {
         console.error("Error syncing user data:", error);
-        // toast.error("Failed to sync your data. Please try again.");
+        toast.error("Failed to sync your data. Please try again.");
       } finally {
         setIsSyncing(false);
       }
