@@ -13,6 +13,8 @@ import {
   ChevronRight,
   Search,
   X,
+  AlertCircle,
+  HeartHandshake,
 } from "lucide-react";
 import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
 import { Header } from "@/components/home";
@@ -49,31 +51,63 @@ interface Badge {
   rank?: number;
 }
 
+interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  limit: number;
+}
+
 // Custom Leaderboard Component for username-based view
 function CustomLeaderboard({ username }: { username: string }) {
   const [view, setView] = useState<"monthly" | "alltime">("monthly");
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
+  const [currentPage, setCurrentPage] = useState(1);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
     []
   );
   const [currentUser, setCurrentUser] = useState<LeaderboardEntry | null>(null);
+  const [userOutOfTop100, setUserOutOfTop100] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 20,
+  });
 
   useEffect(() => {
     fetchLeaderboardData();
-  }, [view, currentMonth, username]);
+  }, [view, currentMonth, username, currentPage]);
+
+  // Reset to page 1 when view or month changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [view, currentMonth]);
 
   const fetchLeaderboardData = async () => {
     setLoading(true);
+    setUserOutOfTop100(false);
     try {
       let response;
 
       if (view === "monthly") {
-        response = await fetch(
-          `/api/leaderboard/monthly?monthYear=${currentMonth}`
-        );
+        const params = new URLSearchParams({
+          monthYear: currentMonth,
+          page: currentPage.toString(),
+          limit: "20",
+        });
+        response = await fetch(`/api/leaderboard/monthly?${params}`);
       } else {
-        response = await fetch(`/api/leaderboard/alltime`);
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: "20",
+        });
+        response = await fetch(`/api/leaderboard/alltime?${params}`);
       }
 
       if (!response.ok) {
@@ -81,26 +115,92 @@ function CustomLeaderboard({ username }: { username: string }) {
       }
 
       const data = await response.json();
-      const leaderboard = data.leaderboard || [];
-
-      // Find the current user
-      const userEntry = leaderboard.find(
-        (entry: LeaderboardEntry) =>
-          entry.user.github_username.toLowerCase() === username.toLowerCase()
+      const leaderboard = (data.leaderboard || []).filter(
+        (entry: LeaderboardEntry) => entry.aura > 0
       );
 
-      // Remove user from the main leaderboard and set them separately
+      // Set pagination info
+      setPagination(
+        data.pagination || {
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+          limit: 20,
+        }
+      );
+
+      // Now we need to get the user's full rank (including beyond top 100)
+      let userFullRank = null;
+      let userEntry = null;
+
+      // First, check if user is in current page
+      userEntry = leaderboard.find(
+        (entry: LeaderboardEntry) =>
+          entry.user.github_username.toLowerCase() === username.toLowerCase() &&
+          entry.aura > 0
+      );
+
+      if (userEntry) {
+        userFullRank = userEntry.rank;
+        setCurrentUser(userEntry);
+      } else {
+        // User not in current page, fetch their rank separately
+        try {
+          const userRankResponse = await fetch(
+            view === "monthly"
+              ? `/api/leaderboard/monthly?monthYear=${currentMonth}&userId=${username}`
+              : `/api/leaderboard/alltime?userId=${username}`
+          );
+
+          if (userRankResponse.ok) {
+            const userRankData = await userRankResponse.json();
+            if (userRankData.userRank && userRankData.userRank > 0) {
+              userFullRank = userRankData.userRank;
+
+              // If user rank > 100, show motivational message
+              if (userFullRank > 100) {
+                setUserOutOfTop100(true);
+                setCurrentUser({
+                  rank: userFullRank,
+                  user: {
+                    id: "",
+                    display_name: username,
+                    github_username: username,
+                    avatar_url: `https://github.com/${username}.png`,
+                    total_aura: 0,
+                    current_streak: 0,
+                  },
+                  aura: 0,
+                  badges: [],
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user rank:", error);
+        }
+      }
+
+      // Remove user from the main leaderboard if they're in current page
       const filteredLeaderboard = leaderboard.filter(
         (entry: LeaderboardEntry) =>
-          entry.user.github_username.toLowerCase() !== username.toLowerCase()
+          entry.user.github_username.toLowerCase() !== username.toLowerCase() &&
+          entry.aura > 0
       );
 
-      setCurrentUser(userEntry || null);
       setLeaderboardData(filteredLeaderboard);
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= pagination.totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -236,52 +336,90 @@ function CustomLeaderboard({ username }: { username: string }) {
         )}
       </div>
 
-      {/* Current User Highlight */}
+      {/* Pagination Info */}
+      {pagination.totalCount > 0 && (
+        <div className="flex items-center justify-between mb-4 text-xs sm:text-sm text-[#7d8590]">
+          <span>
+            Showing {Math.min(pagination.limit, pagination.totalCount)} of top
+            100 developers
+          </span>
+          <span>
+            Page {pagination.currentPage} of {pagination.totalPages}
+          </span>
+        </div>
+      )}
+
+      {/* Current User Highlight or Out of Top 100 Message */}
       {currentUser && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative overflow-hidden rounded-lg sm:rounded-xl border-2 border-[#39d353] bg-gradient-to-r from-[#161b21] to-[#0d1117] p-3 sm:p-4 md:p-6"
+          className={`relative overflow-hidden rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 ${
+            userOutOfTop100
+              ? "border-2 border-orange-500 bg-gradient-to-r from-orange-900/20 to-red-900/20"
+              : "border-2 border-[#39d353] bg-gradient-to-r from-[#161b21] to-[#0d1117]"
+          }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/10 to-[#26a641]/10"></div>
+          {!userOutOfTop100 && (
+            <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/10 to-[#26a641]/10"></div>
+          )}
           <div className="relative">
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#39d353]" />
-              <span className="text-xs sm:text-sm font-medium text-[#39d353]">
-                Your Position
-              </span>
-            </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
-                {getRankIcon(currentUser.rank)}
-                <img
-                  src={currentUser.user.avatar_url}
-                  alt={currentUser.user.display_name}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-[#39d353]"
-                />
+            {userOutOfTop100 ? (
+              <div className="flex items-start gap-3">
+                <HeartHandshake className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">
-                    {currentUser.user.display_name}
+                  <h3 className="text-sm sm:text-base font-semibold text-orange-200 mb-1">
+                    Time to Level Up! 💪
                   </h3>
-                  <p className="text-xs sm:text-sm text-[#7d8590]">
-                    @{currentUser.user.github_username}
+                  <p className="text-xs sm:text-sm text-orange-300/90 leading-relaxed">
+                    @{username} is currently ranked #{currentUser.rank}. The top
+                    100 developers are crushing it! Start contributing more,
+                    maintain consistency, and climb your way up. Every commit
+                    counts toward your coding journey! 🚀
                   </p>
                 </div>
               </div>
-              <div className="text-right w-full sm:w-auto">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  #{currentUser.rank}
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#39d353]" />
+                  <span className="text-xs sm:text-sm font-medium text-[#39d353]">
+                    {username}'s Position
+                  </span>
                 </div>
-                <div className="text-xs sm:text-sm text-[#7d8590]">
-                  {formatNumber(currentUser.aura)} Aura
-                </div>
-                {currentUser.contributions !== undefined && (
-                  <div className="text-[10px] sm:text-xs text-[#7d8590]">
-                    {formatNumber(currentUser.contributions)} contributions
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    {getRankIcon(currentUser.rank)}
+                    <img
+                      src={currentUser.user.avatar_url}
+                      alt={currentUser.user.display_name}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-[#39d353]"
+                    />
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-white">
+                        {currentUser.user.display_name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#7d8590]">
+                        @{currentUser.user.github_username}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
+                  <div className="text-right w-full sm:w-auto">
+                    <div className="text-xl sm:text-2xl font-bold text-white">
+                      #{currentUser.rank}
+                    </div>
+                    <div className="text-xs sm:text-sm text-[#7d8590]">
+                      {formatNumber(currentUser.aura)} Aura
+                    </div>
+                    {currentUser.contributions !== undefined && (
+                      <div className="text-[10px] sm:text-xs text-[#7d8590]">
+                        {formatNumber(currentUser.contributions)} contributions
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
       )}
@@ -294,7 +432,7 @@ function CustomLeaderboard({ username }: { username: string }) {
         <AnimatePresence>
           {leaderboardData.map((entry, index) => (
             <motion.div
-              key={`${entry.user.id}-${view}-${currentMonth}`}
+              key={`${entry.user.id}-${view}-${currentMonth}-${currentPage}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -388,6 +526,59 @@ function CustomLeaderboard({ username }: { username: string }) {
           ))}
         </AnimatePresence>
       </div>
+
+      {/* Pagination Controls */}
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-[#21262d]">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={!pagination.hasPrevPage}
+            className="p-2 rounded-md bg-[#161b21] border border-[#21262d] text-[#7d8590] hover:text-white hover:bg-[#21262d] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from(
+              { length: Math.min(5, pagination.totalPages) },
+              (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                      pageNum === currentPage
+                        ? "bg-[#39d353] text-black"
+                        : "bg-[#161b21] border border-[#21262d] text-[#7d8590] hover:text-white hover:bg-[#21262d]"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              }
+            )}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={!pagination.hasNextPage}
+            className="p-2 rounded-md bg-[#161b21] border border-[#21262d] text-[#7d8590] hover:text-white hover:bg-[#21262d] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {leaderboardData.length === 0 && (
         <div className="text-center py-6 sm:py-8">

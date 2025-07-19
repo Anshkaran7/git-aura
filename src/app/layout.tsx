@@ -18,16 +18,15 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in/"
   ),
   title: {
-    default:
-      "GitHub Profile Visualizer | Beautiful Developer Statistics & Contribution Graphs",
-    template: "%s | GitHub Profile Visualizer",
+    default: "GitAura | Beautiful Developer Statistics & Contribution Graphs",
+    template: "%s | GitAura",
   },
   description:
     "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights. Perfect for showcasing your coding journey and developer portfolio.",
-  applicationName: "GitHub Profile Visualizer",
+  applicationName: "GitAura",
   authors: [{ name: "Karan Dev", url: "https://karandev.in" }],
   creator: "Karan Dev",
-  publisher: "GitHub Profile Visualizer",
+  publisher: "GitAura",
   formatDetection: {
     email: false,
     address: false,
@@ -49,6 +48,8 @@ export const metadata: Metadata = {
     "Developer Tools",
     "GitHub API",
     "React Application",
+    "GitAura",
+    "Github Aura",
   ],
   category: "Developer Tools",
   classification: "Web Application",
@@ -69,8 +70,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "GitHub Profile Visualizer",
-    title: "GitHub Profile Visualizer | Beautiful Developer Statistics",
+    siteName: "GitAura",
+    title: "GitAura | Your GitHub Aura",
     description:
       "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights.",
     images: [
@@ -78,16 +79,16 @@ export const metadata: Metadata = {
         url: "/api/og",
         width: 1200,
         height: 630,
-        alt: "GitHub Profile Visualizer - Beautiful Developer Statistics",
+        alt: "GitAura - Your GitHub Aura",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@your_twitter", // Replace with your actual Twitter handle
-    creator: "@your_twitter", // Replace with your actual Twitter handle
-    title: "GitHub Profile Visualizer | Developer Statistics",
+    site: "@itsmeekaran", // Replace with your actual Twitter handle
+    creator: "@itsmeekaran", // Replace with your actual Twitter handle
+    title: "GitAura | Developer Statistics",
     description:
       "Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics.",
     images: ["/api/og"],
@@ -123,8 +124,8 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "default",
-    "apple-mobile-web-app-title": "GitHub Profile Visualizer",
-    "application-name": "GitHub Profile Visualizer",
+    "apple-mobile-web-app-title": "GitAura",
+    "application-name": "GitAura",
     "msapplication-TileColor": "#0a0a0a",
     "msapplication-config": "/browserconfig.xml",
     "theme-color": "#0a0a0a",
@@ -135,13 +136,12 @@ export const metadata: Metadata = {
 // Enhanced structured data for the organization
 function OrganizationStructuredData() {
   const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    "https://github-profile-visualizer.vercel.app";
+    process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in/";
 
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "GitHub Profile Visualizer",
+    name: "GitAura",
     url: baseUrl,
     logo: `${baseUrl}/api/og`,
     description:
@@ -157,7 +157,7 @@ function OrganizationStructuredData() {
       url: "https://karandev.in",
     },
     sameAs: [
-      "https://github.com/karandev/github-profile-visualizer", // Update with your actual repo
+      "https://github.com/karandev/git-aura", // Update with your actual repo
       "https://karandev.in",
     ],
   };
@@ -236,7 +236,7 @@ export default function RootLayout({
           <meta name="rating" content="general" />
 
           {/* Rich snippets support */}
-          <meta itemProp="name" content="GitHub Profile Visualizer" />
+          <meta itemProp="name" content="GitAura" />
           <meta
             itemProp="description"
             content="Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics."

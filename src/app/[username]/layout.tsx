@@ -47,7 +47,7 @@ export async function generateMetadata({
 
   if (!username) {
     return {
-      title: "GitHub Profile Visualizer | Beautiful Developer Statistics",
+      title: "GitAura | Beautiful Developer Statistics",
       description:
         "Create stunning visualizations of any GitHub profile with contribution graphs and statistics.",
     };
@@ -65,7 +65,7 @@ export async function generateMetadata({
     ? ` | ${userData.public_repos} repositories`
     : "";
 
-  const title = `${displayName}'s GitHub Profile${followerCount}${repoCount} | GitHub Visualizer`;
+  const title = `${displayName}'s GitHub Profile${followerCount}${repoCount} | GitAura`;
   const description = `Explore ${displayName}'s GitHub journey with beautiful visualizations${userBio}. View contribution graphs, repository statistics, and developer insights.`;
 
   return {
@@ -89,7 +89,7 @@ export async function generateMetadata({
       { name: "Karan Dev", url: "https://karandev.in" },
     ],
     creator: "Karan Dev",
-    publisher: "GitHub Profile Visualizer",
+    publisher: "GitAura",
     robots: {
       index: true,
       follow: true,
@@ -109,13 +109,13 @@ export async function generateMetadata({
       title: `${displayName}'s GitHub Profile | Developer Statistics & Contributions`,
       description,
       url: canonicalUrl,
-      siteName: "GitHub Profile Visualizer",
+      siteName: "GitAura",
       images: [
         {
           url: `${baseUrl}/api/og?username=${encodeURIComponent(username)}`,
           width: 1200,
           height: 630,
-          alt: `${displayName}'s GitHub Profile Visualization`,
+          alt: `${displayName}'s GitHub Aura`,
           type: "image/png",
         },
       ],
@@ -130,23 +130,23 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      site: "@your_twitter", // Replace with your Twitter handle
-      creator: "@your_twitter", // Replace with your Twitter handle
+      site: "@itsmeekaran", // Replace with your Twitter handle
+      creator: "@itsmeekaran", // Replace with your Twitter handle
       title: `${displayName}'s GitHub Profile | Developer Stats`,
       description: `Explore ${displayName}'s GitHub contributions and developer statistics with beautiful visualizations.`,
       images: [
         {
           url: `${baseUrl}/api/og?username=${encodeURIComponent(username)}`,
-          alt: `${displayName}'s GitHub Profile Visualization`,
+          alt: `${displayName}'s GitHub Aura`,
         },
       ],
     },
     other: {
-      "application-name": "GitHub Profile Visualizer",
+      "application-name": "GitAura",
       "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": "default",
-      "apple-mobile-web-app-title": "GitHub Profile Visualizer",
+      "apple-mobile-web-app-title": "GitAura",
       "theme-color": "#0d1117",
     },
   };
@@ -166,7 +166,7 @@ function StructuredData({
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "GitHub Profile Visualizer",
+    name: "GitAura",
     description:
       "Beautiful GitHub profile and contribution visualization tool for developers",
     url: baseUrl,
@@ -213,7 +213,7 @@ function StructuredData({
         },
         about: {
           "@type": "WebApplication",
-          name: "GitHub Profile Visualizer",
+          name: "GitAura",
         },
       }
     : null;

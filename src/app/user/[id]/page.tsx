@@ -101,10 +101,11 @@ function UserPage() {
     setCheckingRegistration(true);
     try {
       // Check if user exists in our users table (meaning they're registered)
+      // Use ilike for case-insensitive matching since GitHub usernames are case-insensitive
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("id, github_username")
-        .eq("github_username", username)
+        .ilike("github_username", username)
         .single();
 
       if (userError && userError.code !== "PGRST116") {
@@ -116,8 +117,8 @@ function UserPage() {
       // User found = registered
       if (userData) {
         setIsUserRegistered(true);
-        // Only fetch profile if user is registered
-        await fetchUserProfile(username);
+        // Only fetch profile if user is registered, use the actual stored username for consistency
+        await fetchUserProfile(userData.github_username);
       } else {
         // User not found = not registered
         setIsUserRegistered(false);
