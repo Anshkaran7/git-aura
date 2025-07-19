@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { formatNumber } from "@/lib/utils2";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
           entry.users.display_name ||
           entry.users.github_username ||
           `User ${index + 1}`,
-        designation: `Aura Score: ${entry.total_aura.toLocaleString()}`,
+        designation: `Aura Score: ${formatNumber(entry.total_aura)}`,
         image:
           entry.users.avatar_url ||
           `https://api.dicebear.com/7.x/avatars/svg?seed=${

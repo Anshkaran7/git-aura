@@ -10,9 +10,26 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
-    const limit = parseInt(searchParams.get("limit") || "100");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
 
-    // Fetch all-time leaderboard data
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Ensure we don't go beyond top 100 users
+    const maxLimit = Math.min(100, offset + limit);
+
+    // Get total count of users in leaderboard (up to 100)
+    const { count: totalCount, error: countError } = await supabaseAdmin
+      .from("global_leaderboard")
+      .select("*", { count: "exact", head: true })
+      .lte("rank", 100);
+
+    if (countError) {
+      console.error("Error getting total count:", countError);
+    }
+
+    // Fetch all-time leaderboard data with pagination
     const { data: alltimeData, error: alltimeError } = await supabaseAdmin
       .from("global_leaderboard")
       .select(
@@ -28,8 +45,9 @@ export async function GET(request: NextRequest) {
         )
       `
       )
+      .lte("rank", 100) // Only show top 100 users
       .order("rank", { ascending: true })
-      .limit(limit);
+      .range(offset, maxLimit - 1);
 
     if (alltimeError) {
       console.error("Error fetching all-time leaderboard:", alltimeError);
@@ -82,28 +100,41 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the frontend expectations
-    const transformedData = alltimeData?.map((entry: any) => {
-      const userBadges = badges.filter(
-        (badge: any) => badge.user_id === entry.users.id
-      );
+    const transformedData =
+      alltimeData?.map((entry: any) => {
+        const userBadges = badges.filter(
+          (badge: any) => badge.user_id === entry.users.id
+        );
 
-      return {
-        rank: entry.rank,
-        user: entry.users,
-        aura: entry.total_aura,
-        badges: userBadges.map((ub: any) => ({
-          ...ub.badges,
-          month_year: ub.month_year,
-          rank: ub.rank,
-        })),
-      };
-    }) || [];
+        return {
+          rank: entry.rank,
+          user: entry.users,
+          aura: entry.total_aura,
+          badges: userBadges.map((ub: any) => ({
+            ...ub.badges,
+            month_year: ub.month_year,
+            rank: ub.rank,
+          })),
+        };
+      }) || [];
+
+    // Calculate pagination info
+    const totalPages = Math.ceil((totalCount || 0) / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       leaderboard: transformedData,
       userRank,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount: totalCount || 0,
+        hasNextPage,
+        hasPrevPage,
+        limit,
+      },
     });
-
   } catch (error) {
     console.error("Error in all-time leaderboard API:", error);
     return NextResponse.json(
@@ -111,4 +142,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Github, RefreshCw } from "lucide-react";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { formatNumber } from "@/lib/utils2";
 
 // Types for the API response
 interface TopUser {
@@ -261,7 +262,7 @@ export default function TopAuraUsers() {
               {loading ? (
                 <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
               ) : (
-                `${stats.totalAuraPoints.toLocaleString()}${
+                `${formatNumber(stats.totalAuraPoints)}${
                   stats.totalAuraPoints === 0 ? "" : "+"
                 }`
               )}

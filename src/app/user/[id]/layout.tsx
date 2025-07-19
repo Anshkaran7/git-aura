@@ -11,14 +11,15 @@ export async function generateMetadata({
   params: { id: string };
 }): Promise<Metadata> {
   const username = params.id;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
-  
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
+
   const title = `${username}'s GitHub Profile | GitHub Profile Visualizer`;
   const description = `Check out ${username}'s GitHub contributions, statistics, and coding activity. Beautiful visualizations of developer progress and project insights.`;
-  
+
   // Default OG image - will be dynamically updated client-side if og_image param exists
   const ogImage = `${baseUrl}/api/og?username=${encodeURIComponent(username)}`;
-  
+
   return {
     title,
     description,
@@ -55,6 +56,6 @@ export async function generateMetadata({
   };
 }
 
-export default function UserLayout({ children }: UserLayoutProps) {
+export default function UserLayout({ children, params }: UserLayoutProps) {
   return <>{children}</>;
 }
