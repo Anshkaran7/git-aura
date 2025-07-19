@@ -84,7 +84,7 @@ export async function GET(request: Request) {
                 marginBottom: 20,
               }}
             >
-              📊 GitHub Profile Visualizer
+              GitAura | Beautiful Developer Statistics & Contribution Graphs
             </div>
             <div
               style={{

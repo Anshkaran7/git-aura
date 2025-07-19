@@ -158,7 +158,7 @@ export async function generateMetadata({
       ],
     },
     other: {
-      "application-name": "GitHub Profile Visualizer",
+      "application-name": "GitAura | Beautiful Developer Statistics & Contribution Graphsr",
       "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": "default",
