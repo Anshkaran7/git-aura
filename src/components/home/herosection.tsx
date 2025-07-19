@@ -32,6 +32,7 @@ export const HeroSection = () => {
     averageBadgesPerUser: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const handleGoToProfile = () => {
     if (user?.externalAccounts) {
@@ -48,22 +49,26 @@ export const HeroSection = () => {
   };
 
   const handleShowDemoProfile = () => {
-    // Show a demo profile - replace with your actual demo username
-    router.push("/torvalds"); // Showing Linus Torvalds as demo
+    router.push("/torvalds");
   };
 
   const fetchHeroStats = async () => {
     try {
       setLoading(true);
+      setError(false);
       const response = await fetch("/api/stats/hero");
       if (!response.ok) {
         throw new Error("Failed to fetch stats");
       }
       const data: HeroStats = await response.json();
-      setStats(data);
+      if (data.fallback) {
+        setError(true);
+      } else {
+        setStats(data);
+      }
     } catch (error) {
       console.error("Error fetching hero stats:", error);
-      // Keep showing 0s on error
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -82,6 +87,23 @@ export const HeroSection = () => {
     }
     return num.toString();
   };
+
+  // Render stat with loading state
+  const renderStat = (value: number, label: string, icon: React.ReactNode) => (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      {icon}
+      <span className="font-semibold text-foreground">
+        {loading ? (
+          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
+        ) : error ? (
+          "---"
+        ) : (
+          `${formatNumber(value)}+`
+        )}
+      </span>{" "}
+      {label}
+    </div>
+  );
 
   return (
     <section className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center bg-background overflow-hidden py-12 sm:py-0">
@@ -161,45 +183,21 @@ export const HeroSection = () => {
 
           {/* Stats Row */}
           <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8 sm:mb-12 text-sm sm:text-base">
-            <div className="flex items-center gap-2 text-muted-foreground">
+            {renderStat(
+              stats.totalDevelopers,
+              "Developers",
               <Github className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalDevelopers > 0 ? (
-                  `${formatNumber(stats.totalDevelopers)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Developers
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
+            )}
+            {renderStat(
+              stats.totalAuraPoints,
+              "Aura Points",
               <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalAuraPoints > 0 ? (
-                  `${formatNumber(stats.totalAuraPoints)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Aura Points
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
+            )}
+            {renderStat(
+              stats.totalBadges,
+              "Badges Earned",
               <Star className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalBadges > 0 ? (
-                  `${formatNumber(stats.totalBadges)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Badges Earned
-            </div>
+            )}
           </div>
 
           {/* CTA Buttons */}

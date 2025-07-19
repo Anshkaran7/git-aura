@@ -1,53 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    "https://vxwwzvrzeptddawwvclj.supabase.co",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4d3d6dnJ6ZXB0ZGRhd3d2Y2xqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzM4NDQsImV4cCI6MjA2ODE0OTg0NH0.95XoVV1ZByBeO7vMEJCUZSpsnP37ZOZFoe094CAVXWo"
-);
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const { userId: clerkUserId } = await auth();
 
-    if (!userId) {
+    if (!clerkUserId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const { githubUsername, githubData, contributionDays } = body;
+    const { githubUsername, displayName, avatarUrl } = body;
 
-    if (!githubUsername || !githubData || !contributionDays) {
+    if (!githubUsername) {
       return NextResponse.json(
-        { error: "Missing required data" },
+        { error: "GitHub username is required" },
         { status: 400 }
       );
     }
 
-    // Save or update user in our database
-    const { error: userError } = await supabaseAdmin.from("users").upsert({
-      id: userId,
-      email: githubData.email || `${githubUsername}@github.local`,
-      github_username: githubUsername,
-      github_id: githubData.id.toString(),
-      display_name: githubData.name || githubUsername,
-      avatar_url: githubData.avatar_url,
-      github_data: githubData,
-      updated_at: new Date().toISOString(),
+    // Get current month-year for monthly leaderboard
+    const now = new Date();
+    const currentMonthYear = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    // Create or update user with a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create or update user
+      const user = await tx.user.upsert({
+        where: { githubUsername },
+        create: {
+          email: `${githubUsername}@github.local`, // Temporary email
+          githubUsername,
+          displayName: displayName || githubUsername,
+          avatarUrl: avatarUrl || `https://github.com/${githubUsername}.png`,
+          totalAura: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          lastContributionDate: new Date(),
+        },
+        update: {
+          displayName: displayName || githubUsername,
+          avatarUrl: avatarUrl || `https://github.com/${githubUsername}.png`,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Initialize monthly leaderboard entry if it doesn't exist
+      await tx.monthlyLeaderboard.upsert({
+        where: {
+          userId_monthYear: {
+            userId: user.id,
+            monthYear: currentMonthYear,
+          },
+        },
+        create: {
+          userId: user.id,
+          monthYear: currentMonthYear,
+          totalAura: 0,
+          contributionsCount: 0,
+          rank: 0,
+        },
+        update: {}, // No updates needed if entry exists
+      });
+
+      // Initialize global leaderboard entry if it doesn't exist
+      await tx.globalLeaderboard.upsert({
+        where: { userId: user.id },
+        create: {
+          userId: user.id,
+          totalAura: 0,
+          rank: 0,
+          yearlyAura: 0,
+          year: new Date().getFullYear().toString(),
+        },
+        update: {}, // No updates needed if entry exists
+      });
+
+      return user;
     });
 
-    if (userError) {
-      console.error("Error saving user:", userError);
-      return NextResponse.json(
-        { error: "Failed to save user" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: result.id,
+        githubUsername: result.githubUsername,
+        displayName: result.displayName,
+        avatarUrl: result.avatarUrl,
+      },
+    });
   } catch (error) {
     console.error("Error in sync-user:", error);
     return NextResponse.json(

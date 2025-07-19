@@ -219,13 +219,19 @@ BEGIN
     DO UPDATE SET 
       total_aura = EXCLUDED.total_aura;
 
-    -- Update monthly ranks for the specific month
+    -- Update monthly ranks for the specific month with proper tie-breaking
     WITH ranked_monthly AS (
       SELECT 
-        user_id,
-        RANK() OVER (ORDER BY total_aura DESC) as new_rank
-      FROM monthly_leaderboards
-      WHERE month_year = p_month_year
+        ml.user_id,
+        DENSE_RANK() OVER (
+          ORDER BY 
+            ml.total_aura DESC,
+            ml.contributions_count DESC,
+            u.current_streak DESC
+        ) as new_rank
+      FROM monthly_leaderboards ml
+      JOIN users u ON u.id = ml.user_id::uuid
+      WHERE ml.month_year = p_month_year
     )
     UPDATE monthly_leaderboards ml
     SET rank = rm.new_rank
@@ -233,12 +239,17 @@ BEGIN
     WHERE ml.user_id = rm.user_id
       AND ml.month_year = p_month_year;
 
-    -- Update global ranks based on all-time total
+    -- Update global ranks based on all-time total with proper tie-breaking
     WITH ranked_global AS (
       SELECT 
-        user_id,
-        RANK() OVER (ORDER BY total_aura DESC) as new_rank
-      FROM global_leaderboard
+        gl.user_id,
+        DENSE_RANK() OVER (
+          ORDER BY 
+            gl.total_aura DESC,
+            u.current_streak DESC
+        ) as new_rank
+      FROM global_leaderboard gl
+      JOIN users u ON u.id = gl.user_id::uuid
     )
     UPDATE global_leaderboard gl
     SET rank = rg.new_rank
@@ -248,7 +259,7 @@ BEGIN
   -- Commit transaction
   END;
 END;
-$$ LANGUAGE plpgsql;
+$$ language plpgsql;
 
 -- Add year column and update table structure if not exists
 DO $$ 

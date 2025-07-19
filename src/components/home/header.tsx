@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Github, Menu, Zap, User, LogOut } from "lucide-react";
+import { Github, Menu, Zap, User, LogOut, RefreshCw } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export const Header = ({
   leaderboard = false,
@@ -16,11 +17,63 @@ export const Header = ({
   dashboard?: boolean;
   profile?: boolean;
 }) => {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Handle user data synchronization
+  useEffect(() => {
+    const syncUserData = async () => {
+      if (!isLoaded || !isSignedIn || !user) return;
+
+      try {
+        setIsSyncing(true);
+        const githubAccount = user.externalAccounts?.find(
+          (account) => account.provider === "github"
+        );
+
+        if (!githubAccount?.username) {
+          console.warn("No GitHub account connected");
+          return;
+        }
+
+        // Sync user data with our backend
+        const response = await fetch("/api/sync-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            githubUsername: githubAccount.username,
+            displayName: user.firstName || githubAccount.username,
+            avatarUrl:
+              user.imageUrl ||
+              `https://github.com/${githubAccount.username}.png`,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to sync user data");
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          console.log("User data synced successfully");
+        }
+      } catch (error) {
+        console.error("Error syncing user data:", error);
+        toast.error("Failed to sync your data. Please try again.");
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    syncUserData();
+  }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,9 +108,47 @@ export const Header = ({
 
   const handleNavigateToLeaderboard = (e: React.MouseEvent) => {
     e.preventDefault();
-    const targetPath = isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard";
+    const targetPath = isSignedIn
+      ? `/${user?.username}/leaderboard`
+      : "/leaderboard";
     if (pathname !== targetPath) {
       router.push(targetPath);
+    }
+  };
+
+  const handleManualSync = async () => {
+    if (!isSignedIn || isSyncing) return;
+
+    try {
+      setIsSyncing(true);
+      const response = await fetch("/api/sync-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          githubUsername: user.externalAccounts?.find(
+            (account) => account.provider === "github"
+          )?.username,
+          displayName: user.firstName || user.username,
+          avatarUrl: user.imageUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sync data");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error in manual sync:", error);
+      // toast.error("Failed to sync. Please try again.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -106,31 +197,44 @@ export const Header = ({
               </>
             )}
 
-            {/* {isSignedIn && ( */}
-              {pathname !== "/" && (
-                <a
+            {pathname !== "/" && (
+              <a
                 href={profile ? `/${user?.username}` : "/profile"}
                 onClick={handleNavigateToProfile}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 My Profile
               </a>
-              )}
+            )}
 
             <a
-              href={isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"}
+              href={
+                isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
+              }
               onClick={handleNavigateToLeaderboard}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Leaderboard
             </a>
-            {/* )} */}
           </nav>
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
             {isSignedIn ? (
               <>
+                {/* Manual Sync Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={handleManualSync}
+                  disabled={isSyncing}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                </Button>
+
                 {/* User Profile Button */}
                 <Button
                   variant="ghost"
@@ -237,15 +341,29 @@ export const Header = ({
                 </a>
               )}
               {isSignedIn && (
-                <a
-                  href={
-                    isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
-                  }
-                  onClick={handleNavigateToLeaderboard}
-                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
-                >
-                  Leaderboard
-                </a>
+                <>
+                  <a
+                    href={
+                      isSignedIn
+                        ? `/${user?.username}/leaderboard`
+                        : "/leaderboard"
+                    }
+                    onClick={handleNavigateToLeaderboard}
+                    className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                  >
+                    Leaderboard
+                  </a>
+                  <button
+                    onClick={handleManualSync}
+                    disabled={isSyncing}
+                    className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                    />
+                    Sync Data
+                  </button>
+                </>
               )}
               {isSignedIn && (
                 <SignOutButton>

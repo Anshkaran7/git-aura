@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import UserSync from "@/components/UserSync";
+import { Toaster } from "sonner";
 
 const monaSans = Mona_Sans({
   subsets: ["latin"],
@@ -249,6 +250,19 @@ export default function RootLayout({
           className={`${monaSans.variable} font-sans antialiased`}
           suppressHydrationWarning={true}
         >
+          <Toaster
+            theme="dark"
+            position="top-right"
+            closeButton
+            richColors
+            toastOptions={{
+              style: {
+                background: "#1a1a1a",
+                border: "1px solid #2a2a2a",
+                color: "#ffffff",
+              },
+            }}
+          />
           {/* Skip to main content for accessibility */}
           <a
             href="#main-content"
