@@ -1,5 +1,5 @@
 {
-  "name": "GitAura - GitHub Profile Visualizer",
+  "name": "GitAura - GitHub Aura",
   "short_name": "GitAura",
   "description": "Beautiful GitHub profile and contribution visualization tool for developers",
   "start_url": "/",
@@ -39,7 +39,7 @@
       "sizes": "1200x630",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "GitHub Profile Visualizer Dashboard"
+      "label": "GitAura Dashboard"
     }
   ],
   "shortcuts": [

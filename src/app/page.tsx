@@ -29,8 +29,7 @@ export async function generateMetadata({
     const canonicalUrl = `${baseUrl}?share=${shareId}`;
 
     return {
-      title:
-        "GitHub Profile Visualizer - Shared Profile | Developer Stats & Contributions",
+      title: "GitAura - Shared Profile | Developer Stats & Contributions",
       description:
         "View this beautifully visualized GitHub profile with contribution graphs, repository statistics, and developer insights. Share and showcase your GitHub journey.",
       keywords: [
@@ -45,7 +44,7 @@ export async function generateMetadata({
       ],
       authors: [{ name: "Karan Dev", url: "https://karandev.in" }],
       creator: "Karan Dev",
-      publisher: "GitHub Profile Visualizer",
+      publisher: "GitAura",
       robots: {
         index: true,
         follow: true,
