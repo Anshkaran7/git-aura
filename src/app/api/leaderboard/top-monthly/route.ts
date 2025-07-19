@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/utils2";
 
+// Explicitly set runtime to nodejs to avoid edge runtime issues
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Retry function for database operations
+async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      console.log(
+        `Database operation failed, retrying... (${retries} attempts left)`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+      return withRetry(fn, retries - 1);
+    }
+    throw error;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Get current month-year (YYYY-MM format)
@@ -10,32 +30,37 @@ export async function GET(request: NextRequest) {
       now.getMonth() + 1
     ).padStart(2, "0")}`;
 
-    // Fetch top 5 monthly users with proper sorting
-    const monthlyData = await prisma.monthlyLeaderboard.findMany({
-      where: {
-        monthYear: currentMonthYear,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            displayName: true,
-            githubUsername: true,
-            avatarUrl: true,
-            totalAura: true,
-            currentStreak: true,
+    console.log(`Fetching top monthly users for ${currentMonthYear}`);
+
+    // Fetch top 5 monthly users with proper sorting using retry logic
+    const monthlyData = await withRetry(async () => {
+      return await prisma.monthlyLeaderboard.findMany({
+        where: {
+          monthYear: currentMonthYear,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              githubUsername: true,
+              avatarUrl: true,
+              totalAura: true,
+              currentStreak: true,
+            },
           },
         },
-      },
-      orderBy: [
-        { totalAura: "desc" },
-        { contributionsCount: "desc" },
-        { user: { currentStreak: "desc" } },
-      ],
-      take: 5,
+        orderBy: [
+          { totalAura: "desc" },
+          { contributionsCount: "desc" },
+          { user: { currentStreak: "desc" } },
+        ],
+        take: 5,
+      });
     });
 
     if (!monthlyData || monthlyData.length === 0) {
+      console.log(`No monthly data found for ${currentMonthYear}`);
       return NextResponse.json({
         topUsers: [],
         monthYear: currentMonthYear,
@@ -65,19 +90,23 @@ export async function GET(request: NextRequest) {
       currentStreak: entry.user.currentStreak || 0,
     }));
 
-    // Get monthly stats
-    const monthlyStats = await prisma.monthlyLeaderboard.aggregate({
-      where: {
-        monthYear: currentMonthYear,
-      },
-      _count: {
-        _all: true, // Total participants
-      },
-      _sum: {
-        totalAura: true,
-        contributionsCount: true,
-      },
+    // Get monthly stats with retry logic
+    const monthlyStats = await withRetry(async () => {
+      return await prisma.monthlyLeaderboard.aggregate({
+        where: {
+          monthYear: currentMonthYear,
+        },
+        _count: {
+          _all: true, // Total participants
+        },
+        _sum: {
+          totalAura: true,
+          contributionsCount: true,
+        },
+      });
     });
+
+    console.log(`Successfully fetched ${transformedData.length} top users`);
 
     return NextResponse.json({
       topUsers: transformedData,
@@ -90,6 +119,18 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in top monthly users API:", error);
+
+    // Check if it's a connection error
+    if (
+      error instanceof Error &&
+      error.message.includes("Can't reach database")
+    ) {
+      console.error("Database connection failed. This might be due to:");
+      console.error("1. DATABASE_URL not properly configured for serverless");
+      console.error("2. Missing connection pooling configuration");
+      console.error("3. Supabase instance not accessible");
+    }
+
     return NextResponse.json(
       {
         error: "Internal server error",
@@ -101,6 +142,12 @@ export async function GET(request: NextRequest) {
           totalParticipants: 0,
         },
         fallback: true,
+        debug:
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
