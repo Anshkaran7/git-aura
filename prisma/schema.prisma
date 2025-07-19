@@ -11,8 +11,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = "postgresql://postgres:gitAura2025@db.vxwwzvrzeptddawwvclj.supabase.co:5432/postgres?pgbouncer=true&connection_limit=1&schema=public"
+  directUrl = "postgres://postgres:gitAura2025@db.vxwwzvrzeptddawwvclj.supabase.co:5432/postgres?schema=public"
 }
 
 model User {
