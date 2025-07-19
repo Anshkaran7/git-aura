@@ -1,24 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { calculateTotalAura } from "../../../../../lib/aura";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
-
-// Same calculation logic as save-monthly-aura API
-const calculateMonthlyAura = (
-  monthlyContributions: number,
-  activeDays: number,
-  daysInMonth: number
-): number => {
-  return Math.round(
-    monthlyContributions * 10 + // 10 points per contribution
-      activeDays * 50 + // 50 points per active day
-      (activeDays / daysInMonth) * 1000 // Consistency bonus (up to 1000 points)
-  );
-};
+import { prisma } from "@/lib/prisma";
+import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
 
 export async function GET(request: NextRequest) {
   // Extract username from the URL path
@@ -170,18 +152,44 @@ export async function GET(request: NextRequest) {
       contributions: contributionsResult,
     });
 
-    // If user is authenticated, save monthly aura in background (don't await)
+    // If user is authenticated, save aura in background (don't await)
     const userId = request.nextUrl.searchParams.get("userId");
     if (userId) {
-      console.log(`✅ Starting background aura save for user: ${userId}`);
-      saveMonthlyAuraInBackground(
-        userId,
-        contributionsResult.contributionDays
-      ).catch((err) => {
-        console.error("Background monthly aura save failed:", err);
-      });
+      console.log(
+        `✅ [GitHub API] Starting background aura calculation for user: ${userId}`
+      );
+
+      // Find user in database to get GitHub username
+      prisma.user
+        .findUnique({
+          where: { id: userId },
+          select: { githubUsername: true },
+        })
+        .then((user) => {
+          if (user?.githubUsername) {
+            calculateAndStoreUserAura(
+              userId,
+              user.githubUsername,
+              contributionsResult.contributionDays
+            ).catch((err) => {
+              console.error("Background aura calculation failed:", err);
+            });
+          } else {
+            console.warn(
+              `⚠️ [GitHub API] User ${userId} has no GitHub username, skipping aura calculation`
+            );
+          }
+        })
+        .catch((err) => {
+          console.error(
+            "Error finding user for background aura calculation:",
+            err
+          );
+        });
     } else {
-      console.log("⚠️ No userId provided - skipping background aura save");
+      console.log(
+        "⚠️ [GitHub API] No userId provided - skipping background aura calculation"
+      );
     }
 
     return response;
@@ -191,81 +199,5 @@ export async function GET(request: NextRequest) {
       { error: "Failed to fetch GitHub data" },
       { status: 500 }
     );
-  }
-}
-
-// Background function to save monthly aura (non-blocking)
-async function saveMonthlyAuraInBackground(
-  userId: string,
-  contributionDays: any[]
-) {
-  try {
-    // Get current month/year
-    const now = new Date();
-    const monthYear = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}`;
-
-    // Calculate current month contributions
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    const currentMonthContributions = contributionDays.filter((day) => {
-      const dayDate = new Date(day.date);
-      return dayDate >= currentMonthStart && dayDate <= currentMonthEnd;
-    });
-
-    const monthlyContributionsCount = currentMonthContributions.reduce(
-      (sum, day) => sum + day.contributionCount,
-      0
-    );
-
-    const activeDays = currentMonthContributions.filter(
-      (day) => day.contributionCount > 0
-    ).length;
-    const daysInMonth = currentMonthEnd.getDate();
-
-    // Calculate monthly aura
-    const monthlyAura = calculateMonthlyAura(
-      monthlyContributionsCount,
-      activeDays,
-      daysInMonth
-    );
-
-    // Calculate total aura
-    const totalAura = calculateTotalAura(contributionDays);
-
-    // Update monthly leaderboard
-    await supabaseAdmin.from("monthly_leaderboards").upsert(
-      {
-        user_id: userId,
-        month_year: monthYear,
-        total_aura: monthlyAura,
-        contributions_count: monthlyContributionsCount,
-        rank: 0, // Will be updated later
-      },
-      {
-        onConflict: "user_id,month_year",
-      }
-    );
-    console.log("Monthly leaderboard updated:", monthlyAura);
-    // Update global leaderboard
-    await supabaseAdmin.from("global_leaderboard").upsert(
-      {
-        user_id: userId,
-        total_aura: totalAura,
-        rank: 0, // Will be updated later
-      },
-      {
-        onConflict: "user_id",
-      }
-    );
-
-    console.log(
-      `✅ Background aura save completed for user ${userId}: Monthly=${monthlyAura}, Total=${totalAura}`
-    );
-  } catch (error) {
-    console.error("Error in background monthly aura save:", error);
-    // Don't throw - this is background processing
   }
 }

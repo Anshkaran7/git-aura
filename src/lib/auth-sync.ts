@@ -1,70 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
-import { getCurrentMonthYear } from "./utils2";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-async function initializeLeaderboardRecords(userId: string) {
-  try {
-    // Initialize monthly leaderboard record
-    const currentMonthYear = getCurrentMonthYear();
-    const { error: monthlyError } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .upsert({
-        user_id: userId,
-        month_year: currentMonthYear,
-        total_aura: 0,
-        contributions_count: 0,
-        rank: 999999, // High rank that will be updated by the ranking function
-        created_at: new Date().toISOString(),
-      });
-
-    if (monthlyError) {
-      console.error("Error initializing monthly leaderboard:", monthlyError);
-      return false;
-    }
-
-    // Initialize global leaderboard record
-    const { error: globalError } = await supabaseAdmin
-      .from("global_leaderboard")
-      .upsert({
-        user_id: userId,
-        total_aura: 0,
-        rank: 999999, // High rank that will be updated by the ranking function
-        last_updated: new Date().toISOString(),
-      });
-
-    if (globalError) {
-      console.error("Error initializing global leaderboard:", globalError);
-      return false;
-    }
-
-    // Trigger rank recalculation
-    const { error: rankError } = await supabaseAdmin.rpc(
-      "update_user_aura_and_ranks",
-      {
-        p_user_id: userId,
-        p_month_year: currentMonthYear,
-        p_monthly_aura: 0,
-        p_contributions_count: 0,
-      }
-    );
-
-    if (rankError) {
-      console.error("Error updating ranks:", rankError);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error in initializeLeaderboardRecords:", error);
-    return false;
-  }
-}
+import { prisma } from "./prisma";
+import { fetchGitHubProfile, extractGitHubUsername } from "./github-fetch";
+import { fetchGitHubContributions } from "./github-contributions";
+import { calculateAndStoreUserAura } from "./aura-calculations";
 
 export async function syncCurrentUserToSupabase() {
   try {
@@ -86,47 +24,117 @@ export async function syncCurrentUserToSupabase() {
       primaryEmail?.split("@")[0] ||
       "Anonymous User";
 
-    // Check if user already exists
-    const { data: existingUser } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .eq("id", user.id)
-      .single();
+    // Extract GitHub username from external accounts
+    const githubUsername = extractGitHubUsername(user);
+
+    // Fetch GitHub profile data if GitHub username is available
+    let githubData = null;
+    let githubId = null;
+    let actualEmail = primaryEmail;
+
+    if (githubUsername) {
+      console.log(
+        `[Auth Sync] Fetching GitHub profile for username: ${githubUsername}`
+      );
+      const githubResult = await fetchGitHubProfile(githubUsername);
+
+      if (githubResult.success && githubResult.data) {
+        githubData = githubResult.data;
+        githubId = githubResult.data.id.toString();
+
+        // Use GitHub email if available and no primary email is set
+        if (githubResult.data.email && !primaryEmail) {
+          actualEmail = githubResult.data.email;
+        }
+
+        console.log(
+          `✅ [Auth Sync] Successfully fetched GitHub profile for ${githubUsername}`
+        );
+      } else {
+        console.warn(
+          `⚠️ [Auth Sync] Failed to fetch GitHub profile for ${githubUsername}:`,
+          githubResult.error
+        );
+      }
+    }
+
+    // Check if user already exists using Prisma
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
 
     const isNewUser = !existingUser;
 
-    // Upsert user in Supabase
-    const { error } = await supabaseAdmin.from("users").upsert(
-      {
-        id: user.id,
-        email: primaryEmail || `${user.id}@clerk.local`,
-        display_name: displayName,
-        avatar_url: user.imageUrl,
-        created_at: new Date(user.createdAt).toISOString(),
-        updated_at: new Date(user.updatedAt).toISOString(),
-      },
-      {
-        onConflict: "id",
-      }
-    );
+    // Upsert user using Prisma
+    try {
+      await prisma.user.upsert({
+        where: { id: user.id },
+        create: {
+          id: user.id,
+          email: actualEmail || `${user.id}@clerk.local`,
+          githubUsername: githubUsername,
+          githubId: githubId,
+          displayName: displayName,
+          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          githubData: githubData ? (githubData as any) : undefined,
+          createdAt: new Date(user.createdAt),
+          updatedAt: new Date(user.updatedAt),
+        },
+        update: {
+          email: actualEmail || `${user.id}@clerk.local`,
+          githubUsername: githubUsername,
+          githubId: githubId,
+          displayName: displayName,
+          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          githubData: githubData ? (githubData as any) : undefined,
+          updatedAt: new Date(user.updatedAt),
+        },
+      });
 
-    if (error) {
-      console.error("Error syncing user to Supabase:", error);
-      return { success: false, error: "Failed to sync user" };
-    }
-
-    // If this is a new user, initialize their leaderboard records
-    if (isNewUser) {
-      console.log("Initializing leaderboard records for new user:", user.id);
-      const leaderboardInitialized = await initializeLeaderboardRecords(
-        user.id
+      console.log(
+        `✅ [Auth Sync] Successfully synced user to database: ${user.id}`
       );
-      if (!leaderboardInitialized) {
-        return {
-          success: false,
-          error: "Failed to initialize leaderboard records",
-        };
+
+      // If this is a new user with GitHub username, calculate and store their aura
+      if (isNewUser && githubUsername) {
+        console.log(
+          `[Auth Sync] Starting aura calculation for new user: ${githubUsername}`
+        );
+
+        // Fetch GitHub contributions
+        const contributionsResult = await fetchGitHubContributions(
+          githubUsername
+        );
+
+        if (contributionsResult.success && contributionsResult.data) {
+          // Calculate and store aura
+          const auraResult = await calculateAndStoreUserAura(
+            user.id,
+            githubUsername,
+            contributionsResult.data.contributionDays
+          );
+
+          if (auraResult.success) {
+            console.log(
+              `✅ [Auth Sync] Successfully calculated aura for ${githubUsername}: ${auraResult.totalAura} total aura`
+            );
+          } else {
+            console.error(
+              `❌ [Auth Sync] Failed to calculate aura for ${githubUsername}:`,
+              auraResult.error
+            );
+          }
+        } else {
+          console.warn(
+            `⚠️ [Auth Sync] Failed to fetch contributions for ${githubUsername}:`,
+            contributionsResult.error
+          );
+        }
       }
+    } catch (prismaError) {
+      console.error("Error syncing user with Prisma:", prismaError);
+      return { success: false, error: "Failed to sync user" };
     }
 
     return { success: true, userId: user.id };
@@ -144,18 +152,11 @@ export async function ensureUserInSupabase() {
       return null;
     }
 
-    // Check if user exists in Supabase
-    const { data: existingUser, error: fetchError } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
-    if (fetchError && fetchError.code !== "PGRST116") {
-      // PGRST116 is "not found" error
-      console.error("Error checking user existence:", fetchError);
-      return null;
-    }
+    // Check if user exists using Prisma
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
 
     // If user doesn't exist, sync them
     if (!existingUser) {

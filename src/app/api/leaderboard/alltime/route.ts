@@ -31,8 +31,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = (page - 1) * limit;
 
-    // Fetch all leaderboard data
+    // Fetch leaderboard data with pagination, ordered by totalAura descending
     const alltimeData = await prisma.globalLeaderboard.findMany({
       include: {
         user: {
@@ -50,11 +53,19 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      orderBy: {
+        totalAura: "desc",
+      },
+      skip: offset,
+      take: limit,
     });
 
-    // Transform the data to match the frontend expectations
-    const transformedData = alltimeData.map((entry) => ({
-      rank: 0, // Will be calculated on frontend
+    // Get total count for pagination
+    const totalCount = await prisma.globalLeaderboard.count();
+
+    // Transform the data and add calculated ranks
+    const transformedData = alltimeData.map((entry, index) => ({
+      rank: offset + index + 1, // Calculate rank based on position
       user: {
         id: entry.user.id,
         display_name: entry.user.displayName || entry.user.githubUsername || "",
@@ -85,8 +96,32 @@ export async function GET(request: NextRequest) {
         })),
     }));
 
+    // If userId is provided, find user's rank even if they're not in current page
+    let userRank = null;
+    if (userId) {
+      const userEntry = await prisma.globalLeaderboard.findUnique({
+        where: { userId },
+        select: { rank: true },
+      });
+      userRank = userEntry?.rank || null;
+    }
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
     return NextResponse.json({
       leaderboard: transformedData,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalCount,
+        hasNextPage,
+        hasPrevPage,
+        limit,
+      },
+      userRank,
     });
   } catch (error) {
     console.error("Error in all-time leaderboard API:", error);

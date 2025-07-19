@@ -1,112 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { Webhook } from "svix";
-import { createClient } from "@supabase/supabase-js";
-import { getCurrentMonthYear } from "@/lib/utils2";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // This should be your service role key, not anon key
-);
-
-async function initializeLeaderboardRecords(userId: string) {
-  try {
-    // Initialize monthly leaderboard record
-    const currentMonthYear = getCurrentMonthYear();
-    const { error: monthlyError } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .upsert({
-        user_id: userId,
-        month_year: currentMonthYear,
-        total_aura: 0,
-        contributions_count: 0,
-        rank: 999999, // High rank that will be updated by the ranking function
-        created_at: new Date().toISOString(),
-      });
-
-    if (monthlyError) {
-      console.error("Error initializing monthly leaderboard:", monthlyError);
-      return false;
-    }
-
-    // Initialize global leaderboard record
-    const { error: globalError } = await supabaseAdmin
-      .from("global_leaderboard")
-      .upsert({
-        user_id: userId,
-        total_aura: 0,
-        rank: 999999, // High rank that will be updated by the ranking function
-        last_updated: new Date().toISOString(),
-      });
-
-    if (globalError) {
-      console.error("Error initializing global leaderboard:", globalError);
-      return false;
-    }
-
-    // Trigger rank recalculation
-    const { error: rankError } = await supabaseAdmin.rpc(
-      "update_user_aura_and_ranks",
-      {
-        p_user_id: userId,
-        p_month_year: currentMonthYear,
-        p_monthly_aura: 0,
-        p_contributions_count: 0,
-      }
-    );
-
-    if (rankError) {
-      console.error("Error updating ranks:", rankError);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error in initializeLeaderboardRecords:", error);
-    return false;
-  }
-}
+import { prisma } from "@/lib/prisma";
+import { fetchGitHubProfile, extractGitHubUsername } from "@/lib/github-fetch";
+import { fetchGitHubContributions } from "@/lib/github-contributions";
+import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
 
 export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    throw new Error(
+      "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
+    );
+  }
+
   // Get the headers
   const headerPayload = await headers();
-  const svix_id = headerPayload.get("svix-id");
-  const svix_timestamp = headerPayload.get("svix-timestamp");
-  const svix_signature = headerPayload.get("svix-signature");
+  const svixId = headerPayload.get("svix-id");
+  const svixTimestamp = headerPayload.get("svix-timestamp");
+  const svixSignature = headerPayload.get("svix-signature");
 
   // If there are no headers, error out
-  if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occured -- no svix headers", {
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return new Response("Error occurred -- no svix headers", {
       status: 400,
     });
   }
 
   // Get the body
-  const payload = await req.text();
-  const body = JSON.parse(payload);
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
 
   // Create a new Svix instance with your secret.
-  const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET!);
+  const wh = new Webhook(webhookSecret);
 
   let evt: any;
 
   // Verify the payload with the headers
   try {
-    evt = wh.verify(payload, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-      "svix-signature": svix_signature,
+    evt = wh.verify(body, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
     }) as any;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occured", {
+    return new Response("Error occurred", {
       status: 400,
     });
   }
 
-  // Handle the webhook
-  const { id } = evt.data;
-  const eventType = evt.type;
+  // Get the ID and type
+  const { id, type: eventType } = evt;
 
   console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
   console.log("Webhook body:", body);
@@ -122,6 +68,7 @@ export async function POST(req: NextRequest) {
         image_url,
         created_at,
         updated_at,
+        external_accounts,
       } = evt.data;
 
       // Get primary email
@@ -136,71 +83,147 @@ export async function POST(req: NextRequest) {
         primaryEmail?.split("@")[0] ||
         "Anonymous User";
 
-      // Check if user already exists
-      const { data: existingUser } = await supabaseAdmin
-        .from("users")
-        .select("id")
-        .eq("id", userId)
-        .single();
+      // Extract GitHub username from external accounts
+      const githubUsername = extractGitHubUsername({
+        externalAccounts: external_accounts,
+        username,
+        primaryEmailAddress: { emailAddress: primaryEmail },
+      });
+
+      // Fetch GitHub profile data if GitHub username is available
+      let githubData = null;
+      let githubId = null;
+      let actualEmail = primaryEmail;
+
+      if (githubUsername) {
+        console.log(
+          `[Webhook] Fetching GitHub profile for username: ${githubUsername}`
+        );
+        const githubResult = await fetchGitHubProfile(githubUsername);
+
+        if (githubResult.success && githubResult.data) {
+          githubData = githubResult.data;
+          githubId = githubResult.data.id.toString();
+
+          // Use GitHub email if available and no primary email is set
+          if (githubResult.data.email && !primaryEmail) {
+            actualEmail = githubResult.data.email;
+          }
+
+          console.log(
+            `✅ [Webhook] Successfully fetched GitHub profile for ${githubUsername}`
+          );
+        } else {
+          console.warn(
+            `⚠️ [Webhook] Failed to fetch GitHub profile for ${githubUsername}:`,
+            githubResult.error
+          );
+        }
+      }
+
+      // Check if user already exists using Prisma
+      const existingUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
 
       const isNewUser = !existingUser;
 
-      // Upsert user in Supabase
-      const { error } = await supabaseAdmin.from("users").upsert(
-        {
-          id: userId,
-          email: primaryEmail || `${userId}@clerk.local`,
-          display_name: displayName,
-          avatar_url: image_url,
-          created_at: new Date(created_at).toISOString(),
-          updated_at: new Date(updated_at || created_at).toISOString(),
-        },
-        {
-          onConflict: "id",
-        }
-      );
+      // Upsert user using Prisma
+      try {
+        const user = await prisma.user.upsert({
+          where: { id: userId },
+          create: {
+            id: userId,
+            email: actualEmail || `${userId}@clerk.local`,
+            githubUsername: githubUsername,
+            githubId: githubId,
+            displayName: displayName,
+            avatarUrl: image_url || githubData?.avatar_url,
+            githubData: githubData ? (githubData as any) : undefined,
+            createdAt: new Date(created_at),
+            updatedAt: new Date(updated_at || created_at),
+          },
+          update: {
+            email: actualEmail || `${userId}@clerk.local`,
+            githubUsername: githubUsername,
+            githubId: githubId,
+            displayName: displayName,
+            avatarUrl: image_url || githubData?.avatar_url,
+            githubData: githubData ? (githubData as any) : undefined,
+            updatedAt: new Date(updated_at || created_at),
+          },
+        });
 
-      if (error) {
-        console.error("Error syncing user to Supabase:", error);
+        console.log(
+          `✅ [Webhook] Successfully synced user to database: ${userId}`
+        );
+
+        // If this is a new user with GitHub username, calculate and store their aura
+        if (isNewUser && githubUsername) {
+          console.log(
+            `[Webhook] Starting aura calculation for new user: ${githubUsername}`
+          );
+
+          // Fetch GitHub contributions
+          const contributionsResult = await fetchGitHubContributions(
+            githubUsername
+          );
+
+          if (contributionsResult.success && contributionsResult.data) {
+            // Calculate and store aura
+            const auraResult = await calculateAndStoreUserAura(
+              userId,
+              githubUsername,
+              contributionsResult.data.contributionDays
+            );
+
+            if (auraResult.success) {
+              console.log(
+                `✅ [Webhook] Successfully calculated aura for ${githubUsername}: ${auraResult.totalAura} total aura`
+              );
+            } else {
+              console.error(
+                `❌ [Webhook] Failed to calculate aura for ${githubUsername}:`,
+                auraResult.error
+              );
+            }
+          } else {
+            console.warn(
+              `⚠️ [Webhook] Failed to fetch contributions for ${githubUsername}:`,
+              contributionsResult.error
+            );
+          }
+        }
+      } catch (prismaError) {
+        console.error("Error syncing user with Prisma:", prismaError);
         return new Response("Error syncing user", { status: 500 });
       }
 
-      // If this is a new user, initialize their leaderboard records
-      if (isNewUser) {
-        console.log("Initializing leaderboard records for new user:", userId);
-        const leaderboardInitialized = await initializeLeaderboardRecords(
-          userId
-        );
-        if (!leaderboardInitialized) {
-          return new Response("Error initializing leaderboard records", {
-            status: 500,
-          });
-        }
-      }
-
-      console.log(`Successfully synced user ${userId} to Supabase`);
+      console.log(
+        `✅ [Webhook] Webhook processed successfully for user: ${userId}`
+      );
     }
 
     if (eventType === "user.deleted") {
       const { id: userId } = evt.data;
 
-      // Delete user from Supabase (cascade will handle related records)
-      const { error } = await supabaseAdmin
-        .from("users")
-        .delete()
-        .eq("id", userId);
+      try {
+        // Delete user using Prisma (with cascade delete configured in schema)
+        await prisma.user.delete({
+          where: { id: userId },
+        });
 
-      if (error) {
-        console.error("Error deleting user from Supabase:", error);
+        console.log(`✅ [Webhook] Successfully deleted user: ${userId}`);
+      } catch (prismaError) {
+        console.error("Error deleting user with Prisma:", prismaError);
         return new Response("Error deleting user", { status: 500 });
       }
-
-      console.log(`Successfully deleted user ${userId} from Supabase`);
     }
 
-    return new Response("Webhook processed successfully", { status: 200 });
-  } catch (error) {
-    console.error("Error processing webhook:", error);
+    return new Response("", { status: 200 });
+  } catch (err) {
+    console.error("Error processing webhook:", err);
     return new Response("Error processing webhook", { status: 500 });
   }
 }
