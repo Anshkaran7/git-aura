@@ -18,13 +18,12 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in/"
   ),
   title: {
-    default:
-      "GitHub Profile Visualizer | Beautiful Developer Statistics & Contribution Graphs",
-    template: "%s | GitHub Profile Visualizer",
+    default: "GitAura | Beautiful Developer Statistics & Contribution Graphs",
+    template: "%s | GitAura",
   },
   description:
     "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights. Perfect for showcasing your coding journey and developer portfolio.",
-  applicationName: "GitHub Profile Visualizer",
+  applicationName: "GitAura",
   authors: [{ name: "Karan Dev", url: "https://karandev.in" }],
   creator: "Karan Dev",
   publisher: "GitHub Profile Visualizer",
@@ -49,6 +48,8 @@ export const metadata: Metadata = {
     "Developer Tools",
     "GitHub API",
     "React Application",
+    "GitAura",
+    "Github Aura",
   ],
   category: "Developer Tools",
   classification: "Web Application",
@@ -69,8 +70,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "GitHub Profile Visualizer",
-    title: "GitHub Profile Visualizer | Beautiful Developer Statistics",
+    siteName: "GitAura",
+    title: "GitAura | Your GitHub Aura",
     description:
       "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights.",
     images: [
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
         url: "/api/og",
         width: 1200,
         height: 630,
-        alt: "GitHub Profile Visualizer - Beautiful Developer Statistics",
+        alt: "GitAura - Your GitHub Aura",
         type: "image/png",
       },
     ],
