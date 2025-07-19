@@ -54,49 +54,6 @@ function UserPage() {
     }
   }, [userId, isLoaded]);
 
-  // Handle dynamic OG image meta tags
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      const ogImage = url.searchParams.get("og_image");
-      
-      if (ogImage && profile) {
-        // Update existing meta tags or create new ones
-        updateMetaTags(ogImage, profile.login);
-      }
-    }
-  }, [profile]);
-
-  const updateMetaTags = (imageUrl: string, username: string) => {
-    // Update OG image
-    updateMetaTag("property", "og:image", imageUrl);
-    updateMetaTag("property", "og:image:width", "1200");
-    updateMetaTag("property", "og:image:height", "630");
-    updateMetaTag("property", "og:image:alt", `${username}'s GitHub Profile Statistics`);
-    
-    // Update Twitter card image
-    updateMetaTag("name", "twitter:image", imageUrl);
-    updateMetaTag("name", "twitter:image:alt", `${username}'s GitHub Profile Statistics`);
-    
-    // Update title and description
-    updateMetaTag("property", "og:title", `${username}'s GitHub Profile | GitHub Profile Visualizer`);
-    updateMetaTag("property", "og:description", `Check out ${username}'s GitHub contributions, statistics, and coding activity.`);
-    updateMetaTag("name", "twitter:title", `${username}'s GitHub Profile | GitHub Profile Visualizer`);
-    updateMetaTag("name", "twitter:description", `Check out ${username}'s GitHub contributions, statistics, and coding activity.`);
-  };
-
-  const updateMetaTag = (attributeName: string, attributeValue: string, content: string) => {
-    let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`) as HTMLMetaElement;
-    
-    if (!metaTag) {
-      metaTag = document.createElement("meta");
-      metaTag.setAttribute(attributeName, attributeValue);
-      document.head.appendChild(metaTag);
-    }
-    
-    metaTag.content = content;
-  };
-
   const checkUserRegistration = async (username: string) => {
     setCheckingRegistration(true);
     try {

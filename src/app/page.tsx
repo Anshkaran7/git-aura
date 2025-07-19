@@ -59,29 +59,12 @@ export async function generateMetadata({
       alternates: {
         canonical: canonicalUrl,
       },
-      openGraph: {
-        type: "profile",
-        title: "GitHub Profile Visualizer - Shared Developer Profile",
-        description:
-          "View this beautifully visualized GitHub profile with contribution graphs, repository statistics, and developer insights.",
-        url: canonicalUrl,
-        siteName: "GitHub Profile Visualizer",
-        images: [
-          {
-            url: ogImage || `${baseUrl}/api/og?shared=true`,
-            width: 1200,
-            height: 630,
-            alt: "GitHub Profile Visualization - Shared Profile",
-            type: "image/png",
-          },
-        ],
-        locale: "en_US",
-      },
+
       twitter: {
         card: "summary_large_image",
         site: "@your_twitter", // Replace with your Twitter handle
         creator: "@your_twitter", // Replace with your Twitter handle
-        title: "GitHub Profile Visualizer - Shared Developer Profile",
+        title: "GitAura - Shared Profile | Developer Stats & Contributions",
         description:
           "View this beautifully visualized GitHub profile with contribution graphs and statistics.",
         images: [
@@ -92,11 +75,11 @@ export async function generateMetadata({
         ],
       },
       other: {
-        "application-name": "GitHub Profile Visualizer",
+        "application-name": "GitAura - Shared Profile | Developer Stats & Contributions",
         "mobile-web-app-capable": "yes",
         "apple-mobile-web-app-capable": "yes",
         "apple-mobile-web-app-status-bar-style": "default",
-        "apple-mobile-web-app-title": "GitHub Profile Visualizer",
+        "apple-mobile-web-app-title": "GitAura - Shared Profile | Developer Stats & Contributions",
       },
     };
   }
@@ -106,7 +89,7 @@ export async function generateMetadata({
 
   return {
     title:
-      "GitHub Profile Visualizer | Beautiful Developer Statistics & Contribution Graphs",
+      "GitAura - Shared Profile | Developer Stats & Contributions",
     description:
       "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights. Perfect for showcasing your coding journey and developer portfolio.",
     keywords: [
@@ -126,7 +109,7 @@ export async function generateMetadata({
     ],
     authors: [{ name: "Karan Dev", url: "https://karandev.in" }],
     creator: "Karan Dev",
-    publisher: "GitHub Profile Visualizer",
+    publisher: "GitAura",
     category: "Developer Tools",
     robots: {
       index: true,
@@ -144,11 +127,11 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "website",
-      title: "GitHub Profile Visualizer | Beautiful Developer Statistics",
+      title: "GitAura - Shared Profile | Developer Stats & Contributions",
       description:
         "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights.",
       url: canonicalUrl,
-      siteName: "GitHub Profile Visualizer",
+      siteName: "GitAura - Shared Profile | Developer Stats & Contributions",
       images: [
         {
           url: `${baseUrl}/api/og`,
@@ -194,7 +177,7 @@ function StructuredData() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "GitHub Profile Visualizer",
+    name: "GitAura - Shared Profile | Developer Stats & Contributions",
     description:
       "Beautiful GitHub profile and contribution visualization tool for developers",
     url: baseUrl,
