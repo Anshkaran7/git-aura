@@ -31,11 +31,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = (page - 1) * limit;
 
-    // Fetch leaderboard data with pagination, ordered by totalAura descending
+    // Fetch all leaderboard data, ordered by totalAura descending
     const alltimeData = await prisma.globalLeaderboard.findMany({
       include: {
         user: {
@@ -56,16 +53,11 @@ export async function GET(request: NextRequest) {
       orderBy: {
         totalAura: "desc",
       },
-      skip: offset,
-      take: limit,
     });
-
-    // Get total count for pagination
-    const totalCount = await prisma.globalLeaderboard.count();
 
     // Transform the data and add calculated ranks
     const transformedData = alltimeData.map((entry, index) => ({
-      rank: offset + index + 1, // Calculate rank based on position
+      rank: index + 1, // Calculate rank based on position
       user: {
         id: entry.user.id,
         display_name: entry.user.displayName || entry.user.githubUsername || "",
@@ -96,30 +88,24 @@ export async function GET(request: NextRequest) {
         })),
     }));
 
-    // If userId is provided, find user's rank even if they're not in current page
+    // If userId is provided, find user's rank
     let userRank = null;
     if (userId) {
-      const userEntry = await prisma.globalLeaderboard.findUnique({
-        where: { userId },
-        select: { rank: true },
-      });
-      userRank = userEntry?.rank || null;
+      const userIndex = transformedData.findIndex(
+        (entry) => entry.user.id === userId
+      );
+      userRank = userIndex !== -1 ? userIndex + 1 : null;
     }
-
-    // Calculate pagination info
-    const totalPages = Math.ceil(totalCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       leaderboard: transformedData,
       pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount,
-        hasNextPage,
-        hasPrevPage,
-        limit,
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: transformedData.length,
+        hasNextPage: false,
+        hasPrevPage: false,
+        limit: transformedData.length,
       },
       userRank,
     });

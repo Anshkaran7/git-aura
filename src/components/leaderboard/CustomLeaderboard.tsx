@@ -61,6 +61,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       if (view === "monthly") {
         const params = new URLSearchParams({
           monthYear: currentMonth,
+          ...(username && { username }),
         });
         response = await fetch(`/api/leaderboard/monthly?${params}`);
       } else {
@@ -73,49 +74,33 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
 
       const data = await response.json();
 
-      // Sort leaderboard by aura points
-      const sortedLeaderboard = [...data.leaderboard].sort((a, b) => {
-        // Primary sort by aura
-        if (b.aura !== a.aura) return b.aura - a.aura;
-        // Secondary sort by contributions if available
-        if (a.contributions && b.contributions) {
-          return b.contributions - a.contributions;
-        }
-        // Tertiary sort by streak
-        return b.user.current_streak - a.user.current_streak;
-      });
+      // Sort leaderboard by aura points and assign ranks
+      const sortedLeaderboard = data.leaderboard.map(
+        (entry: LeaderboardEntry, index: number) => ({
+          ...entry,
+          rank: index + 1, // Ensure rank is assigned
+        })
+      );
 
-      // Assign ranks based on sorted order
-      const rankedLeaderboard = sortedLeaderboard.map((entry, index) => ({
-        ...entry,
-        rank: index + 1,
-      }));
-
-      // Only look for current user if username is provided
+      // Find current user in the full leaderboard
       if (username) {
-        // Find current user in the full leaderboard
-        const userEntry = rankedLeaderboard.find(
-          (entry) =>
+        const userEntry = sortedLeaderboard.find(
+          (entry: LeaderboardEntry) =>
             entry.user.github_username.toLowerCase() === username.toLowerCase()
         );
 
         if (userEntry) {
           setCurrentUser(userEntry);
-          // Remove user from main leaderboard to show separately
-          const filteredLeaderboard = rankedLeaderboard.filter(
-            (entry) =>
-              entry.user.github_username.toLowerCase() !==
-              username.toLowerCase()
-          );
-          setLeaderboardData(filteredLeaderboard);
+          setLeaderboardData(sortedLeaderboard);
         } else {
-          // If user not found in leaderboard, show all entries
-          setLeaderboardData(rankedLeaderboard);
+          setLeaderboardData(sortedLeaderboard);
         }
       } else {
-        // If no username provided, show all entries
-        setLeaderboardData(rankedLeaderboard);
+        setLeaderboardData(sortedLeaderboard);
       }
+
+      // Update pagination info
+      setDisplayCount(sortedLeaderboard.length);
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
     } finally {
@@ -176,11 +161,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       {/* Leaderboard Entries */}
       <div className="space-y-2 sm:space-y-3">
         <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">
-          {username
-            ? currentUser
-              ? "Other Developers"
-              : "All Developers"
-            : "All Developers"}
+          All Developers
         </h3>
         <AnimatePresence>
           {displayedData.map((entry, index) => (

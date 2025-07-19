@@ -46,7 +46,7 @@
     {
       "name": "View Profile",
       "short_name": "Profile",
-      "description": "View GitHub profile visualization",
+      "description": "View your GitHub profile and contributions",
       "url": "/",
       "icons": [
         {

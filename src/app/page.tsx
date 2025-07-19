@@ -29,7 +29,7 @@ export async function generateMetadata({
     const canonicalUrl = `${baseUrl}?share=${shareId}`;
 
     return {
-      title: "GitAura - Shared Profile | Developer Stats & Contributions",
+      title: "GitAura - Flex your GitHub Aura",
       description:
         "View this beautifully visualized GitHub profile with contribution graphs, repository statistics, and developer insights. Share and showcase your GitHub journey.",
       keywords: [
@@ -64,22 +64,22 @@ export async function generateMetadata({
         card: "summary_large_image",
         site: "@your_twitter", // Replace with your Twitter handle
         creator: "@your_twitter", // Replace with your Twitter handle
-        title: "GitAura - Shared Profile | Developer Stats & Contributions",
+        title: "GitAura - Flex your GitHub Aura",
         description:
           "View this beautifully visualized GitHub profile with contribution graphs and statistics.",
         images: [
           {
             url: ogImage || `${baseUrl}/api/og?shared=true`,
-            alt: "GitHub Profile Visualization - Shared Profile",
+            alt: "Git Aura  - Flex your GitHub Aura",
           },
         ],
       },
       other: {
-        "application-name": "GitAura - Shared Profile | Developer Stats & Contributions",
+        "application-name": "GitAura - Flex your GitHub Aura",
         "mobile-web-app-capable": "yes",
         "apple-mobile-web-app-capable": "yes",
         "apple-mobile-web-app-status-bar-style": "default",
-        "apple-mobile-web-app-title": "GitAura - Shared Profile | Developer Stats & Contributions",
+        "apple-mobile-web-app-title": "GitAura - Flex your GitHub Aura",
       },
     };
   }
@@ -88,8 +88,7 @@ export async function generateMetadata({
   const canonicalUrl = baseUrl;
 
   return {
-    title:
-      "GitAura - Shared Profile | Developer Stats & Contributions",
+    title: "GitAura - Flex your GitHub Aura",
     description:
       "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights. Perfect for showcasing your coding journey and developer portfolio.",
     keywords: [
@@ -127,17 +126,17 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "website",
-      title: "GitAura - Shared Profile | Developer Stats & Contributions",
+      title: "GitAura - Flex your GitHub Aura",
       description:
         "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights.",
       url: canonicalUrl,
-      siteName: "GitAura - Shared Profile | Developer Stats & Contributions",
+      siteName: "GitAura - Flex your GitHub Aura",
       images: [
         {
           url: `${baseUrl}/api/og`,
           width: 1200,
           height: 630,
-          alt: "GitHub Profile Visualizer - Beautiful Developer Statistics",
+          alt: "Git Aura - Flex your GitHub Aura",
           type: "image/png",
         },
       ],
@@ -147,7 +146,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       site: "@your_twitter", // Replace with your Twitter handle
       creator: "@your_twitter", // Replace with your Twitter handle
-      title: "GitHub Profile Visualizer | Developer Statistics",
+      title: "Git Aura - Flex your GitHub Aura",
       description:
         "Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics.",
       images: [
@@ -177,9 +176,9 @@ function StructuredData() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "GitAura - Shared Profile | Developer Stats & Contributions",
+    name: "GitAura - Flex your GitHub Aura",
     description:
-      "Beautiful GitHub profile and contribution visualization tool for developers",
+      "Flex your GitHub Aura with beautiful contribution graphs and statistics.",
     url: baseUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Any",
