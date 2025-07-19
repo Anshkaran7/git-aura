@@ -160,7 +160,7 @@ export async function GET(request: Request) {
               textAlign: "center",
             }}
           >
-            Powered by GitHub Profile Visualizer
+            Powered by GitAura
           </div>
 
           {/* Decorative elements */}

@@ -115,7 +115,9 @@ function CustomLeaderboard({ username }: { username: string }) {
       }
 
       const data = await response.json();
-      const leaderboard = data.leaderboard || [];
+      const leaderboard = (data.leaderboard || []).filter(
+        (entry: LeaderboardEntry) => entry.aura > 0
+      );
 
       // Set pagination info
       setPagination(
@@ -136,7 +138,8 @@ function CustomLeaderboard({ username }: { username: string }) {
       // First, check if user is in current page
       userEntry = leaderboard.find(
         (entry: LeaderboardEntry) =>
-          entry.user.github_username.toLowerCase() === username.toLowerCase()
+          entry.user.github_username.toLowerCase() === username.toLowerCase() &&
+          entry.aura > 0
       );
 
       if (userEntry) {
@@ -183,7 +186,8 @@ function CustomLeaderboard({ username }: { username: string }) {
       // Remove user from the main leaderboard if they're in current page
       const filteredLeaderboard = leaderboard.filter(
         (entry: LeaderboardEntry) =>
-          entry.user.github_username.toLowerCase() !== username.toLowerCase()
+          entry.user.github_username.toLowerCase() !== username.toLowerCase() &&
+          entry.aura > 0
       );
 
       setLeaderboardData(filteredLeaderboard);
