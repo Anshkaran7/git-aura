@@ -215,7 +215,7 @@ export const HeroSection = () => {
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
 
-                <Button
+                {/* <Button
                   variant="secondary"
                   size="lg"
                   className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
@@ -223,7 +223,7 @@ export const HeroSection = () => {
                 >
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   See Pro Profile Example
-                </Button>
+                </Button> */}
               </>
             ) : (
               <>
