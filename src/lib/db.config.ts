@@ -5,15 +5,19 @@ interface DatabaseConfig {
 
 function getDatabaseConfig(): DatabaseConfig {
   const url = process.env.DATABASE_URL;
+  const directUrl = process.env.DIRECT_URL;
 
   if (!url) {
     throw new Error("DATABASE_URL is not defined");
   }
 
-  // For Neon PostgreSQL, use the same URL for both pooled and direct connections
+  // For Supabase, if DIRECT_URL is not provided, create it from DATABASE_URL
+  const finalDirectUrl =
+    directUrl || url.replace("?pgbouncer=true&connection_limit=1", "");
+
   return {
     url: url,
-    directUrl: url,
+    directUrl: finalDirectUrl,
   };
 }
 
