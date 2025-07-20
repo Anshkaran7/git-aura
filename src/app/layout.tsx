@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import UserSync from "@/components/UserSync";
 import { Toaster } from "sonner";
+import { ProductHuntBanner } from "@/components/ProductHuntBanner";
 
 const monaSans = Mona_Sans({
   subsets: ["latin"],

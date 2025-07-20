@@ -16,7 +16,9 @@ import {
   getAuraStatus,
   getStreakMessage,
   getCurrentMonthYear,
+  calculateStreak,
 } from "@/lib/utils2";
+import { calculateTotalAura } from "@/lib/aura";
 
 interface AuraPanelProps {
   selectedTheme: Theme;
@@ -41,8 +43,50 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     activeDays: number;
   }>({ contributions: 0, aura: 0, activeDays: 0 });
 
-  const auraStatus = getAuraStatus(userAura);
-  const streakStatus = getStreakMessage(currentStreak);
+  // Calculate fallback total aura if userAura is 0 or invalid
+  const fallbackTotalAura =
+    userAura > 0
+      ? userAura
+      : calculateTotalAura(contributions.contributionDays);
+
+  // Calculate fallback current streak if currentStreak is 0 or invalid
+  const fallbackCurrentStreak =
+    currentStreak > 0
+      ? currentStreak
+      : calculateStreak(contributions.contributionDays);
+
+  // Debug logging to understand the aura calculation issue
+  useEffect(() => {
+    if (contributions.contributionDays.length > 0) {
+      const localCalculatedAura = calculateTotalAura(
+        contributions.contributionDays
+      );
+      const localCalculatedStreak = calculateStreak(
+        contributions.contributionDays
+      );
+      console.log("🔍 [AuraPanel Debug]", {
+        userAuraProp: userAura,
+        localCalculatedAura,
+        fallbackTotalAura,
+        currentStreakProp: currentStreak,
+        localCalculatedStreak,
+        fallbackCurrentStreak,
+        contributionsLength: contributions.contributionDays.length,
+        totalContributions: contributions.totalContributions,
+        isCalculatingAura,
+      });
+    }
+  }, [
+    userAura,
+    currentStreak,
+    contributions,
+    fallbackTotalAura,
+    fallbackCurrentStreak,
+    isCalculatingAura,
+  ]);
+
+  const auraStatus = getAuraStatus(fallbackTotalAura);
+  const streakStatus = getStreakMessage(fallbackCurrentStreak);
 
   useEffect(() => {
     calculateMonthlyData();
@@ -269,12 +313,12 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
               <span
                 className={`${auraStatus.color} font-semibold whitespace-nowrap`}
               >
-                {formatNumber(userAura)} Total Aura
+                {formatNumber(fallbackTotalAura)} Total Aura
               </span>
               <span
                 className={`${streakStatus.color} font-semibold flex items-center gap-1 whitespace-nowrap`}
               >
-                {streakStatus.emoji} {currentStreak} Day Streak
+                {streakStatus.emoji} {fallbackCurrentStreak} Day Streak
               </span>
             </div>
           </div>

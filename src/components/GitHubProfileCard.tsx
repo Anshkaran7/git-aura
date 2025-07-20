@@ -227,19 +227,18 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
       // Construct the base share URL in the format /user/[username]
       let shareUrl = `${window.location.origin}/user/${searchedUsername}`;
-      
+
       // Generate and upload image for OG meta tag
       if (profileRef.current) {
         setIsGenerating(true);
         try {
           const dataUrl = await toPng(profileRef.current, {
             cacheBust: true,
-            backgroundColor: 
+            backgroundColor:
               selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
             pixelRatio: 2,
             skipFonts: false,
@@ -276,7 +275,9 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
       let shareLink = "";
       if (platform === "twitter") {
-        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
+        shareLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+          text
+        )}&url=${encodeURIComponent(shareUrl)}`;
       } else if (platform === "linkedin") {
         shareLink = `https://www.linkedin.com/sharing/share-offsite/?text=${encodeURIComponent(
           `${text} ${shareUrl}`
@@ -294,7 +295,6 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   return (
     <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
-
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
           <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-3 sm:p-4 md:p-5 rounded-lg mb-4 sm:mb-6 border border-gray-700/50 mx-1 sm:mx-0">

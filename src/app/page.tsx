@@ -8,6 +8,7 @@ import {
   Footer,
 } from "@/components/home";
 import TopAuraUsers from "@/components/animated-tooltip-demo";
+import { ProductHuntBanner } from "@/components/ProductHuntBanner";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -216,6 +217,8 @@ export default async function Page({ searchParams }: PageProps) {
   return (
     <>
       {/* <StructuredData /> */}
+      {/* <ProductHuntBanner /> */}
+
       <Header leaderboard={true} dashboard={true} />
 
       <HeroSection />

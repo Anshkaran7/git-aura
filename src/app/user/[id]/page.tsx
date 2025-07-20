@@ -112,13 +112,14 @@ function UserPage() {
       setProfile(profileData);
       setContributions(contributionsData);
 
-      // Calculate aura
-      if (isSignedIn && user?.id) {
+      // Calculate aura - only for logged-in user viewing their own profile
+      if (isSignedIn && user?.id && user?.id === userId) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
+        // For viewing other profiles or when not signed in, just calculate locally for display
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );
