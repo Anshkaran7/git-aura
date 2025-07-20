@@ -1,49 +1,28 @@
+"use client";
+
 import { Suspense } from "react";
-import Leaderboard from "@/components/Leaderboard";
-import { themes } from "@/components/themes";
 import { Header } from "@/components/home";
-import { auth } from "@clerk/nextjs/server";
+import { CustomLeaderboard } from "@/components/leaderboard/CustomLeaderboard";
+import { LoadingState } from "@/components/leaderboard/LoadingState";
 
-export default async function LeaderboardPage() {
-  const { userId } = await auth();
-
+export default function LeaderboardPage() {
   return (
-    <div className="min-h-screen transition-colors duration-300">
+    <div className="min-h-screen bg-black transition-colors duration-300">
       <Header leaderboard={false} dashboard={true} />
-      <div className="max-w-6xl mx-auto pt-28 px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
+      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
             🏆 Global Leaderboard
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm sm:text-base text-[#7d8590]">
             Compete with developers worldwide and see your ranking
           </p>
         </div>
-        <LeaderboardWrapper currentUserId={userId} />
+
+        <Suspense fallback={<LoadingState />}>
+          <CustomLeaderboard username="" />
+        </Suspense>
       </div>
     </div>
-  );
-}
-
-// Wrapper component to handle the leaderboard display
-function LeaderboardWrapper({
-  currentUserId,
-}: {
-  currentUserId: string | null;
-}) {
-  const defaultTheme = themes[1]; // Dark theme
-
-  // Create empty contributions data for the leaderboard component
-  const emptyContributions = {
-    totalContributions: 0,
-    contributionDays: [],
-  };
-
-  return (
-    <Leaderboard
-      currentUserId={currentUserId || undefined}
-      selectedTheme={defaultTheme}
-      contributions={emptyContributions}
-    />
   );
 }

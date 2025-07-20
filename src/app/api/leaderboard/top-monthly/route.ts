@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { prisma } from "@/lib/prisma";
 import { formatNumber } from "@/lib/utils2";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+// Explicitly set runtime to nodejs to avoid edge runtime issues
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Retry function for database operations
+async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      console.log(
+        `Database operation failed, retrying... (${retries} attempts left)`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+      return withRetry(fn, retries - 1);
+    }
+    throw error;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,93 +30,124 @@ export async function GET(request: NextRequest) {
       now.getMonth() + 1
     ).padStart(2, "0")}`;
 
-    // Fetch top 5 monthly users
-    const { data: monthlyData, error: monthlyError } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .select(
-        `
-        rank,
-        total_aura,
-        contributions_count,
-        users!inner(
-          id,
-          display_name,
-          github_username,
-          avatar_url,
-          total_aura,
-          current_streak
-        )
-      `
-      )
-      .eq("month_year", currentMonthYear)
-      .order("rank", { ascending: true })
-      .limit(5);
+    console.log(`Fetching top monthly users for ${currentMonthYear}`);
 
-    if (monthlyError) {
-      console.error("Error fetching top monthly users:", monthlyError);
-      // Return fallback data if current month has no data
+    // Fetch top 5 monthly users with proper sorting using retry logic
+    const monthlyData = await withRetry(async () => {
+      return await prisma.monthlyLeaderboard.findMany({
+        where: {
+          monthYear: currentMonthYear,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              githubUsername: true,
+              avatarUrl: true,
+              totalAura: true,
+              currentStreak: true,
+            },
+          },
+        },
+        orderBy: [
+          { totalAura: "desc" },
+          { contributionsCount: "desc" },
+          { user: { currentStreak: "desc" } },
+        ],
+        take: 5,
+      });
+    });
+
+    if (!monthlyData || monthlyData.length === 0) {
+      console.log(`No monthly data found for ${currentMonthYear}`);
       return NextResponse.json({
         topUsers: [],
         monthYear: currentMonthYear,
-        fallback: true,
+        stats: {
+          totalAuraPoints: 0,
+          totalContributions: 0,
+          totalParticipants: 0,
+        },
       });
     }
 
     // Transform data for the AnimatedTooltip component
-    const transformedData =
-      monthlyData?.map((entry: any, index: number) => ({
-        id: index + 1, // Use numeric index for AnimatedTooltip component
-        name:
-          entry.users.display_name ||
-          entry.users.github_username ||
-          `User ${index + 1}`,
-        designation: `Aura Score: ${formatNumber(entry.total_aura)}`,
-        image:
-          entry.users.avatar_url ||
-          `https://api.dicebear.com/7.x/avatars/svg?seed=${
-            entry.users.github_username || index
-          }`,
-        githubUsername: entry.users.github_username,
-        rank: entry.rank,
-        totalAura: entry.total_aura,
-        contributions: entry.contributions_count,
-        currentStreak: entry.users.current_streak || 0,
-      })) || [];
+    const transformedData = monthlyData.map((entry, index) => ({
+      id: index + 1,
+      name:
+        entry.user.displayName ||
+        entry.user.githubUsername ||
+        `User ${index + 1}`,
+      designation: `Aura Score: ${formatNumber(entry.totalAura)}`,
+      image:
+        entry.user.avatarUrl ||
+        `https://github.com/${entry.user.githubUsername}.png`,
+      githubUsername: entry.user.githubUsername,
+      rank: index + 1, // Rank based on sorted order
+      totalAura: entry.totalAura,
+      contributions: entry.contributionsCount,
+      currentStreak: entry.user.currentStreak || 0,
+    }));
 
-    // Calculate total stats for the month
-    const totalAuraPoints =
-      monthlyData?.reduce(
-        (sum: number, entry: any) => sum + entry.total_aura,
-        0
-      ) || 0;
-    const totalContributions =
-      monthlyData?.reduce(
-        (sum: number, entry: any) => sum + entry.contributions_count,
-        0
-      ) || 0;
+    // Get monthly stats with retry logic
+    const monthlyStats = await withRetry(async () => {
+      return await prisma.monthlyLeaderboard.aggregate({
+        where: {
+          monthYear: currentMonthYear,
+        },
+        _count: {
+          _all: true, // Total participants
+        },
+        _sum: {
+          totalAura: true,
+          contributionsCount: true,
+        },
+      });
+    });
 
-    // Get total number of participants this month
-    const { count: totalParticipants } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .select("*", { count: "exact", head: true })
-      .eq("month_year", currentMonthYear);
+    console.log(`Successfully fetched ${transformedData.length} top users`);
 
     return NextResponse.json({
       topUsers: transformedData,
       monthYear: currentMonthYear,
       stats: {
-        totalAuraPoints,
-        totalContributions,
-        totalParticipants: totalParticipants || 0,
+        totalAuraPoints: monthlyStats._sum.totalAura || 0,
+        totalContributions: monthlyStats._sum.contributionsCount || 0,
+        totalParticipants: monthlyStats._count._all,
       },
     });
   } catch (error) {
     console.error("Error in top monthly users API:", error);
+
+    // Check if it's a connection error
+    if (
+      error instanceof Error &&
+      error.message.includes("Can't reach database")
+    ) {
+      console.error("Database connection failed. This might be due to:");
+      console.error("1. DATABASE_URL not properly configured for serverless");
+      console.error("2. Missing connection pooling configuration");
+      console.error("3. Supabase instance not accessible");
+    }
+
     return NextResponse.json(
       {
         error: "Internal server error",
         topUsers: [],
+        monthYear: "",
+        stats: {
+          totalAuraPoints: 0,
+          totalContributions: 0,
+          totalParticipants: 0,
+        },
         fallback: true,
+        debug:
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );

@@ -1,74 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     // Get total number of users
-    const { count: totalDevelopers } = await supabaseAdmin
-      .from("users")
-      .select("*", { count: "exact", head: true });
+    const totalDevelopers = await prisma.user.count();
 
-    // Get total aura points across all users
-    const { data: totalAuraData, error: auraError } = await supabaseAdmin
-      .from("users")
-      .select("total_aura");
-
-    if (auraError) {
-      console.error("Error fetching total aura:", auraError);
-    }
-
-    const totalAuraPoints =
-      totalAuraData?.reduce((sum, user) => sum + (user.total_aura || 0), 0) ||
-      0;
+    // Get total aura points from global leaderboard
+    const totalAuraPoints = await prisma.globalLeaderboard.aggregate({
+      _sum: {
+        totalAura: true,
+      },
+    });
 
     // Get total number of badges earned
-    const { count: totalBadges } = await supabaseAdmin
-      .from("user_badges")
-      .select("*", { count: "exact", head: true });
+    const totalBadges = await prisma.userBadge.count();
 
-    // Get current month stats for extra context
+    // Get current month stats
     const now = new Date();
     const currentMonthYear = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
 
-    const { count: monthlyActive } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .select("*", { count: "exact", head: true })
-      .eq("month_year", currentMonthYear);
+    // Get monthly active users and contributions
+    const monthlyStats = await prisma.monthlyLeaderboard.aggregate({
+      where: {
+        monthYear: currentMonthYear,
+      },
+      _count: {
+        _all: true, // This gives us monthly active users
+      },
+      _sum: {
+        contributionsCount: true, // This gives us total contributions
+      },
+    });
 
-    // Get total contributions this month
-    const { data: monthlyContributions, error: monthlyError } =
-      await supabaseAdmin
-        .from("monthly_leaderboards")
-        .select("contributions_count")
-        .eq("month_year", currentMonthYear);
-
-    const totalMonthlyContributions =
-      monthlyContributions?.reduce(
-        (sum, entry) => sum + (entry.contributions_count || 0),
-        0
-      ) || 0;
-
-    // Calculate growth metrics
+    // Calculate averages
     const averageAuraPerUser = totalDevelopers
-      ? Math.round(totalAuraPoints / totalDevelopers)
+      ? Math.round((totalAuraPoints._sum.totalAura || 0) / totalDevelopers)
       : 0;
     const averageBadgesPerUser = totalDevelopers
-      ? Math.round((totalBadges || 0) / totalDevelopers)
+      ? Math.round(totalBadges / totalDevelopers)
       : 0;
 
     return NextResponse.json({
-      totalDevelopers: totalDevelopers || 0,
-      totalAuraPoints,
-      totalBadges: totalBadges || 0,
-      monthlyActive: monthlyActive || 0,
-      totalMonthlyContributions,
+      totalDevelopers,
+      totalAuraPoints: totalAuraPoints._sum.totalAura || 0,
+      totalBadges,
+      monthlyActive: monthlyStats._count._all,
+      totalMonthlyContributions: monthlyStats._sum.contributionsCount || 0,
       averageAuraPerUser,
       averageBadgesPerUser,
       monthYear: currentMonthYear,

@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
-import { createClient } from "@supabase/supabase-js";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import { Header } from "@/components/home";
@@ -20,14 +19,6 @@ import {
   Theme,
   ContributionDay,
 } from "@/components/types";
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
-
-
 
 function UserPage() {
   const params = useParams();
@@ -108,25 +99,26 @@ function UserPage() {
   const checkUserRegistration = async (username: string) => {
     setCheckingRegistration(true);
     try {
-      // Check if user exists in our users table (meaning they're registered)
-      // Use ilike for case-insensitive matching since GitHub usernames are case-insensitive
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("id, github_username")
-        .ilike("github_username", username)
-        .single();
+      console.log(
+        `[User Page] Checking registration for username: ${username}`
+      );
 
-      if (userError && userError.code !== "PGRST116") {
-        console.error("Error checking user registration:", userError);
+      // Check if user exists via API
+      const response = await fetch(`/api/check-user/${username}`);
+
+      if (!response.ok) {
+        console.error("Error checking user registration:", response.statusText);
         setIsUserRegistered(false);
         return;
       }
 
-      // User found = registered
-      if (userData) {
+      const data = await response.json();
+      console.log(`[User Page] Registration check result:`, data);
+
+      if (data.isRegistered && data.user) {
         setIsUserRegistered(true);
         // Only fetch profile if user is registered, use the actual stored username for consistency
-        await fetchUserProfile(userData.github_username);
+        await fetchUserProfile(data.user.githubUsername);
       } else {
         // User not found = not registered
         setIsUserRegistered(false);
@@ -168,13 +160,14 @@ function UserPage() {
       setProfile(profileData);
       setContributions(contributionsData);
 
-      // Calculate aura
-      if (isSignedIn && user?.id) {
+      // Calculate aura - only for logged-in user viewing their own profile
+      if (isSignedIn && user?.id && user?.id === userId) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
+        // For viewing other profiles or when not signed in, just calculate locally for display
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );
@@ -250,14 +243,14 @@ function UserPage() {
   const handleShare = async (platform: "twitter" | "linkedin") => {
     try {
       let shareUrl = window.location.href;
-      
+
       // Generate and upload image for OG meta tag
       if (profileRef.current) {
         setIsGenerating(true);
         try {
           const dataUrl = await toPng(profileRef.current, {
             cacheBust: true,
-            backgroundColor: 
+            backgroundColor:
               selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
             pixelRatio: 2,
             skipFonts: false,

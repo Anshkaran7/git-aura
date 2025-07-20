@@ -1,154 +1,125 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+type MonthlyLeaderboardWithRelations = Prisma.MonthlyLeaderboardGetPayload<{
+  include: {
+    user: {
+      select: {
+        id: true;
+        displayName: true;
+        githubUsername: true;
+        avatarUrl: true;
+        currentStreak: true;
+        userBadges: {
+          include: {
+            badge: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+type UserBadgeWithBadge = Prisma.UserBadgeGetPayload<{
+  include: {
+    badge: true;
+  };
+}>;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const monthYear = searchParams.get("monthYear");
     const userId = searchParams.get("userId");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
-
-    // Calculate offset for pagination
-    const offset = (page - 1) * limit;
-
-    // Ensure we don't go beyond top 100 users
-    const maxLimit = Math.min(100, offset + limit);
 
     if (!monthYear) {
       return NextResponse.json(
-        { error: "monthYear parameter is required" },
+        { error: "Month and year are required" },
         { status: 400 }
       );
     }
 
-    // Get total count of users in this month's leaderboard (up to 100)
-    const { count: totalCount, error: countError } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .select("*", { count: "exact", head: true })
-      .eq("month_year", monthYear)
-      .lte("rank", 100);
+    // Fetch all monthly leaderboard data for the specified month
+    const monthlyData = await prisma.monthlyLeaderboard.findMany({
+      where: {
+        monthYear: monthYear,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
+            githubUsername: true,
+            avatarUrl: true,
+            currentStreak: true,
+            userBadges: {
+              include: {
+                badge: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        totalAura: "desc",
+      },
+    });
 
-    if (countError) {
-      console.error("Error getting total count:", countError);
-    }
-
-    // Fetch monthly leaderboard data with pagination
-    const { data: monthlyData, error: monthlyError } = await supabaseAdmin
-      .from("monthly_leaderboards")
-      .select(
-        `
-        rank,
-        total_aura,
-        contributions_count,
-        users!inner(
-          id,
-          display_name,
-          github_username,
-          avatar_url,
-          total_aura,
-          current_streak
+    // Transform and add ranks to the data
+    const transformedData = monthlyData.map((entry, index) => ({
+      rank: index + 1, // Calculate rank based on position
+      user: {
+        id: entry.user.id,
+        display_name: entry.user.displayName || entry.user.githubUsername || "",
+        github_username: entry.user.githubUsername || "",
+        avatar_url:
+          entry.user.avatarUrl ||
+          `https://github.com/${entry.user.githubUsername}.png`,
+        current_streak: entry.user.currentStreak || 0,
+      },
+      aura: entry.totalAura,
+      contributions: entry.contributionsCount,
+      badges: entry.user.userBadges
+        .filter(
+          (
+            ub
+          ): ub is UserBadgeWithBadge & {
+            badge: NonNullable<UserBadgeWithBadge["badge"]>;
+          } => ub.badge !== null && ub.monthYear === monthYear
         )
-      `
-      )
-      .eq("month_year", monthYear)
-      .lte("rank", 100) // Only show top 100 users
-      .order("rank", { ascending: true })
-      .range(offset, maxLimit - 1);
+        .map((ub) => ({
+          id: ub.badge.id,
+          name: ub.badge.name,
+          description: ub.badge.description || "",
+          icon: ub.badge.icon || "",
+          color: ub.badge.color || "",
+          rarity: (ub.badge.rarity || "COMMON").toLowerCase(),
+          month_year: ub.monthYear || null,
+          rank: ub.rank || null,
+        })),
+    }));
 
-    if (monthlyError) {
-      console.error("Error fetching monthly leaderboard:", monthlyError);
-      return NextResponse.json(
-        { error: "Failed to fetch monthly leaderboard" },
-        { status: 500 }
-      );
-    }
-
-    // Get user rank if userId is provided
+    // Find user's rank if userId is provided
     let userRank = null;
     if (userId) {
-      const { data: userRankData, error: rankError } = await supabaseAdmin
-        .from("monthly_leaderboards")
-        .select("rank")
-        .eq("month_year", monthYear)
-        .eq("user_id", userId)
-        .single();
-
-      if (!rankError && userRankData) {
-        userRank = userRankData.rank;
-      }
+      const userIndex = transformedData.findIndex(
+        (entry) => entry.user.id === userId
+      );
+      userRank = userIndex !== -1 ? userIndex + 1 : null;
     }
-
-    // Fetch badges for users in the leaderboard
-    let badges: any[] = [];
-    if (monthlyData && monthlyData.length > 0) {
-      const userIds = monthlyData.map((entry: any) => entry.users.id);
-      const { data: badgesData, error: badgesError } = await supabaseAdmin
-        .from("user_badges")
-        .select(
-          `
-          user_id,
-          month_year,
-          rank,
-          badges!inner(
-            id,
-            name,
-            description,
-            icon,
-            color,
-            rarity
-          )
-        `
-        )
-        .in("user_id", userIds);
-
-      if (!badgesError && badgesData) {
-        badges = badgesData;
-      }
-    }
-
-    // Transform the data to match the frontend expectations
-    const transformedData =
-      monthlyData?.map((entry: any) => {
-        const userBadges = badges.filter(
-          (badge: any) => badge.user_id === entry.users.id
-        );
-
-        return {
-          rank: entry.rank,
-          user: entry.users,
-          aura: entry.total_aura,
-          contributions: entry.contributions_count,
-          badges: userBadges.map((ub: any) => ({
-            ...ub.badges,
-            month_year: ub.month_year,
-            rank: ub.rank,
-          })),
-        };
-      }) || [];
-
-    // Calculate pagination info
-    const totalPages = Math.ceil((totalCount || 0) / limit);
-    const hasNextPage = page < totalPages;
-    const hasPrevPage = page > 1;
 
     return NextResponse.json({
       leaderboard: transformedData,
-      userRank,
-      monthYear,
       pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount: totalCount || 0,
-        hasNextPage,
-        hasPrevPage,
-        limit,
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: transformedData.length,
+        hasNextPage: false,
+        hasPrevPage: false,
+        limit: transformedData.length,
       },
+      userRank,
     });
   } catch (error) {
     console.error("Error in monthly leaderboard API:", error);

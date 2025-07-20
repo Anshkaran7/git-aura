@@ -84,7 +84,7 @@ export async function GET(request: Request) {
                 marginBottom: 20,
               }}
             >
-              GitAura | Beautiful Developer Statistics & Contribution Graphs
+              📊 Git Aura - Flex your GitHub Aura
             </div>
             <div
               style={{
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
                 textAlign: "center",
               }}
             >
-              Beautiful GitHub profile visualization
+              Beautiful Git Aura profile visualization
             </div>
             <div
               style={{

@@ -1,11 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { prisma } from "./prisma";
+import { fetchGitHubProfile, extractGitHubUsername } from "./github-fetch";
+import { fetchGitHubContributions } from "./github-contributions";
+import { calculateAndStoreUserAura } from "./aura-calculations";
 
 export async function syncCurrentUserToSupabase() {
   try {
@@ -27,23 +24,116 @@ export async function syncCurrentUserToSupabase() {
       primaryEmail?.split("@")[0] ||
       "Anonymous User";
 
-    // Upsert user in Supabase
-    const { error } = await supabaseAdmin.from("users").upsert(
-      {
-        id: user.id,
-        email: primaryEmail || `${user.id}@clerk.local`,
-        display_name: displayName,
-        avatar_url: user.imageUrl,
-        created_at: new Date(user.createdAt).toISOString(),
-        updated_at: new Date(user.updatedAt).toISOString(),
-      },
-      {
-        onConflict: "id",
-      }
-    );
+    // Extract GitHub username from external accounts
+    const githubUsername = extractGitHubUsername(user);
 
-    if (error) {
-      console.error("Error syncing user to Supabase:", error);
+    // Fetch GitHub profile data if GitHub username is available
+    let githubData = null;
+    let githubId = null;
+    let actualEmail = primaryEmail;
+
+    if (githubUsername) {
+      console.log(
+        `[Auth Sync] Fetching GitHub profile for username: ${githubUsername}`
+      );
+      const githubResult = await fetchGitHubProfile(githubUsername);
+
+      if (githubResult.success && githubResult.data) {
+        githubData = githubResult.data;
+        githubId = githubResult.data.id.toString();
+
+        // Use GitHub email if available and no primary email is set
+        if (githubResult.data.email && !primaryEmail) {
+          actualEmail = githubResult.data.email;
+        }
+
+        console.log(
+          `✅ [Auth Sync] Successfully fetched GitHub profile for ${githubUsername}`
+        );
+      } else {
+        console.warn(
+          `⚠️ [Auth Sync] Failed to fetch GitHub profile for ${githubUsername}:`,
+          githubResult.error
+        );
+      }
+    }
+
+    // Check if user already exists using Prisma
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
+
+    const isNewUser = !existingUser;
+
+    // Upsert user using Prisma
+    try {
+      await prisma.user.upsert({
+        where: { id: user.id },
+        create: {
+          id: user.id,
+          email: actualEmail || `${user.id}@clerk.local`,
+          githubUsername: githubUsername,
+          githubId: githubId,
+          displayName: displayName,
+          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          githubData: githubData ? (githubData as any) : undefined,
+          createdAt: new Date(user.createdAt),
+          updatedAt: new Date(user.updatedAt),
+        },
+        update: {
+          email: actualEmail || `${user.id}@clerk.local`,
+          githubUsername: githubUsername,
+          githubId: githubId,
+          displayName: displayName,
+          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          githubData: githubData ? (githubData as any) : undefined,
+          updatedAt: new Date(user.updatedAt),
+        },
+      });
+
+      console.log(
+        `✅ [Auth Sync] Successfully synced user to database: ${user.id}`
+      );
+
+      // If this is a new user with GitHub username, calculate and store their aura
+      if (isNewUser && githubUsername) {
+        console.log(
+          `[Auth Sync] Starting aura calculation for new user: ${githubUsername}`
+        );
+
+        // Fetch GitHub contributions
+        const contributionsResult = await fetchGitHubContributions(
+          githubUsername
+        );
+
+        if (contributionsResult.success && contributionsResult.data) {
+          // Calculate and store aura
+          const auraResult = await calculateAndStoreUserAura(
+            user.id,
+            githubUsername,
+            contributionsResult.data.contributionDays
+          );
+
+          if (auraResult.success) {
+            console.log(
+              `✅ [Auth Sync] Successfully calculated aura for ${githubUsername}: ${auraResult.totalAura} total aura`
+            );
+          } else {
+            console.error(
+              `❌ [Auth Sync] Failed to calculate aura for ${githubUsername}:`,
+              auraResult.error
+            );
+          }
+        } else {
+          console.warn(
+            `⚠️ [Auth Sync] Failed to fetch contributions for ${githubUsername}:`,
+            contributionsResult.error
+          );
+        }
+      }
+    } catch (prismaError) {
+      console.error("Error syncing user with Prisma:", prismaError);
       return { success: false, error: "Failed to sync user" };
     }
 
@@ -62,18 +152,11 @@ export async function ensureUserInSupabase() {
       return null;
     }
 
-    // Check if user exists in Supabase
-    const { data: existingUser, error: fetchError } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
-    if (fetchError && fetchError.code !== "PGRST116") {
-      // PGRST116 is "not found" error
-      console.error("Error checking user existence:", fetchError);
-      return null;
-    }
+    // Check if user exists using Prisma
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
 
     // If user doesn't exist, sync them
     if (!existingUser) {

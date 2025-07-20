@@ -32,6 +32,7 @@ export const HeroSection = () => {
     averageBadgesPerUser: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const handleGoToProfile = () => {
     if (user?.externalAccounts) {
@@ -48,22 +49,26 @@ export const HeroSection = () => {
   };
 
   const handleShowDemoProfile = () => {
-    // Show a demo profile - replace with your actual demo username
-    router.push("/torvalds"); // Showing Linus Torvalds as demo
+    router.push("/torvalds");
   };
 
   const fetchHeroStats = async () => {
     try {
       setLoading(true);
+      setError(false);
       const response = await fetch("/api/stats/hero");
       if (!response.ok) {
         throw new Error("Failed to fetch stats");
       }
       const data: HeroStats = await response.json();
-      setStats(data);
+      if (data.fallback) {
+        setError(true);
+      } else {
+        setStats(data);
+      }
     } catch (error) {
       console.error("Error fetching hero stats:", error);
-      // Keep showing 0s on error
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -83,8 +88,25 @@ export const HeroSection = () => {
     return num.toString();
   };
 
+  // Render stat with loading state
+  const renderStat = (value: number, label: string, icon: React.ReactNode) => (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      {icon}
+      <span className="font-semibold text-foreground">
+        {loading ? (
+          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
+        ) : error ? (
+          "---"
+        ) : (
+          `${formatNumber(value)}+`
+        )}
+      </span>{" "}
+      {label}
+    </div>
+  );
+
   return (
-    <section className="relative min-h-[90vh] sm:min-h-screen flex items-center justify-center bg-background overflow-hidden py-12 sm:py-0">
+    <section className="relative min-h-[100vh] sm:min-h-screen flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
       <div className="absolute w-full h-full z-30 pointer-events-auto">
         <Squares
           speed={0.3}
@@ -95,13 +117,13 @@ export const HeroSection = () => {
         />
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 text-center relative z-40 pointer-events-none">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 text-center relative z-40 pointer-events-none">
         {/* Main Content */}
         <div className="max-w-4xl mx-auto slide-up">
           {/* Badge */}
-          <div className="inline-flex items-center bg-muted/50 border-2 border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 text-xs sm:text-sm">
+          <div className="inline-flex mt-0 md:mt-10 items-center bg-muted/50 border-2 border-border rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 mb-3 sm:mb-4 text-xs sm:text-sm">
             <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-            <span className="font-medium z-50 ml-2">
+            <span className="font-medium text-[9px]  md:text-base z-50 ml-1 sm:ml-2 text-center">
               {isSignedIn
                 ? `Welcome back, ${user?.firstName || "Developer"}! 🚀`
                 : loading
@@ -115,7 +137,7 @@ export const HeroSection = () => {
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight z-50">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight z-50 px-2">
             {isSignedIn ? (
               <>
                 Ready to Level Up Your{" "}
@@ -132,7 +154,7 @@ export const HeroSection = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 md:mb-8 max-w-3xl mx-auto leading-relaxed px-3 sm:px-4">
             {isSignedIn ? (
               <>
                 Your GitHub profile is connected! Time to see your developer
@@ -160,56 +182,32 @@ export const HeroSection = () => {
           </p>
 
           {/* Stats Row */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8 sm:mb-12 text-sm sm:text-base">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Github className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalDevelopers > 0 ? (
-                  `${formatNumber(stats.totalDevelopers)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Developers
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalAuraPoints > 0 ? (
-                  `${formatNumber(stats.totalAuraPoints)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Aura Points
-            </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {loading ? (
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin inline" />
-                ) : stats.totalBadges > 0 ? (
-                  `${formatNumber(stats.totalBadges)}+`
-                ) : (
-                  "---"
-                )}
-              </span>{" "}
-              Badges Earned
-            </div>
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-4 lg:gap-8 mb-6 sm:mb-8 md:mb-12 text-xs sm:text-sm md:text-base px-2">
+            {renderStat(
+              stats.totalDevelopers,
+              "Developers",
+              <Github className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary" />
+            )}
+            {renderStat(
+              stats.totalAuraPoints,
+              "Aura Points",
+              <Trophy className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary" />
+            )}
+            {/* {renderStat(
+              stats.totalBadges,
+              "Badges Earned",
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary" />
+            )} */}
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pointer-events-auto px-4">
+          <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center pointer-events-auto px-3 sm:px-4">
             {isSignedIn ? (
               <>
                 <Button
                   variant="default"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
+                  className="text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleGoToProfile}
                 >
                   <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -217,15 +215,15 @@ export const HeroSection = () => {
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </Button>
 
-                <Button
+                {/* <Button
                   variant="secondary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
+                  className="text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleShowDemoProfile}
                 >
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   See Pro Profile Example
-                </Button>
+                </Button> */}
               </>
             ) : (
               <>
@@ -233,7 +231,7 @@ export const HeroSection = () => {
                   <Button
                     variant="default"
                     size="lg"
-                    className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto group cursor-pointer"
+                    className="text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 w-full sm:w-auto group cursor-pointer"
                   >
                     <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2 cursor-pointer group-hover:rotate-12 transition-transform" />
                     Connect GitHub & Get Roasted
@@ -244,7 +242,7 @@ export const HeroSection = () => {
                 <Button
                   variant="secondary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto cursor-pointer"
+                  className="text-sm sm:text-base md:text-lg px-4 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 w-full sm:w-auto cursor-pointer"
                   onClick={handleShowDemoProfile}
                 >
                   <Trophy className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -255,7 +253,7 @@ export const HeroSection = () => {
           </div>
 
           {/* Social Proof */}
-          <p className="text-xs sm:text-sm text-muted-foreground mt-6 sm:mt-8 px-4">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6 md:mt-8 px-3 sm:px-4 leading-relaxed">
             {isSignedIn ? (
               <>
                 🎉 You're now part of the GitHub Aura elite!
@@ -277,21 +275,21 @@ export const HeroSection = () => {
         </div>
       </div>
 
-      {/* Floating Elements - Adjusted for mobile */}
-      <div className="absolute top-10 sm:top-20 right-10 sm:right-20 floating">
-        <div className="w-2 sm:w-3 h-2 sm:h-3 bg-primary rounded-full shadow-card"></div>
+      {/* Floating Elements - Better mobile positioning */}
+      <div className="absolute top-8 sm:top-10 md:top-20 right-8 sm:right-10 md:right-20 floating">
+        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 md:w-3 md:h-3 bg-primary rounded-full shadow-card"></div>
       </div>
       <div
-        className="absolute bottom-16 sm:bottom-32 left-10 sm:left-20 floating"
+        className="absolute bottom-12 sm:bottom-16 md:bottom-32 left-8 sm:left-10 md:left-20 floating"
         style={{ animationDelay: "1s" }}
       >
-        <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-accent rounded-full shadow-card"></div>
+        <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 bg-accent rounded-full shadow-card"></div>
       </div>
       <div
-        className="absolute top-1/2 right-16 sm:right-32 floating"
+        className="absolute top-1/2 right-12 sm:right-16 md:right-32 floating"
         style={{ animationDelay: "2s" }}
       >
-        <div className="w-3 sm:w-4 h-3 sm:h-4 bg-muted rounded-full shadow-card"></div>
+        <div className="w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 bg-muted rounded-full shadow-card"></div>
       </div>
     </section>
   );

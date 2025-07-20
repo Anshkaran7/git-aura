@@ -88,7 +88,7 @@ const fallbackUsers: TopUser[] = [
 export default function TopAuraUsers() {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
-  const [topUsers, setTopUsers] = useState<TopUser[]>(fallbackUsers);
+  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
   const [stats, setStats] = useState({
     totalAuraPoints: 0,
     totalContributions: 0,
@@ -115,6 +115,7 @@ export default function TopAuraUsers() {
     try {
       setLoading(true);
       setError(null);
+      setTopUsers(fallbackUsers); // Show loading state immediately
 
       const response = await fetch("/api/leaderboard/top-monthly");
       if (!response.ok) {
@@ -123,12 +124,15 @@ export default function TopAuraUsers() {
 
       const data: ApiResponse = await response.json();
 
+      if (data.fallback) {
+        throw new Error("No data available");
+      }
+
       if (data.topUsers && data.topUsers.length > 0) {
         setTopUsers(data.topUsers);
         setStats(data.stats);
         setMonthYear(data.monthYear);
       } else {
-        // No data available for current month, show placeholder message
         setTopUsers([]);
         setStats({
           totalAuraPoints: 0,
@@ -139,14 +143,12 @@ export default function TopAuraUsers() {
     } catch (err) {
       console.error("Error fetching top users:", err);
       setError(err instanceof Error ? err.message : "Failed to load data");
-      // Keep fallback data on error
-      setTopUsers(fallbackUsers);
+      setTopUsers([]); // Clear loading state on error
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchTopUsers();
   }, []);
@@ -157,6 +159,44 @@ export default function TopAuraUsers() {
     const [year, month] = monthYear.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  };
+
+  // Render stats section
+  const renderStats = () => {
+    if (loading) return null;
+    if (error || !stats.totalParticipants) return null;
+
+    return (
+      <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-primary" />
+          <span className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {formatNumber(stats.totalAuraPoints)}
+            </span>{" "}
+            Total Aura
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Github className="w-4 h-4 text-primary" />
+          <span className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {formatNumber(stats.totalContributions)}
+            </span>{" "}
+            Contributions
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-primary" />
+          <span className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {formatNumber(stats.totalParticipants)}
+            </span>{" "}
+            Participants
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -185,6 +225,8 @@ export default function TopAuraUsers() {
           <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             {loading ? (
               "Loading the month's top performers..."
+            ) : error ? (
+              "Unable to load top performers. Please try again later."
             ) : topUsers.length === 0 ? (
               <>
                 Be the first to claim your spot this month!
@@ -204,6 +246,9 @@ export default function TopAuraUsers() {
               </>
             )}
           </p>
+
+          {/* Stats Section */}
+          {renderStats()}
         </div>
 
         {/* Animated Tooltip Component */}
@@ -214,6 +259,12 @@ export default function TopAuraUsers() {
               <span className="text-sm sm:text-base text-muted-foreground">
                 Loading top performers...
               </span>
+            </div>
+          ) : error ? (
+            <div className="text-center">
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {error}
+              </p>
             </div>
           ) : topUsers.length === 0 ? (
             <div className="text-center">
@@ -232,7 +283,7 @@ export default function TopAuraUsers() {
         </div>
 
         {/* Call to Action */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 sm:mb-12">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           {isSignedIn ? (
             <Badge
               variant="outline"
@@ -248,80 +299,12 @@ export default function TopAuraUsers() {
                 variant="outline"
                 className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors w-full sm:w-auto text-center"
               >
-                <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Join the Elite - Connect Your GitHub
+                <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Connect GitHub & Start Competing
               </Badge>
             </SignInButton>
           )}
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto px-4">
-          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
-              {loading ? (
-                <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
-              ) : (
-                `${formatNumber(stats.totalAuraPoints)}${
-                  stats.totalAuraPoints === 0 ? "" : "+"
-                }`
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Total Aura Points{" "}
-              {monthYear ? `(${getMonthName(monthYear)})` : "This Month"}
-            </div>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
-              {loading ? (
-                <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin" />
-              ) : (
-                `${stats.totalParticipants.toLocaleString()}${
-                  stats.totalParticipants === 0 ? "" : "+"
-                }`
-              )}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Active Competitors
-            </div>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-            <div className="text-xl sm:text-2xl font-bold text-primary mb-2">
-              {(() => {
-                const now = new Date();
-                const nextMonth = new Date(
-                  now.getFullYear(),
-                  now.getMonth() + 1,
-                  1
-                );
-                const timeDiff = nextMonth.getTime() - now.getTime();
-                const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                return `${daysLeft} days`;
-              })()}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground">
-              Until Next Reset
-            </div>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <div className="mt-6 sm:mt-8 bg-red-900/20 border border-red-800 rounded-lg p-3 sm:p-4 max-w-md mx-auto">
-            <p className="text-xs sm:text-sm text-red-400 text-center">
-              ⚠️ {error}
-              <br />
-              <button
-                onClick={fetchTopUsers}
-                className="text-primary hover:text-primary/80 underline mt-2 inline-flex items-center gap-1 text-xs sm:text-sm"
-              >
-                <RefreshCw className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                Try again
-              </button>
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );

@@ -5,26 +5,33 @@ This document explains the environment variables required for the secure API wra
 ## Required Environment Variables
 
 ### Database
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
 **Note:** The service role key is needed for admin operations like updating leaderboards.
 
 ### GitHub API (Server-side only - SECURE)
+
 ```
 GITHUB_TOKEN=your_github_personal_access_token
 ```
+
 **Important**: This replaces the old `NEXT_PUBLIC_GITHUB_TOKEN` which was exposed to the client. The new `GITHUB_TOKEN` is kept secure on the server.
 
-### Image Upload (Server-side only - SECURE) 
+### Image Upload (Server-side only - SECURE)
+
 ```
 IMGBB_API_KEY=your_imgbb_api_key
 ```
+
 **Important**: This replaces the old `NEXT_PUBLIC_IMGBB_API_KEY` which was exposed to the client. The new `IMGBB_API_KEY` is kept secure on the server.
 
 ### Clerk Authentication
+
 ```
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
@@ -37,10 +44,12 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 ## Migration Notes
 
 ### Before (Insecure - API keys exposed to client)
+
 - `NEXT_PUBLIC_GITHUB_TOKEN` - ❌ Exposed to client
 - `NEXT_PUBLIC_IMGBB_API_KEY` - ❌ Exposed to client
 
 ### After (Secure - API keys kept on server)
+
 - `GITHUB_TOKEN` - ✅ Server-side only
 - `IMGBB_API_KEY` - ✅ Server-side only
 
@@ -66,4 +75,4 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 - API keys are no longer exposed in the client-side bundle
 - All external API calls are made from the server
 - Rate limiting and caching can be implemented at the API level
-- Better error handling and logging capabilities 
+- Better error handling and logging capabilities

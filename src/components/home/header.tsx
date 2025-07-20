@@ -1,11 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Github, Menu, Zap, User, LogOut } from "lucide-react";
+import { Github, Menu, Zap, User, LogOut, RefreshCw } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export const Header = ({
   leaderboard = false,
@@ -16,11 +18,63 @@ export const Header = ({
   dashboard?: boolean;
   profile?: boolean;
 }) => {
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Handle user data synchronization
+  useEffect(() => {
+    const syncUserData = async () => {
+      if (!isLoaded || !isSignedIn || !user) return;
+
+      try {
+        setIsSyncing(true);
+        const githubAccount = user.externalAccounts?.find(
+          (account) => account.provider === "github"
+        );
+
+        if (!githubAccount?.username) {
+          console.warn("No GitHub account connected");
+          return;
+        }
+
+        // Sync user data with our backend
+        const response = await fetch("/api/sync-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: user.id,
+            githubUsername: githubAccount.username,
+            displayName: user.firstName || githubAccount.username,
+            avatarUrl:
+              user.imageUrl ||
+              `https://github.com/${githubAccount.username}.png`,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to sync user data");
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          console.log("User data synced successfully");
+        }
+      } catch (error) {
+        console.error("Error syncing user data:", error);
+        // toast.error("Failed to sync your data. Please try again.");
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    syncUserData();
+  }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,9 +109,47 @@ export const Header = ({
 
   const handleNavigateToLeaderboard = (e: React.MouseEvent) => {
     e.preventDefault();
-    const targetPath = isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard";
+    const targetPath = isSignedIn
+      ? `/${user?.username}/leaderboard`
+      : "/leaderboard";
     if (pathname !== targetPath) {
       router.push(targetPath);
+    }
+  };
+
+  const handleManualSync = async () => {
+    if (!isSignedIn || isSyncing) return;
+
+    try {
+      setIsSyncing(true);
+      const response = await fetch("/api/sync-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          githubUsername: user.externalAccounts?.find(
+            (account) => account.provider === "github"
+          )?.username,
+          displayName: user.firstName || user.username,
+          avatarUrl: user.imageUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to sync data");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Data synced successfully!");
+      }
+    } catch (error) {
+      console.error("Error in manual sync:", error);
+      // toast.error("Failed to sync. Please try again.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -77,11 +169,18 @@ export const Header = ({
             href="/"
             className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="p-1.5 sm:p-2 rounded-lg bg-muted border border-border">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <div className=" bg-muted border-[1px] border-border rounded-lg">
+              <Image
+                src="/logo.png"
+                alt="Git Aura"
+                width={1000}
+                height={1000}
+                loading="lazy"
+                className="w-12 h-12 rounded-lg text-primary"
+              />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-base sm:text-lg text-highlight">
+              <span className="font-bold text-sm sm:text-base md:text-lg text-highlight">
                 Git Aura
               </span>
             </div>
@@ -89,7 +188,8 @@ export const Header = ({
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            {leaderboard && (
+            {/* Home Screen Navigation */}
+            {pathname === "/" && (
               <>
                 <a
                   href="#features"
@@ -106,31 +206,63 @@ export const Header = ({
               </>
             )}
 
-            {/* {isSignedIn && ( */}
-              {pathname !== "/" && (
-                <a
+            {/* Non-logged in user on leaderboard page */}
+            {!isSignedIn && pathname === "/leaderboard" && (
+              <Link
+                href="/"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Home
+              </Link>
+            )}
+
+            {/* Logged in user navigation */}
+            {isSignedIn && pathname !== "/" && (
+              <a
                 href={profile ? `/${user?.username}` : "/profile"}
                 onClick={handleNavigateToProfile}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 My Profile
               </a>
-              )}
+            )}
 
             <a
-              href={isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"}
+              href={
+                isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
+              }
               onClick={handleNavigateToLeaderboard}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Leaderboard
             </a>
-            {/* )} */}
+
+            {/* Contribute link - shown on all pages */}
+            <Link
+              href="/contribute"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Contribute
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
             {isSignedIn ? (
               <>
+                {/* Manual Sync Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2"
+                  onClick={handleManualSync}
+                  disabled={isSyncing}
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                </Button>
+
                 {/* User Profile Button */}
                 <Button
                   variant="ghost"
@@ -185,11 +317,11 @@ export const Header = ({
                   <Button
                     variant="default"
                     size="sm"
-                    className="h-8 px-3 text-sm whitespace-nowrap"
+                    className="h-8 px-3 text-sm items-center whitespace-nowrap"
                   >
-                    <Github className="w-4 h-4 mr-2" />
+                    <Github className="w-4 h-4 mr-0 md:mr-2" />
                     <span className="hidden sm:inline">Connect GitHub</span>
-                    <span className="sm:hidden">Connect</span>
+                    {/* <span className="sm:hidden">Connect</span> */}
                   </Button>
                 </SignInButton>
               </>
@@ -211,7 +343,8 @@ export const Header = ({
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {leaderboard && (
+              {/* Home Screen Navigation */}
+              {pathname === "/" && (
                 <>
                   <a
                     href="#features"
@@ -227,6 +360,18 @@ export const Header = ({
                   </a>
                 </>
               )}
+
+              {/* Non-logged in user on leaderboard page */}
+              {!isSignedIn && pathname === "/leaderboard" && (
+                <Link
+                  href="/"
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  Home
+                </Link>
+              )}
+
+              {/* Logged in user navigation */}
               {isSignedIn && pathname !== "/" && (
                 <a
                   href={profile ? `/${user?.username}` : "/profile"}
@@ -236,24 +381,44 @@ export const Header = ({
                   My Profile
                 </a>
               )}
+
+              <a
+                href={
+                  isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
+                }
+                onClick={handleNavigateToLeaderboard}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                Leaderboard
+              </a>
+
+              {/* Contribute link - shown on all pages */}
+              <Link
+                href="/contribute"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                Contribute
+              </Link>
+
               {isSignedIn && (
-                <a
-                  href={
-                    isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
-                  }
-                  onClick={handleNavigateToLeaderboard}
-                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
-                >
-                  Leaderboard
-                </a>
-              )}
-              {isSignedIn && (
-                <SignOutButton>
-                  <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
-                    <LogOut className="w-4 h-4 inline mr-2" />
-                    Sign Out
+                <>
+                  <button
+                    onClick={handleManualSync}
+                    disabled={isSyncing}
+                    className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                    />
+                    Sync Data
                   </button>
-                </SignOutButton>
+                  <SignOutButton>
+                    <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
+                      <LogOut className="w-4 h-4 inline mr-2" />
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </>
               )}
             </nav>
           </div>

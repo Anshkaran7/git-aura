@@ -3,12 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Star } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
 
 interface PositionBadge {
   id: string;
@@ -44,62 +38,55 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
     try {
       console.log("Fetching user position for userId:", userId);
 
-      // First, let's check if the user exists in the database
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("id, aura_points")
-        .eq("id", userId)
-        .single();
+      // Fetch current month's leaderboard to get user position
+      const response = await fetch(`/api/leaderboard/monthly?userId=${userId}`);
 
-      if (userError) {
-        console.log("User not found in database:", userError);
-        // User doesn't exist in leaderboard yet
+      if (!response.ok) {
+        console.log("Failed to fetch leaderboard data");
         setBadge(null);
         return;
       }
 
-      console.log("Found user data:", userData);
+      const data = await response.json();
+      console.log("Leaderboard response:", data);
 
-      // Fetch current leaderboard to get user's position
-      const { data: leaderboardData, error: leaderboardError } = await supabase
-        .from("users")
-        .select("id, aura_points")
-        .not("aura_points", "is", null)
-        .order("aura_points", { ascending: false });
-
-      if (leaderboardError) {
-        console.error("Leaderboard query error:", leaderboardError);
-        throw leaderboardError;
+      if (!data.leaderboard || data.leaderboard.length === 0) {
+        console.log("No leaderboard data found");
+        setBadge(null);
+        return;
       }
 
-      console.log("Leaderboard data:", leaderboardData?.slice(0, 5)); // Log first 5 users
-
       // Find user's position in the leaderboard
-      const position =
-        leaderboardData?.findIndex((user) => user.id === userId) + 1;
+      const userEntry = data.leaderboard.find(
+        (entry: any) => entry.user.id === userId
+      );
 
-      console.log("User position:", position);
+      if (userEntry) {
+        // Calculate position based on aura ranking
+        const sortedLeaderboard = [...data.leaderboard].sort(
+          (a, b) => b.aura - a.aura
+        );
+        const position =
+          sortedLeaderboard.findIndex(
+            (entry: any) => entry.user.id === userId
+          ) + 1;
 
-      if (position && position > 0) {
+        console.log("User position:", position);
         setUserPosition(position);
-        setBadge(generatePositionBadge(position));
+
+        // Only show badges for top 3 positions
+        if (position <= 3) {
+          setBadge(generatePositionBadge(position));
+        } else {
+          setBadge(null);
+        }
       } else {
-        // User not found in leaderboard
+        console.log("User not found in leaderboard");
         setBadge(null);
       }
     } catch (error) {
       console.error("Error fetching user position:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-      // Show a default badge for errors
-      setBadge({
-        id: "error",
-        name: "Join the Game",
-        description: "Start contributing to join the leaderboard!",
-        icon: <Star className="w-8 h-8" />,
-        color: "from-gray-400 to-gray-600",
-        rarity: "common",
-        position: 0,
-      });
+      setBadge(null);
     } finally {
       setLoading(false);
     }
@@ -109,8 +96,8 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
     if (position === 1) {
       return {
         id: "first-place",
-        name: "Champion",
-        description: "Current #1 on the leaderboard! 🏆",
+        name: "🏆 Champion",
+        description: "You're the #1 developer this month! Absolute legend! 👑",
         icon: <Trophy className="w-8 h-8" />,
         color: "from-yellow-400 to-yellow-600",
         rarity: "legendary",
@@ -119,8 +106,9 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
     } else if (position === 2) {
       return {
         id: "second-place",
-        name: "Runner-up",
-        description: "Holding strong at #2! 🥈",
+        name: "🥈 Runner-up",
+        description:
+          "Amazing work! You're holding strong at #2! Keep pushing! 💪",
         icon: <Medal className="w-8 h-8" />,
         color: "from-gray-300 to-gray-500",
         rarity: "epic",
@@ -129,34 +117,26 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
     } else if (position === 3) {
       return {
         id: "third-place",
-        name: "Bronze Medalist",
-        description: "Solid #3 position! 🥉",
+        name: "🥉 Bronze Medalist",
+        description:
+          "Excellent! You've earned the #3 spot! You're in the top tier! 🌟",
         icon: <Award className="w-8 h-8" />,
         color: "from-orange-400 to-orange-600",
         rarity: "rare",
         position: 3,
       };
-    } else if (position <= 10) {
-      return {
-        id: "top-ten",
-        name: "Top 10",
-        description: `Elite top ${position} performer! ⭐`,
-        icon: <Star className="w-8 h-8" />,
-        color: "from-blue-400 to-blue-600",
-        rarity: "rare",
-        position: position,
-      };
-    } else {
-      return {
-        id: "participant",
-        name: "Participant",
-        description: `Currently ranked #${position}`,
-        icon: <Award className="w-8 h-8" />,
-        color: "from-gray-400 to-gray-600",
-        rarity: "common",
-        position: position,
-      };
     }
+
+    // This shouldn't happen since we only call this for top 3
+    return {
+      id: "participant",
+      name: "Participant",
+      description: `Currently ranked #${position}`,
+      icon: <Star className="w-8 h-8" />,
+      color: "from-gray-400 to-gray-600",
+      rarity: "common",
+      position: position,
+    };
   };
 
   const getRarityColor = (rarity: string) => {
@@ -203,13 +183,17 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
         >
           <Award className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 opacity-50" />
           <p className="text-base sm:text-lg md:text-xl mb-2">
-            Join the Leaderboard!
+            {userPosition && userPosition > 3
+              ? `Great job! You're ranked #${userPosition}`
+              : "Join the Top 3 Elite!"}
           </p>
           <p className="text-sm sm:text-base max-w-sm mx-auto px-2">
-            Connect your GitHub and contribute code to earn a position badge!
+            {userPosition && userPosition > 3
+              ? "Keep contributing to break into the top 3 and earn your elite badge!"
+              : "Compete with other developers and earn your place in the top 3 to get an exclusive badge!"}
           </p>
           <div className="mt-3 sm:mt-4 text-xs sm:text-sm opacity-75">
-            Your badge will appear here once you're on the leaderboard
+            Only the top 3 developers get special badges 🏆🥈🥉
           </div>
         </div>
       </div>
@@ -318,7 +302,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
                     : "text-blue-300"
                 }`}
               >
-                🎯 Current Leaderboard Position
+                🎯 Monthly Leaderboard Elite
               </p>
             </div>
           </div>
@@ -331,7 +315,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           ></div>
         </div>
 
-        {/* Floating Particles */}
+        {/* Floating Particles for legendary badge */}
         {badge.rarity === "legendary" && (
           <>
             {[...Array(6)].map((_, i) => (
