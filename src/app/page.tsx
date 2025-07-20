@@ -153,16 +153,17 @@ export async function generateMetadata({
       images: [
         {
           url: `${baseUrl}/api/og`,
-          alt: "GitHub Profile Visualizer",
+          alt: "Git Aura - Flex your GitHub Aura",
         },
       ],
     },
     other: {
-      "application-name": "GitAura | Beautiful Developer Statistics & Contribution Graphsr",
+      "application-name":
+        "GitAura | Beautiful Developer Statistics & Contribution Graphsr",
       "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": "default",
-      "apple-mobile-web-app-title": "GitHub Profile Visualizer",
+      "apple-mobile-web-app-title": "Git Aura - Flex your GitHub Aura",
       "theme-color": "#0d1117",
       "color-scheme": "dark light",
     },
