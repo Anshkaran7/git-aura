@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
@@ -11,6 +11,7 @@ import ProfileCard from "@/components/ProfileCard";
 import AuraPanel from "@/components/AuraPanel";
 import EmptyState from "@/components/EmptyState";
 import { themes } from "@/components/themes";
+import Head from "next/head";
 
 import {
   GitHubProfile,
@@ -21,6 +22,7 @@ import {
 
 function UserPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
   const userId = params.id as string;
 
@@ -41,6 +43,52 @@ function UserPage() {
   );
   const [checkingRegistration, setCheckingRegistration] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Handle dynamic OG meta tags based on URL parameters
+  useEffect(() => {
+    const ogImageParam = searchParams.get('og_image');
+    if (ogImageParam && userId) {
+      try {
+        const decodedOgImage = decodeURIComponent(ogImageParam);
+        updateMetaTags(decodedOgImage, userId);
+      } catch (e) {
+        updateMetaTags(ogImageParam, userId);
+      }
+    }
+  }, [searchParams, userId]);
+
+  const updateMetaTags = (imageUrl: string, username: string) => {
+    // Update OG image
+    updateMetaTag("property", "og:image", imageUrl);
+    updateMetaTag("property", "og:image:width", "1200");
+    updateMetaTag("property", "og:image:height", "630");
+    updateMetaTag("property", "og:image:alt", `${username}'s GitHub Profile Statistics`);
+    
+    // Update Twitter card image
+    updateMetaTag("name", "twitter:image", imageUrl);
+    updateMetaTag("name", "twitter:image:alt", `${username}'s GitHub Profile Statistics`);
+    
+    // Update title and description
+    updateMetaTag("property", "og:title", `${username}'s GitHub Profile | GitAura`);
+    updateMetaTag("property", "og:description", `View ${username}'s GitHub contributions, statistics, and coding activity.`);
+    updateMetaTag("name", "twitter:title", `${username}'s GitHub Profile | GitAura`);
+    updateMetaTag("name", "twitter:description", `View ${username}'s GitHub contributions, statistics, and coding activity.`);
+    
+    // Update page title
+    document.title = `${username}'s GitHub Profile | GitAura`;
+  };
+
+  const updateMetaTag = (attributeName: string, attributeValue: string, content: string) => {
+    let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`) as HTMLMetaElement;
+    
+    if (!metaTag) {
+      metaTag = document.createElement("meta");
+      metaTag.setAttribute(attributeName, attributeValue);
+      document.head.appendChild(metaTag);
+    }
+    
+    metaTag.content = content;
+  };
 
   useEffect(() => {
     if (userId && isLoaded) {
