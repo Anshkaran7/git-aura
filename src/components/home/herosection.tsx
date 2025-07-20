@@ -121,9 +121,9 @@ export const HeroSection = () => {
         {/* Main Content */}
         <div className="max-w-4xl mx-auto slide-up">
           {/* Badge */}
-          <div className="inline-flex items-center bg-muted/50 border-2 border-border rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 mb-3 sm:mb-4 text-xs sm:text-sm">
+          <div className="inline-flex mt-0 md:mt-10 items-center bg-muted/50 border-2 border-border rounded-full px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 mb-3 sm:mb-4 text-xs sm:text-sm">
             <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-            <span className="font-medium text-[9px] md:text-base z-50 ml-1 sm:ml-2 text-center">
+            <span className="font-medium text-[9px]  md:text-base z-50 ml-1 sm:ml-2 text-center">
               {isSignedIn
                 ? `Welcome back, ${user?.firstName || "Developer"}! 🚀`
                 : loading
