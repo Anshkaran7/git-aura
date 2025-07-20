@@ -236,6 +236,14 @@ export const Header = ({
             >
               Leaderboard
             </a>
+
+            {/* Contribute link - shown on all pages */}
+            <Link
+              href="/contribute"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Contribute
+            </Link>
           </nav>
 
           {/* CTA Buttons */}
@@ -383,6 +391,14 @@ export const Header = ({
               >
                 Leaderboard
               </a>
+
+              {/* Contribute link - shown on all pages */}
+              <Link
+                href="/contribute"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                Contribute
+              </Link>
 
               {isSignedIn && (
                 <>
