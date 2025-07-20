@@ -53,9 +53,58 @@ export async function GET(request: NextRequest) {
 
     const contributors = await response.json();
 
-    // Filter out bots and sort by contributions
+    // Filter out bots and known automated accounts
+    const botPatterns = [
+      /bot$/i,
+      /\[bot\]/i,
+      /imgbot/i,
+      /dependabot/i,
+      /renovate/i,
+      /snyk-bot/i,
+      /greenkeeper/i,
+      /codecov/i,
+      /deepsource/i,
+      /whitesource/i,
+      /allcontributors/i,
+      /stale/i,
+      /semantic-release/i,
+    ];
+
+    const knownBotNames = [
+      "imgbot",
+      "imgbotapp",
+      "dependabot[bot]",
+      "renovate[bot]",
+      "snyk-bot",
+      "greenkeeper[bot]",
+      "codecov-io",
+      "deepsource-autofix[bot]",
+      "whitesource-bolt-for-github[bot]",
+      "allcontributors[bot]",
+      "stale[bot]",
+      "semantic-release-bot",
+    ];
+
     const filteredContributors = contributors
-      .filter((contributor: any) => contributor.type === "User")
+      .filter((contributor: any) => {
+        // Filter by type first
+        if (contributor.type !== "User") return false;
+
+        // Check against known bot names (case insensitive)
+        const loginLower = contributor.login.toLowerCase();
+        if (
+          knownBotNames.some((botName) => loginLower === botName.toLowerCase())
+        ) {
+          return false;
+        }
+
+        // Check against bot patterns
+        if (botPatterns.some((pattern) => pattern.test(contributor.login))) {
+          return false;
+        }
+
+        return true;
+      })
       .sort((a: any, b: any) => b.contributions - a.contributions);
 
     return NextResponse.json({
