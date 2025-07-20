@@ -193,11 +193,11 @@ export const HeroSection = () => {
               "Aura Points",
               <Trophy className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary" />
             )}
-            {renderStat(
+            {/* {renderStat(
               stats.totalBadges,
               "Badges Earned",
               <Star className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary" />
-            )}
+            )} */}
           </div>
 
           {/* CTA Buttons */}
