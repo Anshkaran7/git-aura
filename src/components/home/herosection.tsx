@@ -182,7 +182,7 @@ export const HeroSection = () => {
           </p>
 
           {/* Stats Row */}
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-4 lg:gap-8 mb-6 sm:mb-8 md:mb-12 text-xs sm:text-sm md:text-base px-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-2 sm:gap-4 lg:gap-8 mb-6 sm:mb-8 md:mb-12 text-xs sm:text-sm md:text-base px-2">
             {renderStat(
               stats.totalDevelopers,
               "Developers",
