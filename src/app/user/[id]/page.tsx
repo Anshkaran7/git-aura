@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
@@ -21,6 +21,7 @@ import {
 
 function UserPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
   const userId = params.id as string;
 
@@ -41,6 +42,10 @@ function UserPage() {
   );
   const [checkingRegistration, setCheckingRegistration] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  // Get OG image from URL parameters
+  const ogImageParam = searchParams.get('og_image');
+  const ogImageUrl = ogImageParam ? decodeURIComponent(ogImageParam) : null;
 
   useEffect(() => {
     if (userId && isLoaded) {
@@ -112,14 +117,13 @@ function UserPage() {
       setProfile(profileData);
       setContributions(contributionsData);
 
-      // Calculate aura - only for logged-in user viewing their own profile
-      if (isSignedIn && user?.id && user?.id === userId) {
+      // Calculate aura
+      if (isSignedIn && user?.id) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
-        // For viewing other profiles or when not signed in, just calculate locally for display
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );
@@ -325,8 +329,9 @@ function UserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="pt-20">
+    <>
+      <div className="min-h-screen bg-black">
+        <div className="pt-20">
         <Header leaderboard={false} profile={true} />
 
         {/* Error Message */}
@@ -378,8 +383,9 @@ function UserPage() {
             </div>
           )
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

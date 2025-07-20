@@ -180,7 +180,7 @@ export const Header = ({
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-base sm:text-lg text-highlight">
+              <span className="font-bold text-sm sm:text-base md:text-lg text-highlight">
                 Git Aura
               </span>
             </div>
@@ -317,11 +317,11 @@ export const Header = ({
                   <Button
                     variant="default"
                     size="sm"
-                    className="h-8 px-3 text-sm whitespace-nowrap"
+                    className="h-8 px-3 text-sm items-center whitespace-nowrap"
                   >
-                    <Github className="w-4 h-4 mr-2" />
+                    <Github className="w-4 h-4 mr-0 md:mr-2" />
                     <span className="hidden sm:inline">Connect GitHub</span>
-                    <span className="sm:hidden">Connect</span>
+                    {/* <span className="sm:hidden">Connect</span> */}
                   </Button>
                 </SignInButton>
               </>
