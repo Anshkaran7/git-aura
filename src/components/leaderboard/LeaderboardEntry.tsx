@@ -116,7 +116,7 @@ export function LeaderboardEntry({
 
           <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
             {/* Badges */}
-            <div className="flex items-center gap-1">
+            {/* <div className="flex items-center gap-1">
               {entry.badges.slice(0, 3).map((badge, index) => (
                 <div
                   key={`${entry.user.id}-${badge.id}-${index}`}
@@ -137,7 +137,7 @@ export function LeaderboardEntry({
                   )}
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Stats */}
             <div className="text-right">
