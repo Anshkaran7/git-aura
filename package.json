@@ -13,6 +13,7 @@
     "@clerk/nextjs": "^6.25.4",
     "@clerk/themes": "^2.3.3",
     "@prisma/client": "^6.12.0",
+    "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/supabase-js": "^2.52.0",
     "@vercel/analytics": "^1.5.0",
