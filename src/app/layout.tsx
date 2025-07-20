@@ -68,24 +68,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "/",
-    siteName: "GitAura",
-    title: "GitAura | Your GitHub Aura",
-    description:
-      "Create stunning visualizations of any GitHub profile. View contribution graphs, repository statistics, and developer insights.",
-    images: [
-      {
-        url: "/api/og",
-        width: 1200,
-        height: 630,
-        alt: "GitAura - Your GitHub Aura",
-        type: "image/png",
-      },
-    ],
-  },
+  // OpenGraph metadata removed - will be handled by nested layouts
   twitter: {
     card: "summary_large_image",
     site: "@itsmeekaran", // Replace with your actual Twitter handle

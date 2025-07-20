@@ -11,7 +11,6 @@ import ProfileCard from "@/components/ProfileCard";
 import AuraPanel from "@/components/AuraPanel";
 import EmptyState from "@/components/EmptyState";
 import { themes } from "@/components/themes";
-import Head from "next/head";
 
 import {
   GitHubProfile,
@@ -44,51 +43,9 @@ function UserPage() {
   const [checkingRegistration, setCheckingRegistration] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Handle dynamic OG meta tags based on URL parameters
-  useEffect(() => {
-    const ogImageParam = searchParams.get('og_image');
-    if (ogImageParam && userId) {
-      try {
-        const decodedOgImage = decodeURIComponent(ogImageParam);
-        updateMetaTags(decodedOgImage, userId);
-      } catch (e) {
-        updateMetaTags(ogImageParam, userId);
-      }
-    }
-  }, [searchParams, userId]);
-
-  const updateMetaTags = (imageUrl: string, username: string) => {
-    // Update OG image
-    updateMetaTag("property", "og:image", imageUrl);
-    updateMetaTag("property", "og:image:width", "1200");
-    updateMetaTag("property", "og:image:height", "630");
-    updateMetaTag("property", "og:image:alt", `${username}'s GitHub Profile Statistics`);
-    
-    // Update Twitter card image
-    updateMetaTag("name", "twitter:image", imageUrl);
-    updateMetaTag("name", "twitter:image:alt", `${username}'s GitHub Profile Statistics`);
-    
-    // Update title and description
-    updateMetaTag("property", "og:title", `${username}'s GitHub Profile | GitAura`);
-    updateMetaTag("property", "og:description", `View ${username}'s GitHub contributions, statistics, and coding activity.`);
-    updateMetaTag("name", "twitter:title", `${username}'s GitHub Profile | GitAura`);
-    updateMetaTag("name", "twitter:description", `View ${username}'s GitHub contributions, statistics, and coding activity.`);
-    
-    // Update page title
-    document.title = `${username}'s GitHub Profile | GitAura`;
-  };
-
-  const updateMetaTag = (attributeName: string, attributeValue: string, content: string) => {
-    let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`) as HTMLMetaElement;
-    
-    if (!metaTag) {
-      metaTag = document.createElement("meta");
-      metaTag.setAttribute(attributeName, attributeValue);
-      document.head.appendChild(metaTag);
-    }
-    
-    metaTag.content = content;
-  };
+  // Get OG image from URL parameters
+  const ogImageParam = searchParams.get('og_image');
+  const ogImageUrl = ogImageParam ? decodeURIComponent(ogImageParam) : null;
 
   useEffect(() => {
     if (userId && isLoaded) {
@@ -160,14 +117,13 @@ function UserPage() {
       setProfile(profileData);
       setContributions(contributionsData);
 
-      // Calculate aura - only for logged-in user viewing their own profile
-      if (isSignedIn && user?.id && user?.id === userId) {
+      // Calculate aura
+      if (isSignedIn && user?.id) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
-        // For viewing other profiles or when not signed in, just calculate locally for display
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );
@@ -373,8 +329,9 @@ function UserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="pt-20">
+    <>
+      <div className="min-h-screen bg-black">
+        <div className="pt-20">
         <Header leaderboard={false} profile={true} />
 
         {/* Error Message */}
@@ -426,8 +383,9 @@ function UserPage() {
             </div>
           )
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
