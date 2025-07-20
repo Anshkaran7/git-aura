@@ -188,7 +188,8 @@ export const Header = ({
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            {leaderboard && (
+            {/* Home Screen Navigation */}
+            {pathname === "/" && (
               <>
                 <a
                   href="#features"
@@ -205,7 +206,18 @@ export const Header = ({
               </>
             )}
 
-            {pathname !== "/" && (
+            {/* Non-logged in user on leaderboard page */}
+            {!isSignedIn && pathname === "/leaderboard" && (
+              <Link
+                href="/"
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Home
+              </Link>
+            )}
+
+            {/* Logged in user navigation */}
+            {isSignedIn && pathname !== "/" && (
               <a
                 href={profile ? `/${user?.username}` : "/profile"}
                 onClick={handleNavigateToProfile}
@@ -323,7 +335,8 @@ export const Header = ({
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {leaderboard && (
+              {/* Home Screen Navigation */}
+              {pathname === "/" && (
                 <>
                   <a
                     href="#features"
@@ -339,6 +352,18 @@ export const Header = ({
                   </a>
                 </>
               )}
+
+              {/* Non-logged in user on leaderboard page */}
+              {!isSignedIn && pathname === "/leaderboard" && (
+                <Link
+                  href="/"
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  Home
+                </Link>
+              )}
+
+              {/* Logged in user navigation */}
               {isSignedIn && pathname !== "/" && (
                 <a
                   href={profile ? `/${user?.username}` : "/profile"}
@@ -348,19 +373,19 @@ export const Header = ({
                   My Profile
                 </a>
               )}
+
+              <a
+                href={
+                  isSignedIn ? `/${user?.username}/leaderboard` : "/leaderboard"
+                }
+                onClick={handleNavigateToLeaderboard}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                Leaderboard
+              </a>
+
               {isSignedIn && (
                 <>
-                  <a
-                    href={
-                      isSignedIn
-                        ? `/${user?.username}/leaderboard`
-                        : "/leaderboard"
-                    }
-                    onClick={handleNavigateToLeaderboard}
-                    className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
-                  >
-                    Leaderboard
-                  </a>
                   <button
                     onClick={handleManualSync}
                     disabled={isSyncing}
@@ -371,15 +396,13 @@ export const Header = ({
                     />
                     Sync Data
                   </button>
+                  <SignOutButton>
+                    <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
+                      <LogOut className="w-4 h-4 inline mr-2" />
+                      Sign Out
+                    </button>
+                  </SignOutButton>
                 </>
-              )}
-              {isSignedIn && (
-                <SignOutButton>
-                  <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
-                    <LogOut className="w-4 h-4 inline mr-2" />
-                    Sign Out
-                  </button>
-                </SignOutButton>
               )}
             </nav>
           </div>
