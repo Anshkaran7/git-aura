@@ -58,7 +58,12 @@ export const Header = ({
         });
 
         if (!response.ok) {
-          throw new Error("Failed to sync user data");
+          if (process.env.NODE_ENV === "development") {
+            const errorText = await response.text();
+            console.error("Sync user data failed:", response.status, errorText);
+          }
+          setIsSyncing(false);
+          return;
         }
 
         const data = await response.json();
