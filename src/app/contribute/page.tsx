@@ -157,7 +157,7 @@ export default function ContributePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center bg-background overflow-hidden py-12">
+      <section className="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
         {/* Animated Squares Background */}
         <div className="absolute w-full h-full z-30 pointer-events-auto">
           <Squares
@@ -171,44 +171,45 @@ export default function ContributePage() {
 
         {/* Background Effects */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-muted/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-accent/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 text-center relative z-40 pointer-events-none">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-40 pointer-events-none">
           <div className="max-w-4xl mx-auto">
             {/* Badge */}
             <Badge
               variant="outline"
-              className="mb-4 border-border text-primary text-xs sm:text-sm"
+              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
             >
               🚀 Open Source Project
             </Badge>
 
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
               Help Build <span className="text-highlight">GitAura</span>
             </h1>
 
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-4">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
               Join our community of developers and help shape the future of
               GitHub analytics. Whether you're fixing bugs, adding features, or
               improving docs - every contribution matters!
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pointer-events-auto">
+            <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center pointer-events-auto max-w-md xs:max-w-none mx-auto">
               <Link
                 href="https://github.com/Anshkaran7/git-aura"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="w-full xs:w-auto"
               >
                 <Button
                   variant="default"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto group"
+                  className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full group"
                 >
                   <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:rotate-12 transition-transform" />
                   View on GitHub
-                  <ExternalLink className="w-4 h-4 ml-2" />
+                  <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
                 </Button>
               </Link>
 
@@ -216,11 +217,12 @@ export default function ContributePage() {
                 href="https://github.com/Anshkaran7/git-aura/issues"
                 target="_blank"
                 rel="noopener noreferrer"
+                className="w-full xs:w-auto"
               >
                 <Button
                   variant="secondary"
                   size="lg"
-                  className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
+                  className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full"
                 >
                   <Bug className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Browse Issues
@@ -232,7 +234,7 @@ export default function ContributePage() {
       </section>
 
       {/* Ways to Contribute */}
-      <section className="py-12 sm:py-24 bg-card relative overflow-hidden">
+      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
         {/* Background Grid */}
         <div className="absolute inset-0 opacity-10">
           <div
@@ -242,29 +244,29 @@ export default function ContributePage() {
                 linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
               `,
-              backgroundSize: "25px 25px",
+              backgroundSize: "20px 20px, 25px 25px",
             }}
           ></div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center mb-8 sm:mb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
             <Badge
               variant="outline"
-              className="mb-4 border-border text-primary text-xs sm:text-sm"
+              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
             >
               🔥 Multiple Ways to Help
             </Badge>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               Ways to <span className="text-highlight">Contribute</span>
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               From code warriors to documentation heroes - there's a place for
               everyone in our community
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
             {contributionTypes.map((type, index) => (
               <Card
                 key={index}
@@ -277,16 +279,16 @@ export default function ContributePage() {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
                     <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
-                      <type.icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                      <type.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                    <Badge variant="secondary" className="text-xs shrink-0">
+                    <Badge variant="secondary" className="text-xs shrink-0 px-2 py-1">
                       {type.badge}
                     </Badge>
                   </div>
 
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
+                  <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
                     {type.title}
                   </h3>
 
@@ -301,54 +303,54 @@ export default function ContributePage() {
       </section>
 
       {/* How to Contribute Process */}
-      <section className="py-12 sm:py-24 bg-background relative overflow-hidden">
+      <section className="py-8 sm:py-12 lg:py-24 bg-background relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-0 right-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-accent/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-muted/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 right-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-accent/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center mb-8 sm:mb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
             <Badge
               variant="outline"
-              className="mb-4 border-border text-primary text-xs sm:text-sm"
+              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
             >
               📋 Simple 4-Step Process
             </Badge>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               How to <span className="text-highlight">Contribute</span>
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               From finding issues to merging PRs - here's your roadmap to
               becoming a GitAura contributor
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8 sm:mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
             {contributionSteps.map((step, index) => (
               <div key={index} className="relative">
-                <Card className="card-hover p-4 sm:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border">
+                <Card className="card-hover p-4 sm:p-6 lg:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border">
                   {/* Step Number */}
                   <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <div className="text-4xl sm:text-6xl font-bold text-primary">
+                    <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-6xl font-bold text-primary">
                       {step.number}
                     </div>
-                    <div className="p-3 sm:p-4 rounded-xl bg-muted border border-border text-primary">
-                      <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                    <div className="p-2 sm:p-3 lg:p-4 rounded-xl bg-muted border border-border text-primary">
+                      <step.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-primary" />
                     </div>
                   </div>
 
                   {/* Content */}
                   <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-1 sm:mb-2">
                         {step.title}
                       </h3>
-                      <p className="text-sm sm:text-base text-primary font-medium mb-3 sm:mb-4">
+                      <p className="text-xs sm:text-sm lg:text-base text-primary font-medium mb-3 sm:mb-4">
                         {step.subtitle}
                       </p>
-                      <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
+                      <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mb-4 sm:mb-6">
                         {step.description}
                       </p>
                     </div>
@@ -357,7 +359,7 @@ export default function ContributePage() {
                       {step.details.map((detail, detailIndex) => (
                         <li
                           key={detailIndex}
-                          className="flex items-start gap-2 text-muted-foreground text-sm"
+                          className="flex items-start gap-2 text-muted-foreground text-xs sm:text-sm"
                         >
                           <span className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0"></span>
                           {detail}
@@ -373,34 +375,34 @@ export default function ContributePage() {
       </section>
 
       {/* Tech Stack & Guidelines */}
-      <section className="py-12 sm:py-24 bg-card relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
             {/* Tech Stack */}
-            <Card className="card-hover p-6 sm:p-8 border border-border">
-              <h3 className="text-2xl font-bold text-foreground mb-6">
+            <Card className="card-hover p-4 sm:p-6 lg:p-8 border border-border">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-4 sm:mb-6">
                 Tech Stack We Use
               </h3>
               <div className="space-y-3">
                 {techStack.map((tech, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <span className="w-2 h-2 bg-primary rounded-full"></span>
-                    <span className="text-muted-foreground">{tech}</span>
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0"></span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{tech}</span>
                   </div>
                 ))}
               </div>
             </Card>
 
             {/* Guidelines */}
-            <Card className="card-hover p-6 sm:p-8 border border-border">
-              <h3 className="text-2xl font-bold text-foreground mb-6">
+            <Card className="card-hover p-4 sm:p-6 lg:p-8 border border-border">
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-4 sm:mb-6">
                 Contribution Guidelines
               </h3>
               <div className="space-y-3">
                 {guidelines.map((guideline, index) => (
                   <div key={index} className="flex items-start gap-3">
-                    <span className="w-2 h-2 bg-accent rounded-full mt-2 flex-shrink-0"></span>
-                    <span className="text-muted-foreground">{guideline}</span>
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent rounded-full mt-2 flex-shrink-0"></span>
+                    <span className="text-muted-foreground text-sm sm:text-base">{guideline}</span>
                   </div>
                 ))}
               </div>
@@ -410,25 +412,25 @@ export default function ContributePage() {
       </section>
 
       {/* Contributors Section */}
-      <section className="py-12 sm:py-24  bg-background relative overflow-hidden">
+      <section className="py-8 sm:py-12 lg:py-24 bg-background relative overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-muted/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-accent/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="container  mx-auto px-4 sm:px-6 relative z-10">
-          <div className="text-center mb-8 sm:mb-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
             <Badge
               variant="outline"
-              className="mb-4 border-border text-primary text-xs sm:text-sm"
+              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
             >
               👥 Community Heroes
             </Badge>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
               Meet Our <span className="text-highlight">Contributors</span>
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
+            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               These amazing developers are building the future of GitHub
               analytics with us
             </p>
@@ -439,33 +441,34 @@ export default function ContributePage() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-12 sm:py-24 bg-card relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
-            <Card className="card-hover p-8 sm:p-12 max-w-4xl mx-auto border border-border bg-gradient-to-br from-muted/50 to-background">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-4">
+            <Card className="card-hover p-6 sm:p-8 lg:p-12 max-w-4xl mx-auto border border-border bg-gradient-to-br from-muted/50 to-background">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 sm:mb-4">
                 Ready to <span className="text-highlight">Contribute</span>?
               </h2>
-              <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
                 Join our community of contributors and help make GitAura the
                 best GitHub analytics platform. Every contribution, no matter
                 how small, makes a difference!
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center max-w-md xs:max-w-none mx-auto">
                 <Link
                   href="https://github.com/Anshkaran7/git-aura/fork"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full xs:w-auto"
                 >
                   <Button
                     variant="default"
                     size="lg"
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base group"
+                    className="w-full px-4 sm:px-6 lg:px-8 py-3 text-sm sm:text-base group"
                   >
-                    <GitFork className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                    <GitFork className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:scale-110 transition-transform" />
                     Fork Repository
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
 
@@ -473,13 +476,14 @@ export default function ContributePage() {
                   href="https://github.com/Anshkaran7/git-aura/issues/new"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full xs:w-auto"
                 >
                   <Button
                     variant="secondary"
                     size="lg"
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 text-base"
+                    className="w-full px-4 sm:px-6 lg:px-8 py-3 text-sm sm:text-base"
                   >
-                    <Bug className="w-5 h-5 mr-2" />
+                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Report Issue
                   </Button>
                 </Link>
