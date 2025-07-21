@@ -75,7 +75,7 @@ export function LeaderboardEntry({
       )}
 
       <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/40 backdrop-blur-xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex  sm:flex-row  sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
             {/* Rank */}
             <div className="flex items-center justify-center shrink-0">
@@ -114,7 +114,7 @@ export function LeaderboardEntry({
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex items-center justify-end sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
             {/* Badges */}
             {/* <div className="flex items-center gap-1">
               {entry.badges.slice(0, 3).map((badge, index) => (

@@ -48,41 +48,41 @@ export function UserCard({
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#39d353]" />
-              <span className="text-xs sm:text-sm font-medium text-[#39d353]">
-                {username}'s Position
+            <div className="flex items-center gap-2 ">
+              <Star className="w-3 h-3 text-[#39d353]" />
+              <span className="text-xs font-medium text-[#39d353]">
+              {username}'s Position
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <RankIcon rank={currentUser.rank} />
-                <img
-                  src={currentUser.user.avatar_url}
-                  alt={currentUser.user.display_name}
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full ring-2 ring-[#39d353]"
-                />
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">
-                    {currentUser.user.display_name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#7d8590]">
-                    @{currentUser.user.github_username}
-                  </p>
-                </div>
+            <div className="flex flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+              <RankIcon rank={currentUser.rank} />
+              <img
+                src={currentUser.user.avatar_url}
+                alt={currentUser.user.display_name}
+                className="w-8 h-8 rounded-full ring-2 ring-[#39d353]"
+              />
+              <div>
+                <h3 className="text-sm font-bold text-white">
+                {currentUser.user.display_name}
+                </h3>
+                <p className="text-xs text-[#7d8590]">
+                @{currentUser.user.github_username}
+                </p>
               </div>
-              <div className="text-right w-full sm:w-auto">
-                <div className="text-xl sm:text-2xl font-bold text-white">
-                  #{currentUser.rank}
+              </div>
+              <div className="text-right">
+              <div className="text-lg font-bold text-white">
+                #{currentUser.rank}
+              </div>
+              <div className="text-xs text-[#7d8590]">
+                {formatNumber(currentUser.aura)} Aura
+              </div>
+              {currentUser.contributions !== undefined && (
+                <div className="text-[10px] text-[#7d8590]">
+                {formatNumber(currentUser.contributions)} contributions
                 </div>
-                <div className="text-xs sm:text-sm text-[#7d8590]">
-                  {formatNumber(currentUser.aura)} Aura
-                </div>
-                {currentUser.contributions !== undefined && (
-                  <div className="text-[10px] sm:text-xs text-[#7d8590]">
-                    {formatNumber(currentUser.contributions)} contributions
-                  </div>
-                )}
+              )}
               </div>
             </div>
           </>
