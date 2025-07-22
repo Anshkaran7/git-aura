@@ -134,11 +134,25 @@ export async function POST(request: NextRequest) {
       );
 
     // Calculate aura based on contributions
-    const monthlyAura = monthlyContributions * 10; // 10 points per contribution
+    // const monthlyAura = monthlyContributions * 10; // 10 points per contribution
     const totalAura = totalContributions * 10; // 10 points per contribution
+    const activeDays = contributionsData.contributionDays.filter((day) => {
+      const date = new Date(day.date);
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        day.contributionCount > 0
+      );
+    }).length;
 
-    // Only update basic data without expensive rank calculations
-    // The rank calculations will be handled by a separate cron job
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+    // Correct monthly aura calculation
+    const baseAura = monthlyContributions * 10; // 10 points per contribution
+    const consistencyBonus = Math.round((activeDays / daysInMonth) * 1000); // Consistency bonus
+    const monthlyAura = Math.round(baseAura + activeDays * 50 + consistencyBonus); // Active days bonus
+
+    console.log("sync-user", { monthlyAura, monthlyContributions, activeDays });
     await prisma.monthlyLeaderboard.upsert({
       where: {
         userId_monthYear: {
