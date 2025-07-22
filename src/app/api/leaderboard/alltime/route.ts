@@ -32,8 +32,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    // Fetch all leaderboard data, ordered by totalAura descending
+    // Fetch all leaderboard data, ordered by totalAura descending, excluding banned users
     const alltimeData = await prisma.globalLeaderboard.findMany({
+      where: {
+        user: {
+          isBanned: false, // Exclude banned users
+        },
+      },
       include: {
         user: {
           select: {
@@ -42,6 +47,7 @@ export async function GET(request: NextRequest) {
             githubUsername: true,
             avatarUrl: true,
             currentStreak: true,
+            isBanned: true,
             userBadges: {
               include: {
                 badge: true,

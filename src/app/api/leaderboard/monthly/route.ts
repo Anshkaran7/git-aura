@@ -40,10 +40,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all monthly leaderboard data for the specified month
+    // Fetch all monthly leaderboard data for the specified month, excluding banned users
     const monthlyData = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: monthYear,
+        user: {
+          isBanned: false, // Exclude banned users
+        },
       },
       include: {
         user: {
@@ -53,6 +56,7 @@ export async function GET(request: NextRequest) {
             githubUsername: true,
             avatarUrl: true,
             currentStreak: true,
+            isBanned: true,
             userBadges: {
               include: {
                 badge: true,

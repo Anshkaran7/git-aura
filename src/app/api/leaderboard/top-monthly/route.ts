@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
       return await prisma.monthlyLeaderboard.findMany({
         where: {
           monthYear: currentMonthYear,
+          user: {
+            isBanned: false, // Exclude banned users
+          },
         },
         include: {
           user: {
@@ -47,6 +50,7 @@ export async function GET(request: NextRequest) {
               avatarUrl: true,
               totalAura: true,
               currentStreak: true,
+              isBanned: true,
             },
           },
         },

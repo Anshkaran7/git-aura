@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { fetchGitHubProfile, extractGitHubUsername } from "./github-fetch";
 import { fetchGitHubContributions } from "./github-contributions";
 import { calculateAndStoreUserAura } from "./aura-calculations";
+import { checkUserBanStatus } from "./ban-middleware";
 
 export async function syncCurrentUserToSupabase() {
   try {
@@ -135,6 +136,19 @@ export async function syncCurrentUserToSupabase() {
     } catch (prismaError) {
       console.error("Error syncing user with Prisma:", prismaError);
       return { success: false, error: "Failed to sync user" };
+    }
+
+    // Check if user is banned
+    const banStatus = await checkUserBanStatus(user.id);
+    if (banStatus.isBanned) {
+      console.log(
+        `🚫 [Auth Sync] User ${user.id} is banned: ${banStatus.reason}`
+      );
+      return {
+        success: false,
+        error: "User is banned",
+        banInfo: banStatus,
+      };
     }
 
     return { success: true, userId: user.id };

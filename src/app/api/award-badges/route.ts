@@ -69,10 +69,13 @@ export async function POST(req: NextRequest) {
 
     console.log(`✅ Created/updated ${badges.length} badges`);
 
-    // Get top 3 users from monthly leaderboard
+    // Get top 3 users from monthly leaderboard, excluding banned users
     const topUsers = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: currentMonthYear,
+        user: {
+          isBanned: false, // Exclude banned users from badge awarding
+        },
       },
       include: {
         user: {
@@ -80,6 +83,7 @@ export async function POST(req: NextRequest) {
             id: true,
             displayName: true,
             githubUsername: true,
+            isBanned: true,
           },
         },
       },

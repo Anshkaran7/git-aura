@@ -10,12 +10,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the user's GitHub data from the request body
-    const { githubData } = await request.json();
+    // Get the user data from the request body
+    const body = await request.json();
+    const {
+      userId: requestUserId,
+      githubUsername,
+      displayName,
+      avatarUrl,
+    } = body;
 
-    if (!githubData) {
+    console.log("Sync request data:", { userId, githubUsername, displayName });
+
+    if (!githubUsername) {
       return NextResponse.json(
-        { error: "GitHub data is required" },
+        { error: "GitHub username is required" },
         { status: 400 }
       );
     }
@@ -24,17 +32,17 @@ export async function POST(request: NextRequest) {
     const user = await prisma.user.upsert({
       where: { id: userId },
       update: {
-        githubUsername: githubData.username,
-        displayName: githubData.name || githubData.username,
-        avatarUrl: githubData.avatar_url,
+        githubUsername: githubUsername,
+        displayName: displayName || githubUsername,
+        avatarUrl: avatarUrl,
         updatedAt: new Date(),
       },
       create: {
         id: userId,
-        email: `${githubData.username}@github.local`, // Required field
-        githubUsername: githubData.username,
-        displayName: githubData.name || githubData.username,
-        avatarUrl: githubData.avatar_url,
+        email: `${githubUsername}@github.local`, // Required field
+        githubUsername: githubUsername,
+        displayName: displayName || githubUsername,
+        avatarUrl: avatarUrl,
         totalAura: 0,
         currentStreak: 0,
       },
@@ -42,11 +50,18 @@ export async function POST(request: NextRequest) {
 
     // Calculate total contributions and aura
     const contributionsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL}/api/github/contributions/${githubData.username}`
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/github/contributions/${githubUsername}`
     );
 
     if (!contributionsResponse.ok) {
-      throw new Error("Failed to fetch GitHub contributions");
+      console.error(
+        "Contributions API failed:",
+        contributionsResponse.status,
+        await contributionsResponse.text()
+      );
+      throw new Error(
+        `Failed to fetch GitHub contributions: ${contributionsResponse.status}`
+      );
     }
 
     const contributionsData = await contributionsResponse.json();
@@ -115,17 +130,33 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: {
         totalAura: totalAura,
+        currentStreak: 0, // Reset streak for now, will be calculated properly later
       },
     });
 
     // Return the updated user data
     const updatedUser = await prisma.user.findUnique({
       where: { id: user.id },
-      include: {
+      select: {
+        id: true,
+        githubUsername: true,
+        displayName: true,
+        avatarUrl: true,
+        totalAura: true,
+        currentStreak: true,
         monthlyLeaderboard: {
           where: { monthYear: currentMonthYear },
+          select: {
+            totalAura: true,
+            rank: true,
+          },
         },
-        globalLeaderboard: true,
+        globalLeaderboard: {
+          select: {
+            totalAura: true,
+            rank: true,
+          },
+        },
       },
     });
 
@@ -141,7 +172,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error syncing user:", error);
     return NextResponse.json(
-      { error: "Failed to sync user data" },
+      {
+        error: "Failed to sync user data",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

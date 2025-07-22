@@ -273,39 +273,55 @@ export async function calculateAndStoreUserAura(
 }
 
 // Update leaderboards using Prisma
-async function updateLeaderboards(
+export async function updateLeaderboards(
   userId: string,
   totalAura: number,
   contributionDays: ContributionDay[]
 ) {
   try {
-    // Get current month data
+    console.log(
+      `[Leaderboard] Updating leaderboards for user: ${userId} with ${totalAura} total aura`
+    );
+
+    // Check if user is banned before updating leaderboards
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isBanned: true },
+    });
+
+    if (user?.isBanned) {
+      console.log(
+        `[Leaderboard] Skipping leaderboard update for banned user: ${userId}`
+      );
+      return {
+        success: true,
+        message: "User is banned, skipped leaderboard update",
+      };
+    }
+
+    // Get current month's contributions
     const now = new Date();
     const currentMonthYear = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Calculate monthly contributions
+    // Calculate monthly aura and contributions
     const monthlyContributions = contributionDays.filter((day) => {
       const dayDate = new Date(day.date);
-      return dayDate >= monthStart && dayDate <= monthEnd;
+      return (
+        dayDate.getFullYear() === now.getFullYear() &&
+        dayDate.getMonth() === now.getMonth()
+      );
     });
+
+    const monthlyAura = monthlyContributions.reduce(
+      (sum, day) => sum + calculateBaseAura(day.contributionCount),
+      0
+    );
 
     const monthlyContributionsCount = monthlyContributions.reduce(
       (sum, day) => sum + day.contributionCount,
       0
-    );
-
-    const activeDays = monthlyContributions.filter(
-      (day) => day.contributionCount > 0
-    ).length;
-    const daysInMonth = monthEnd.getDate();
-    const monthlyAura = calculateMonthlyAura(
-      monthlyContributionsCount,
-      activeDays,
-      daysInMonth
     );
 
     // Update monthly leaderboard
@@ -321,7 +337,7 @@ async function updateLeaderboards(
         monthYear: currentMonthYear,
         totalAura: monthlyAura,
         contributionsCount: monthlyContributionsCount,
-        rank: 999999, // Will be recalculated
+        rank: 0, // Will be updated by rank calculation
       },
       update: {
         totalAura: monthlyAura,
@@ -335,26 +351,28 @@ async function updateLeaderboards(
       create: {
         userId: userId,
         totalAura: totalAura,
-        rank: 999999, // Will be recalculated
+        rank: 0, // Will be updated by rank calculation
         year: now.getFullYear().toString(),
         yearlyAura: totalAura,
       },
       update: {
         totalAura: totalAura,
+        year: now.getFullYear().toString(),
         yearlyAura: totalAura,
-        lastUpdated: now,
       },
     });
 
-    // Recalculate ranks for monthly leaderboard
-    await recalculateMonthlyRanks(currentMonthYear);
+    console.log(
+      `✅ [Leaderboard] Updated leaderboards - Monthly: ${monthlyAura}, Global: ${totalAura}`
+    );
 
-    // Recalculate ranks for global leaderboard
-    await recalculateGlobalRanks();
-
-    console.log(`✅ [Leaderboard] Updated leaderboards for user ${userId}`);
+    return { success: true, monthlyAura, totalAura };
   } catch (error) {
-    console.error("❌ [Leaderboard] Error updating leaderboards:", error);
+    console.error("Error updating leaderboards:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 

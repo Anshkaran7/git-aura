@@ -25,8 +25,16 @@ model User {
   currentStreak        Int       @default(0) @map("current_streak")
   longestStreak        Int       @default(0) @map("longest_streak")
   lastContributionDate DateTime? @map("last_contribution_date")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  // Ban management fields
+  isBanned     Boolean   @default(false) @map("is_banned")
+  banReason    String?   @map("ban_reason")
+  bannedAt     DateTime? @map("banned_at")
+  bannedBy     String?   @map("banned_by") // Admin user ID who applied the ban
+  banExpiresAt DateTime? @map("ban_expires_at") // For temporary bans
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   auraCalculations   AuraCalculation[]
