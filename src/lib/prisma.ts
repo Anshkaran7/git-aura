@@ -21,5 +21,3 @@ export const prisma =
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-// DATABASE_URL=postgresql://postgres:gitAura2025@db.vxwwzvrzeptddawwvclj.supabase.co:5432/postgres

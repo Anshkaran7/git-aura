@@ -41,6 +41,60 @@ export async function POST(req: NextRequest) {
 
     // If we have all contributions, calculate and store complete aura
     if (allContributions && Array.isArray(allContributions)) {
+      console.log(
+        `🔄 [save-monthly-aura] Using complete aura calculation for ${user.githubUsername}`
+      );
+      console.log(`📊 [save-monthly-aura] Input data:`, {
+        monthYear,
+        contributionsCount,
+        activeDays,
+        allContributionsLength: allContributions.length,
+      });
+
+      // Calculate monthly aura using SAME logic as frontend
+      const [year, month] = monthYear.split("-").map(Number);
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const frontendMatchingAura = Math.round(
+        contributionsCount * 10 + // Base aura
+          activeDays * 50 + // Active days bonus
+          Math.round((activeDays / daysInMonth) * 1000) // Consistency bonus
+      );
+
+      console.log(`📊 [save-monthly-aura] Frontend-matching calculation:`, {
+        contributionsCount,
+        activeDays,
+        daysInMonth,
+        baseAura: contributionsCount * 10,
+        activeDaysBonus: activeDays * 50,
+        consistencyBonus: Math.round((activeDays / daysInMonth) * 1000),
+        finalAura: frontendMatchingAura,
+      });
+
+      // Update monthly leaderboard FIRST with frontend-matching calculation
+      console.log(
+        `🔧 [save-monthly-aura] Updating monthly leaderboard with frontend calculation: ${frontendMatchingAura}`
+      );
+      await prisma.monthlyLeaderboard.upsert({
+        where: {
+          userId_monthYear: {
+            userId: userId,
+            monthYear: monthYear,
+          },
+        },
+        create: {
+          userId: userId,
+          monthYear: monthYear,
+          totalAura: frontendMatchingAura, // Use frontend calculation
+          contributionsCount: contributionsCount,
+          rank: 999999, // Will be recalculated by cron
+        },
+        update: {
+          totalAura: frontendMatchingAura, // Use frontend calculation
+          contributionsCount: contributionsCount,
+        },
+      });
+
+      // Then do the complete aura calculation for total/global data (without overwriting monthly)
       const auraResult = await calculateAndStoreUserAura(
         userId,
         user.githubUsername,
@@ -48,14 +102,40 @@ export async function POST(req: NextRequest) {
       );
 
       if (auraResult.success) {
+        // Get the updated monthly leaderboard entry to verify
+        const monthlyEntry = await prisma.monthlyLeaderboard.findUnique({
+          where: {
+            userId_monthYear: {
+              userId: userId,
+              monthYear: monthYear,
+            },
+          },
+        });
+
+        console.log(`✅ [save-monthly-aura] Update result:`, {
+          totalAura: auraResult.totalAura,
+          currentStreak: auraResult.currentStreak,
+          longestStreak: auraResult.longestStreak,
+          storedMonthlyEntry: monthlyEntry
+            ? {
+                totalAura: monthlyEntry.totalAura,
+                contributionsCount: monthlyEntry.contributionsCount,
+              }
+            : "NOT_FOUND",
+        });
+
         return NextResponse.json({
           success: true,
-          monthlyAura: 0, // This will be calculated in the function
+          monthlyAura: monthlyEntry?.totalAura || frontendMatchingAura,
           totalAura: auraResult.totalAura,
           currentStreak: auraResult.currentStreak,
           longestStreak: auraResult.longestStreak,
         });
       } else {
+        console.error(
+          `❌ [save-monthly-aura] Complete calculation failed:`,
+          auraResult.error
+        );
         return NextResponse.json(
           { error: auraResult.error || "Failed to calculate aura" },
           { status: 500 }
@@ -95,20 +175,23 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Recalculate monthly ranks
-    const monthlyLeaderboard = await prisma.monthlyLeaderboard.findMany({
-      where: { monthYear },
-      orderBy: { totalAura: "desc" },
-    });
+    // DON'T recalculate ranks during sync - too expensive!
+    // Process updates in batches to avoid connection pool timeout
+    // const batchSize = 10;
+    // for (let i = 0; i < monthlyLeaderboard.length; i += batchSize) {
+    //   const batch = monthlyLeaderboard.slice(i, i + batchSize);
+    //   const monthlyRankUpdates = batch.map((entry, batchIndex) =>
+    //     prisma.monthlyLeaderboard.update({
+    //       where: { id: entry.id },
+    //       data: { rank: i + batchIndex + 1 },
+    //     })
+    //   );
+    //   await Promise.all(monthlyRankUpdates);
+    // }
 
-    const monthlyRankUpdates = monthlyLeaderboard.map((entry, index) =>
-      prisma.monthlyLeaderboard.update({
-        where: { id: entry.id },
-        data: { rank: index + 1 },
-      })
+    console.log(
+      `✅ [save-monthly-aura] Updated monthly data without rank calculation (cron job will handle ranks)`
     );
-
-    await Promise.all(monthlyRankUpdates);
 
     return NextResponse.json({
       success: true,

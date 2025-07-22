@@ -1,27 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { fetchGitHubContributions } from "@/lib/github-contributions";
 
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
 
+    // Debug logging for user ID issue
+    console.log(`🔍 [Sync] Auth userId: ${userId}`);
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the user data from the request body
+    // Get the user's GitHub data from the request body
     const body = await request.json();
-    const {
-      userId: requestUserId,
-      githubUsername,
-      displayName,
-      avatarUrl,
-    } = body;
+    console.log(`🔍 [Sync] Request body userId: ${body.userId}`);
 
-    console.log("Sync request data:", { userId, githubUsername, displayName });
+    const githubData = {
+      username: body.githubUsername,
+      name: body.displayName,
+      avatar_url: body.avatarUrl,
+    };
 
-    if (!githubUsername) {
+    console.log("🔍 [Sync] githubData", githubData);
+    if (!githubData.username) {
       return NextResponse.json(
         { error: "GitHub username is required" },
         { status: 400 }
@@ -29,42 +33,84 @@ export async function POST(request: NextRequest) {
     }
 
     // First, ensure the user exists in our database
-    const user = await prisma.user.upsert({
-      where: { id: userId },
-      update: {
-        githubUsername: githubUsername,
-        displayName: displayName || githubUsername,
-        avatarUrl: avatarUrl,
-        updatedAt: new Date(),
-      },
-      create: {
-        id: userId,
-        email: `${githubUsername}@github.local`, // Required field
-        githubUsername: githubUsername,
-        displayName: displayName || githubUsername,
-        avatarUrl: avatarUrl,
-        totalAura: 0,
-        currentStreak: 0,
-      },
+    // Handle the unique constraint on githubUsername by checking if it exists first
+    let user = await prisma.user.findUnique({
+      where: { githubUsername: githubData.username },
     });
 
-    // Calculate total contributions and aura
-    const contributionsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/github/contributions/${githubUsername}`
+    if (user) {
+      // User with this GitHub username already exists, update their Clerk user ID and other data
+      console.log(
+        `🔍 [Sync] Found existing user with GitHub username: ${githubData.username}, current ID: ${user.id}, new ID: ${userId}`
+      );
+      user = await prisma.user.update({
+        where: { githubUsername: githubData.username },
+        data: {
+          id: userId, // Update to current Clerk user ID
+          displayName: githubData.name || githubData.username,
+          avatarUrl: githubData.avatar_url,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      // Check if user exists by Clerk ID but with different/no GitHub username
+      const existingUserById = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (existingUserById) {
+        console.log(
+          `🔍 [Sync] Found existing user by ID: ${userId}, updating with GitHub info`
+        );
+        // Update existing user with GitHub info
+        user = await prisma.user.update({
+          where: { id: userId },
+          data: {
+            githubUsername: githubData.username,
+            displayName: githubData.name || githubData.username,
+            avatarUrl: githubData.avatar_url,
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        console.log(`🔍 [Sync] Creating new user: ${userId}`);
+        // Create new user
+        user = await prisma.user.create({
+          data: {
+            id: userId,
+            email: `${githubData.username}@github.local`, // Required field
+            githubUsername: githubData.username,
+            displayName: githubData.name || githubData.username,
+            avatarUrl: githubData.avatar_url,
+            totalAura: 0,
+            currentStreak: 0,
+          },
+        });
+      }
+    }
+
+    console.log(`🔍 [Sync] Final user ID: ${user.id}`);
+
+    // Fetch GitHub contributions using the existing utility function
+    console.log(`Fetching GitHub contributions for ${githubData.username}`);
+    const contributionsResult = await fetchGitHubContributions(
+      githubData.username
     );
 
-    if (!contributionsResponse.ok) {
+    if (!contributionsResult.success || !contributionsResult.data) {
       console.error(
-        "Contributions API failed:",
-        contributionsResponse.status,
-        await contributionsResponse.text()
+        "Failed to fetch GitHub contributions:",
+        contributionsResult.error
       );
-      throw new Error(
-        `Failed to fetch GitHub contributions: ${contributionsResponse.status}`
+      return NextResponse.json(
+        {
+          error: `Failed to fetch GitHub contributions: ${contributionsResult.error}`,
+        },
+        { status: 500 }
       );
     }
 
-    const contributionsData = await contributionsResponse.json();
+    const contributionsData = contributionsResult.data;
     const totalContributions = contributionsData.totalContributions || 0;
 
     // Get the current month's contributions
@@ -91,7 +137,8 @@ export async function POST(request: NextRequest) {
     const monthlyAura = monthlyContributions * 10; // 10 points per contribution
     const totalAura = totalContributions * 10; // 10 points per contribution
 
-    // Update monthly leaderboard
+    // Only update basic data without expensive rank calculations
+    // The rank calculations will be handled by a separate cron job
     await prisma.monthlyLeaderboard.upsert({
       where: {
         userId_monthYear: {
@@ -101,27 +148,30 @@ export async function POST(request: NextRequest) {
       },
       update: {
         totalAura: monthlyAura,
-        rank: 0, // Rank will be updated by a separate cron job
+        // Don't update rank here to avoid connection pool issues
       },
       create: {
         userId: user.id,
         monthYear: currentMonthYear,
         totalAura: monthlyAura,
-        rank: 0, // Rank will be updated by a separate cron job
+        rank: 999999, // Will be updated by cron job
       },
     });
 
-    // Update global leaderboard
+    // Update global leaderboard without rank calculation
     await prisma.globalLeaderboard.upsert({
       where: { userId: user.id },
       update: {
         totalAura: totalAura,
-        rank: 0, // Rank will be updated by a separate cron job
+        lastUpdated: now,
+        // Don't update rank here to avoid connection pool issues
       },
       create: {
         userId: user.id,
         totalAura: totalAura,
-        rank: 0, // Rank will be updated by a separate cron job
+        rank: 999999, // Will be updated by cron job
+        year: now.getFullYear().toString(),
+        yearlyAura: totalAura,
       },
     });
 
@@ -130,36 +180,17 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: {
         totalAura: totalAura,
-        currentStreak: 0, // Reset streak for now, will be calculated properly later
       },
     });
 
-    // Return the updated user data
+    // Return the updated user data without expensive joins
     const updatedUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: {
-        id: true,
-        githubUsername: true,
-        displayName: true,
-        avatarUrl: true,
-        totalAura: true,
-        currentStreak: true,
-        monthlyLeaderboard: {
-          where: { monthYear: currentMonthYear },
-          select: {
-            totalAura: true,
-            rank: true,
-          },
-        },
-        globalLeaderboard: {
-          select: {
-            totalAura: true,
-            rank: true,
-          },
-        },
-      },
     });
 
+    console.log(
+      `✅ Successfully synced user data for ${githubData.username} (ID: ${user.id})`
+    );
     return NextResponse.json({
       success: true,
       user: {
@@ -170,12 +201,18 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error syncing user:", error);
+    console.error("❌ [Sync] Error syncing user:", error);
+
+    // More specific error handling
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: `Failed to sync user data: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      {
-        error: "Failed to sync user data",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Failed to sync user data" },
       { status: 500 }
     );
   }

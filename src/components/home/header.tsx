@@ -36,34 +36,36 @@ export const Header = ({
           (account) => account.provider === "github"
         );
 
-        // Only sync if user has GitHub account connected
         if (!githubAccount?.username) {
-          console.log("No GitHub account connected - skipping sync");
+          console.warn("No GitHub account connected");
           return;
         }
 
-        // Prepare sync data
-        const syncData = {
-          userId: user.id,
-          githubUsername: githubAccount.username,
-          displayName:
-            user.firstName || user.username || githubAccount.username,
-          avatarUrl:
-            user.imageUrl || `https://github.com/${githubAccount.username}.png`,
-        };
-
-        // Sync user data with our backend
+        // IMPORTANT: This sync is critical for:
+        // 1. Keeping user data in sync with GitHub (username, avatar, etc.)
+        // 2. Updating aura calculations and contributions
+        // 3. Maintaining leaderboard accuracy
+        // DO NOT REMOVE unless implementing alternative sync mechanism
         const response = await fetch("/api/sync-user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(syncData),
+          body: JSON.stringify({
+            githubUsername: githubAccount.username,
+            displayName: user.firstName || githubAccount.username,
+            avatarUrl:
+              user.imageUrl ||
+              `https://github.com/${githubAccount.username}.png`,
+          }),
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Sync user data failed:", response.status, errorText);
+          if (process.env.NODE_ENV === "development") {
+            const errorText = await response.text();
+            console.error("Sync user data failed:", response.status, errorText);
+          }
+          setIsSyncing(false);
           return;
         }
 
@@ -73,6 +75,7 @@ export const Header = ({
         }
       } catch (error) {
         console.error("Error syncing user data:", error);
+        // toast.error("Failed to sync your data. Please try again.");
       } finally {
         setIsSyncing(false);
       }
@@ -127,34 +130,22 @@ export const Header = ({
 
     try {
       setIsSyncing(true);
-      const githubAccount = user?.externalAccounts?.find(
-        (account) => account.provider === "github"
-      );
-
-      if (!githubAccount?.username) {
-        toast.error("Please connect your GitHub account first");
-        return;
-      }
-
-      const syncData = {
-        userId: user.id,
-        githubUsername: githubAccount.username,
-        displayName: user.firstName || user.username || githubAccount.username,
-        avatarUrl:
-          user.imageUrl || `https://github.com/${githubAccount.username}.png`,
-      };
-
       const response = await fetch("/api/sync-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(syncData),
+        body: JSON.stringify({
+          githubUsername: user.externalAccounts?.find(
+            (account) => account.provider === "github"
+          )?.username,
+          displayName: user.firstName || user.username,
+          avatarUrl: user.imageUrl,
+        }),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Sync failed: ${errorText}`);
+        throw new Error("Failed to sync data");
       }
 
       const data = await response.json();
@@ -163,7 +154,7 @@ export const Header = ({
       }
     } catch (error) {
       console.error("Error in manual sync:", error);
-      toast.error("Failed to sync. Please try again.");
+      // toast.error("Failed to sync. Please try again.");
     } finally {
       setIsSyncing(false);
     }
