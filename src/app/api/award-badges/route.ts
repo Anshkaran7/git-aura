@@ -32,10 +32,7 @@ const TOP_3_BADGES = [
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("🏆 Starting badge awarding process...");
-
     const currentMonthYear = getCurrentMonthYear();
-    console.log(`📅 Processing badges for: ${currentMonthYear}`);
 
     // Create or update badges in the database
     const badges = await Promise.all(
@@ -67,8 +64,6 @@ export async function POST(req: NextRequest) {
       })
     );
 
-    console.log(`✅ Created/updated ${badges.length} badges`);
-
     // Get top 3 users from monthly leaderboard, excluding banned users
     const topUsers = await prisma.monthlyLeaderboard.findMany({
       where: {
@@ -92,8 +87,6 @@ export async function POST(req: NextRequest) {
       },
       take: 3,
     });
-
-    console.log(`🔍 Found ${topUsers.length} top users for this month`);
 
     if (topUsers.length === 0) {
       return NextResponse.json({
@@ -165,27 +158,12 @@ export async function POST(req: NextRequest) {
             },
             aura: user.totalAura,
           });
-
-          console.log(
-            `🏅 Awarded "${badge.name}" to ${
-              userBadge.user.displayName || userBadge.user.githubUsername
-            } (Position #${position})`
-          );
         } else {
-          console.log(
-            `ℹ️ User ${
-              user.user.displayName || user.user.githubUsername
-            } already has badge for position #${position}`
-          );
         }
       } catch (error) {
         console.error(`❌ Error awarding badge to user ${user.userId}:`, error);
       }
     }
-
-    console.log(
-      `🎉 Badge awarding process completed. Awarded ${awardedBadges.length} new badges.`
-    );
 
     return NextResponse.json({
       success: true,

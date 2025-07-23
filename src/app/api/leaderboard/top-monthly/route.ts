@@ -12,9 +12,6 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
     return await fn();
   } catch (error) {
     if (retries > 0) {
-      console.log(
-        `Database operation failed, retrying... (${retries} attempts left)`
-      );
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
       return withRetry(fn, retries - 1);
     }
@@ -29,8 +26,6 @@ export async function GET(request: NextRequest) {
     const currentMonthYear = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
-
-    console.log(`Fetching top monthly users for ${currentMonthYear}`);
 
     // Fetch top 5 monthly users with proper sorting using retry logic
     const monthlyData = await withRetry(async () => {
@@ -64,7 +59,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (!monthlyData || monthlyData.length === 0) {
-      console.log(`No monthly data found for ${currentMonthYear}`);
       return NextResponse.json({
         topUsers: [],
         monthYear: currentMonthYear,
@@ -110,8 +104,6 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    console.log(`Successfully fetched ${transformedData.length} top users`);
-
     return NextResponse.json({
       topUsers: transformedData,
       monthYear: currentMonthYear,
@@ -129,10 +121,9 @@ export async function GET(request: NextRequest) {
       error instanceof Error &&
       error.message.includes("Can't reach database")
     ) {
-      console.error("Database connection failed. This might be due to:");
-      console.error("1. DATABASE_URL not properly configured for serverless");
-      console.error("2. Missing connection pooling configuration");
-      console.error("3. Supabase instance not accessible");
+      console.error(
+        "Database connection failed. This might be due to: 1. DATABASE_URL not properly configured for serverless 2. Missing connection pooling configuration 3. Supabase instance not accessible"
+      );
     }
 
     return NextResponse.json(

@@ -178,11 +178,6 @@ async function updateLeaderboards(
       new Date().getTime() - existingMonthlyEntry.createdAt.getTime() > 30000; // 30 seconds
 
     if (shouldUpdateMonthly) {
-      console.log(
-        `🔄 [save-user-aura] Updating monthly leaderboard for ${currentMonthYear}:`,
-        { monthlyAura, monthlyContributionsCount, activeDays, daysInMonth }
-      );
-
       // Update monthly leaderboard
       await prisma.monthlyLeaderboard.upsert({
         where: {
@@ -204,9 +199,6 @@ async function updateLeaderboards(
         },
       });
     } else {
-      console.log(
-        `⏭️ [save-user-aura] Skipping monthly leaderboard update (recently updated by save-monthly-aura)`
-      );
     }
 
     // Update global leaderboard
@@ -229,10 +221,6 @@ async function updateLeaderboards(
     // DON'T recalculate ranks during manual sync - too expensive!
     // Let cron job handle rank updates
     // await recalculateRanks(currentMonthYear);
-
-    console.log(
-      `✅ [save-user-aura] Updated leaderboards without rank calculation (cron job will handle ranks)`
-    );
   } catch (error) {
     console.error("Error updating leaderboards:", error);
     throw error;

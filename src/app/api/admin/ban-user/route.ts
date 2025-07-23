@@ -125,12 +125,6 @@ export async function POST(request: NextRequest) {
       // Remove banned user from leaderboards
       await removeBannedUserFromLeaderboards(targetUserId);
 
-      console.log(
-        `🔨 [Admin] User banned: ${
-          targetUser.githubUsername || targetUser.displayName
-        } by ${user.username || user.id}`
-      );
-
       return NextResponse.json({
         success: true,
         message: `User ${
@@ -163,12 +157,6 @@ export async function POST(request: NextRequest) {
           banExpiresAt: null,
         },
       });
-
-      console.log(
-        `✅ [Admin] User unbanned: ${
-          targetUser.githubUsername || targetUser.displayName
-        } by ${user.username || user.id}`
-      );
 
       return NextResponse.json({
         success: true,

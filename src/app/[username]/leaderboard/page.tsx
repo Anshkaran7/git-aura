@@ -38,7 +38,6 @@ export default function LeaderboardPage({ params }: PageProps) {
 
       try {
         const response = await fetch(`/api/check-ban-status?userId=${userId}`);
-        console.log("response", response);
         if (response.ok) {
           const data = await response.json();
           if (data.isBanned) {
@@ -70,7 +69,6 @@ export default function LeaderboardPage({ params }: PageProps) {
     );
   }
 
-  console.log("banStatus", banStatus);
   if (banStatus?.isBanned) {
     return (
       <div className="min-h-screen bg-black transition-colors duration-300">

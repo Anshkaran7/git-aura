@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
 
     // Debug logging for user ID issue
-    console.log(`🔍 [Sync] Auth userId: ${userId}`);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,7 +15,6 @@ export async function POST(request: NextRequest) {
 
     // Get the user's GitHub data from the request body
     const body = await request.json();
-    console.log(`🔍 [Sync] Request body userId: ${body.userId}`);
 
     const githubData = {
       username: body.githubUsername,
@@ -24,7 +22,6 @@ export async function POST(request: NextRequest) {
       avatar_url: body.avatarUrl,
     };
 
-    console.log("🔍 [Sync] githubData", githubData);
     if (!githubData.username) {
       return NextResponse.json(
         { error: "GitHub username is required" },
@@ -40,9 +37,6 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       // User with this GitHub username already exists, update their Clerk user ID and other data
-      console.log(
-        `🔍 [Sync] Found existing user with GitHub username: ${githubData.username}, current ID: ${user.id}, new ID: ${userId}`
-      );
       user = await prisma.user.update({
         where: { githubUsername: githubData.username },
         data: {
@@ -59,9 +53,6 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingUserById) {
-        console.log(
-          `🔍 [Sync] Found existing user by ID: ${userId}, updating with GitHub info`
-        );
         // Update existing user with GitHub info
         user = await prisma.user.update({
           where: { id: userId },
@@ -73,7 +64,6 @@ export async function POST(request: NextRequest) {
           },
         });
       } else {
-        console.log(`🔍 [Sync] Creating new user: ${userId}`);
         // Create new user
         user = await prisma.user.create({
           data: {
@@ -89,19 +79,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🔍 [Sync] Final user ID: ${user.id}`);
-
     // Fetch GitHub contributions using the existing utility function
-    console.log(`Fetching GitHub contributions for ${githubData.username}`);
     const contributionsResult = await fetchGitHubContributions(
       githubData.username
     );
 
     if (!contributionsResult.success || !contributionsResult.data) {
-      console.error(
-        "Failed to fetch GitHub contributions:",
-        contributionsResult.error
-      );
       return NextResponse.json(
         {
           error: `Failed to fetch GitHub contributions: ${contributionsResult.error}`,
@@ -145,14 +128,19 @@ export async function POST(request: NextRequest) {
       );
     }).length;
 
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0
+    ).getDate();
 
     // Correct monthly aura calculation
     const baseAura = monthlyContributions * 10; // 10 points per contribution
     const consistencyBonus = Math.round((activeDays / daysInMonth) * 1000); // Consistency bonus
-    const monthlyAura = Math.round(baseAura + activeDays * 50 + consistencyBonus); // Active days bonus
+    const monthlyAura = Math.round(
+      baseAura + activeDays * 50 + consistencyBonus
+    ); // Active days bonus
 
-    console.log("sync-user", { monthlyAura, monthlyContributions, activeDays });
     await prisma.monthlyLeaderboard.upsert({
       where: {
         userId_monthYear: {
@@ -202,9 +190,6 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
     });
 
-    console.log(
-      `✅ Successfully synced user data for ${githubData.username} (ID: ${user.id})`
-    );
     return NextResponse.json({
       success: true,
       user: {
@@ -215,8 +200,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("❌ [Sync] Error syncing user:", error);
-
     // More specific error handling
     if (error instanceof Error) {
       return NextResponse.json(

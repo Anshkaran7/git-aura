@@ -13,8 +13,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`[Check User] Checking registration for username: ${username}`);
-
     // Check if user exists in our users table (meaning they're registered)
     // Use case-insensitive matching since GitHub usernames are case-insensitive
     const user = await prisma.user.findFirst({
@@ -33,7 +31,6 @@ export async function GET(request: NextRequest) {
     });
 
     if (user) {
-      console.log(`✅ [Check User] User found: ${user.githubUsername}`);
       return NextResponse.json({
         isRegistered: true,
         user: {
@@ -44,7 +41,6 @@ export async function GET(request: NextRequest) {
         },
       });
     } else {
-      console.log(`❌ [Check User] User not found: ${username}`);
       return NextResponse.json({
         isRegistered: false,
         user: null,
