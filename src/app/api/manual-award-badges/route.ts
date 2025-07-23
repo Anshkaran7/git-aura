@@ -13,10 +13,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(
-      "🔧 [Manual Badge Award] Manually triggering badge awarding process..."
-    );
-
     // Call the badge awarding API
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const response = await fetch(`${baseUrl}/api/award-badges`, {
@@ -28,9 +24,6 @@ export async function POST(req: NextRequest) {
 
     if (response.ok) {
       const result = await response.json();
-      console.log(
-        "✅ [Manual Badge Award] Badge awarding completed successfully"
-      );
       return NextResponse.json({
         success: true,
         message: "Manual badge awarding completed successfully",
@@ -38,10 +31,6 @@ export async function POST(req: NextRequest) {
       });
     } else {
       const errorText = await response.text();
-      console.error(
-        "❌ [Manual Badge Award] Failed to award badges:",
-        errorText
-      );
       return NextResponse.json(
         {
           error: "Failed to award badges",
@@ -51,10 +40,6 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error(
-      "❌ [Manual Badge Award] Error in manual badge awarding:",
-      error
-    );
     return NextResponse.json(
       {
         error: "Internal server error",

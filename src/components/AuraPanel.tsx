@@ -67,9 +67,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     setIsSyncingManually(true);
 
     try {
-      console.log(`🔄 [AuraPanel] Manual sync initiated`);
-      toast.info("Syncing aura data...");
-
       // Sync current month data FIRST to establish correct monthly aura
       if (currentMonth === getCurrentMonthYear()) {
         const [year, month] = currentMonth.split("-").map(Number);
@@ -103,7 +100,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         });
 
         if (monthlyResponse.ok) {
-          console.log(`✅ [AuraPanel] Manual monthly sync successful`);
         }
 
         // Wait a moment to ensure monthly data is committed before total aura sync
@@ -113,13 +109,12 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       // Then sync total aura (this will respect the monthly data set above)
       await syncTotalAuraWithBackend();
 
-      console.log(`✅ [AuraPanel] Manual sync completed successfully`);
-      toast.success("✅ Aura data synced! Ranks will update shortly.", {
-        duration: 4000,
-      });
+      // toast.success("✅ Aura data synced! Ranks will update shortly.", {
+      //   duration: 4000,
+      // });
     } catch (error) {
-      console.error("❌ [AuraPanel] Manual sync failed:", error);
-      toast.error("❌ Failed to sync aura data. Please try again.");
+      // console.error("❌ [AuraPanel] Manual sync failed:", error);
+      // toast.error("❌ Failed to sync aura data. Please try again.");
     } finally {
       setIsSyncingManually(false);
     }
@@ -137,15 +132,15 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       );
 
       if (!githubAccount?.username) {
-        console.warn(
-          "⚠️ [AuraPanel] No GitHub account found for total aura sync"
-        );
+        // console.warn(
+        //   "⚠️ [AuraPanel] No GitHub account found for total aura sync"
+        // );
         return;
       }
 
-      console.log(
-        `🔄 [AuraPanel] Auto-syncing total aura data for ${githubAccount.username}`
-      );
+      // console.log(
+      //   `🔄 [AuraPanel] Auto-syncing total aura data for ${githubAccount.username}`
+      // );
 
       const response = await fetch("/api/save-user-aura", {
         method: "POST",
@@ -161,13 +156,13 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
 
       if (response.ok) {
         const result = await response.json();
-        console.log(`✅ [AuraPanel] Successfully synced total aura:`, result);
+        // console.log(`✅ [AuraPanel] Successfully synced total aura:`, result);
       } else {
         const errorData = await response.json();
-        console.warn(`⚠️ [AuraPanel] Failed to sync total aura:`, errorData);
+        // console.warn(`⚠️ [AuraPanel] Failed to sync total aura:`, errorData);
       }
     } catch (error) {
-      console.error("❌ [AuraPanel] Error syncing total aura:", error);
+      // console.error("❌ [AuraPanel] Error syncing total aura:", error);
     }
   };
 
@@ -202,17 +197,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       const localCalculatedStreak = calculateStreak(
         contributions.contributionDays
       );
-      console.log("🔍 [AuraPanel Debug]", {
-        userAuraProp: userAura,
-        localCalculatedAura,
-        fallbackTotalAura,
-        currentStreakProp: currentStreak,
-        localCalculatedStreak,
-        fallbackCurrentStreak,
-        contributionsLength: contributions.contributionDays.length,
-        totalContributions: contributions.totalContributions,
-        isCalculatingAura,
-      });
     }
   }, [
     userAura,
@@ -265,22 +249,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     // Auto-sync monthly data to backend if user is signed in and it's current month
     if (isSignedIn && user && currentMonth === getCurrentMonthYear()) {
       try {
-        console.log(
-          `🔄 [AuraPanel] Auto-syncing monthly data for ${currentMonth}`
-        );
-        console.log(`📊 [AuraPanel Debug] Frontend calculation:`, {
-          monthlyContributions,
-          activeDays,
-          monthEnd: monthEnd.getDate(),
-          baseAura: monthlyContributions * 10,
-          consistencyRatio: activeDays / monthEnd.getDate(),
-          consistencyBonus: Math.round(
-            (activeDays / monthEnd.getDate()) * 1000
-          ),
-          finalMonthlyAura: monthlyAura,
-          totalContributionDays: contributions.contributionDays.length,
-        });
-
         const response = await fetch("/api/save-monthly-aura", {
           method: "POST",
           headers: {
@@ -296,18 +264,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
 
         if (response.ok) {
           const result = await response.json();
-          console.log(
-            `✅ [AuraPanel] Successfully synced monthly data:`,
-            result
-          );
-          console.log(
-            `📊 [AuraPanel] Backend returned monthly aura:`,
-            result.monthlyAura
-          );
-          // Only show success toast for current month auto-sync
-          toast.success("📊 Monthly aura data synced! Ranks updating...", {
-            duration: 3000,
-          });
         } else {
           const errorData = await response.json();
           console.warn(

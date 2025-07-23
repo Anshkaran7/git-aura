@@ -71,7 +71,7 @@ export const Header = ({
 
         const data = await response.json();
         if (data.success) {
-          console.log("User data synced successfully");
+          // console.log("User data synced successfully");
         }
       } catch (error) {
         console.error("Error syncing user data:", error);

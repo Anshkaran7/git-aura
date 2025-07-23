@@ -41,16 +41,6 @@ export async function POST(req: NextRequest) {
 
     // If we have all contributions, calculate and store complete aura
     if (allContributions && Array.isArray(allContributions)) {
-      console.log(
-        `🔄 [save-monthly-aura] Using complete aura calculation for ${user.githubUsername}`
-      );
-      console.log(`📊 [save-monthly-aura] Input data:`, {
-        monthYear,
-        contributionsCount,
-        activeDays,
-        allContributionsLength: allContributions.length,
-      });
-
       // Calculate monthly aura using SAME logic as frontend
       const [year, month] = monthYear.split("-").map(Number);
       const daysInMonth = new Date(year, month, 0).getDate();
@@ -60,20 +50,6 @@ export async function POST(req: NextRequest) {
           Math.round((activeDays / daysInMonth) * 1000) // Consistency bonus
       );
 
-      console.log(`📊 [save-monthly-aura] Frontend-matching calculation:`, {
-        contributionsCount,
-        activeDays,
-        daysInMonth,
-        baseAura: contributionsCount * 10,
-        activeDaysBonus: activeDays * 50,
-        consistencyBonus: Math.round((activeDays / daysInMonth) * 1000),
-        finalAura: frontendMatchingAura,
-      });
-
-      // Update monthly leaderboard FIRST with frontend-matching calculation
-      console.log(
-        `🔧 [save-monthly-aura] Updating monthly leaderboard with frontend calculation: ${frontendMatchingAura}`
-      );
       await prisma.monthlyLeaderboard.upsert({
         where: {
           userId_monthYear: {
@@ -110,18 +86,6 @@ export async function POST(req: NextRequest) {
               monthYear: monthYear,
             },
           },
-        });
-
-        console.log(`✅ [save-monthly-aura] Update result:`, {
-          totalAura: auraResult.totalAura,
-          currentStreak: auraResult.currentStreak,
-          longestStreak: auraResult.longestStreak,
-          storedMonthlyEntry: monthlyEntry
-            ? {
-                totalAura: monthlyEntry.totalAura,
-                contributionsCount: monthlyEntry.contributionsCount,
-              }
-            : "NOT_FOUND",
         });
 
         return NextResponse.json({
@@ -188,10 +152,6 @@ export async function POST(req: NextRequest) {
     //   );
     //   await Promise.all(monthlyRankUpdates);
     // }
-
-    console.log(
-      `✅ [save-monthly-aura] Updated monthly data without rank calculation (cron job will handle ranks)`
-    );
 
     return NextResponse.json({
       success: true,

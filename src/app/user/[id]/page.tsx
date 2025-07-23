@@ -44,7 +44,7 @@ function UserPage() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Get OG image from URL parameters
-  const ogImageParam = searchParams.get('og_image');
+  const ogImageParam = searchParams.get("og_image");
   const ogImageUrl = ogImageParam ? decodeURIComponent(ogImageParam) : null;
 
   useEffect(() => {
@@ -56,10 +56,6 @@ function UserPage() {
   const checkUserRegistration = async (username: string) => {
     setCheckingRegistration(true);
     try {
-      console.log(
-        `[User Page] Checking registration for username: ${username}`
-      );
-
       // Check if user exists via API
       const response = await fetch(`/api/check-user/${username}`);
 
@@ -70,7 +66,6 @@ function UserPage() {
       }
 
       const data = await response.json();
-      console.log(`[User Page] Registration check result:`, data);
 
       if (data.isRegistered && data.user) {
         setIsUserRegistered(true);
@@ -332,57 +327,57 @@ function UserPage() {
     <>
       <div className="min-h-screen bg-black">
         <div className="pt-20">
-        <Header leaderboard={false} profile={true} />
+          <Header leaderboard={false} profile={true} />
 
-        {/* Error Message */}
-        {error && (
-          <div className="max-w-4xl mx-auto px-4 mb-6">
-            <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-4 rounded-lg border border-gray-700/50">
-              <p className="flex items-center gap-2 text-sm">
-                <span className="text-red-400 text-lg">⚠️</span>
-                <span>{error}</span>
-              </p>
+          {/* Error Message */}
+          {error && (
+            <div className="max-w-4xl mx-auto px-4 mb-6">
+              <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-4 rounded-lg border border-gray-700/50">
+                <p className="flex items-center gap-2 text-sm">
+                  <span className="text-red-400 text-lg">⚠️</span>
+                  <span>{error}</span>
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Loading State */}
-        {loading ? (
-          <div className="flex items-center justify-center w-full py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
-          </div>
-        ) : profile ? (
-          <div className="space-y-8 max-w-6xl mx-auto">
-            <ProfileCard
-              profile={profile}
-              contributions={contributions}
-              selectedTheme={selectedTheme}
-              profileRef={profileRef}
-              handleShareTwitter={() => handleShare("twitter")}
-              handleShareLinkedin={() => handleShare("linkedin")}
-              handleDownload={handleExportImage}
-              isGenerating={isGenerating}
-            />
-            <MontlyContribution
-              selectedTheme={selectedTheme}
-              contributions={contributions}
-            />
-          </div>
-        ) : (
-          !error && (
-            <div className="max-w-4xl mx-auto px-4">
-              <EmptyState
+          {/* Loading State */}
+          {loading ? (
+            <div className="flex items-center justify-center w-full py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
+            </div>
+          ) : profile ? (
+            <div className="space-y-8 max-w-6xl mx-auto">
+              <ProfileCard
+                profile={profile}
+                contributions={contributions}
                 selectedTheme={selectedTheme}
-                onLoadProfile={(username) => {
-                  if (username !== userId && !loading) {
-                    // Redirect to new user page
-                    window.location.href = `/user/${username}`;
-                  }
-                }}
+                profileRef={profileRef}
+                handleShareTwitter={() => handleShare("twitter")}
+                handleShareLinkedin={() => handleShare("linkedin")}
+                handleDownload={handleExportImage}
+                isGenerating={isGenerating}
+              />
+              <MontlyContribution
+                selectedTheme={selectedTheme}
+                contributions={contributions}
               />
             </div>
-          )
-        )}
+          ) : (
+            !error && (
+              <div className="max-w-4xl mx-auto px-4">
+                <EmptyState
+                  selectedTheme={selectedTheme}
+                  onLoadProfile={(username) => {
+                    if (username !== userId && !loading) {
+                      // Redirect to new user page
+                      window.location.href = `/user/${username}`;
+                    }
+                  }}
+                />
+              </div>
+            )
+          )}
         </div>
       </div>
     </>

@@ -54,9 +54,6 @@ export async function POST(req: NextRequest) {
   // Get the ID and type
   const { id, type: eventType } = evt;
 
-  console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
-  console.log("Webhook body:", body);
-
   try {
     if (eventType === "user.created" || eventType === "user.updated") {
       const {
@@ -96,9 +93,6 @@ export async function POST(req: NextRequest) {
       let actualEmail = primaryEmail;
 
       if (githubUsername) {
-        console.log(
-          `[Webhook] Fetching GitHub profile for username: ${githubUsername}`
-        );
         const githubResult = await fetchGitHubProfile(githubUsername);
 
         if (githubResult.success && githubResult.data) {
@@ -109,15 +103,7 @@ export async function POST(req: NextRequest) {
           if (githubResult.data.email && !primaryEmail) {
             actualEmail = githubResult.data.email;
           }
-
-          console.log(
-            `✅ [Webhook] Successfully fetched GitHub profile for ${githubUsername}`
-          );
         } else {
-          console.warn(
-            `⚠️ [Webhook] Failed to fetch GitHub profile for ${githubUsername}:`,
-            githubResult.error
-          );
         }
       }
 
@@ -155,16 +141,8 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        console.log(
-          `✅ [Webhook] Successfully synced user to database: ${userId}`
-        );
-
         // If this is a new user with GitHub username, calculate and store their aura
         if (isNewUser && githubUsername) {
-          console.log(
-            `[Webhook] Starting aura calculation for new user: ${githubUsername}`
-          );
-
           // Fetch GitHub contributions
           const contributionsResult = await fetchGitHubContributions(
             githubUsername
@@ -179,30 +157,15 @@ export async function POST(req: NextRequest) {
             );
 
             if (auraResult.success) {
-              console.log(
-                `✅ [Webhook] Successfully calculated aura for ${githubUsername}: ${auraResult.totalAura} total aura`
-              );
             } else {
-              console.error(
-                `❌ [Webhook] Failed to calculate aura for ${githubUsername}:`,
-                auraResult.error
-              );
             }
           } else {
-            console.warn(
-              `⚠️ [Webhook] Failed to fetch contributions for ${githubUsername}:`,
-              contributionsResult.error
-            );
           }
         }
       } catch (prismaError) {
         console.error("Error syncing user with Prisma:", prismaError);
         return new Response("Error syncing user", { status: 500 });
       }
-
-      console.log(
-        `✅ [Webhook] Webhook processed successfully for user: ${userId}`
-      );
     }
 
     if (eventType === "user.deleted") {
@@ -213,8 +176,6 @@ export async function POST(req: NextRequest) {
         await prisma.user.delete({
           where: { id: userId },
         });
-
-        console.log(`✅ [Webhook] Successfully deleted user: ${userId}`);
       } catch (prismaError) {
         console.error("Error deleting user with Prisma:", prismaError);
         return new Response("Error deleting user", { status: 500 });

@@ -15,8 +15,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🔄 [Refresh] Starting aura refresh for user: ${username}`);
-
     // Find user in database
     const user = await prisma.user.findUnique({
       where: { githubUsername: username },
@@ -36,7 +34,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch fresh GitHub contributions
-    console.log(`📊 [Refresh] Fetching latest GitHub data for ${username}`);
     const contributionsResult = await fetchGitHubContributions(username);
 
     if (!contributionsResult.success || !contributionsResult.data) {
@@ -57,7 +54,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Force recalculate and store aura
-    console.log(`🧮 [Refresh] Recalculating aura for ${username}`);
     const auraResult = await calculateAndStoreUserAura(
       user.id,
       username,
@@ -108,8 +104,6 @@ export async function POST(request: NextRequest) {
       (sum, day) => sum + day.contributionCount,
       0
     );
-
-    console.log(`✅ [Refresh] Successfully refreshed aura for ${username}`);
 
     return NextResponse.json({
       success: true,

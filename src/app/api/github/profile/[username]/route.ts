@@ -155,10 +155,6 @@ export async function GET(request: NextRequest) {
     // If user is authenticated, save aura in background ONLY if viewing their own profile
     const userId = request.nextUrl.searchParams.get("userId");
     if (userId) {
-      console.log(
-        `✅ [GitHub API] Checking if user ${userId} is viewing their own profile (${username})`
-      );
-
       // Find user in database to get GitHub username
       prisma.user
         .findUnique({
@@ -169,9 +165,6 @@ export async function GET(request: NextRequest) {
           if (user?.githubUsername) {
             // Only calculate aura if the logged-in user is viewing their own profile
             if (user.githubUsername.toLowerCase() === username.toLowerCase()) {
-              console.log(
-                `✅ [GitHub API] User is viewing their own profile, calculating aura for: ${userId}`
-              );
               calculateAndStoreUserAura(
                 userId,
                 user.githubUsername,
@@ -180,14 +173,8 @@ export async function GET(request: NextRequest) {
                 console.error("Background aura calculation failed:", err);
               });
             } else {
-              console.log(
-                `⚠️ [GitHub API] User ${userId} (${user.githubUsername}) is viewing ${username}'s profile, skipping aura calculation`
-              );
             }
           } else {
-            console.warn(
-              `⚠️ [GitHub API] User ${userId} has no GitHub username, skipping aura calculation`
-            );
           }
         })
         .catch((err) => {
@@ -197,9 +184,6 @@ export async function GET(request: NextRequest) {
           );
         });
     } else {
-      console.log(
-        "⚠️ [GitHub API] No userId provided - skipping background aura calculation"
-      );
     }
 
     return response;
