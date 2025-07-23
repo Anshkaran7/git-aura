@@ -6,26 +6,30 @@ export {
   calculateConsistencyBonus,
   calculateQualityBonus,
   calculateMonthlyAura,
-  calculateAndStoreUserAura,
-  createAuraCalculation,
 } from "./aura-calculations";
 
 export { calculateStreak } from "./utils2";
 
-// Legacy function for compatibility - now uses the new system
+// Client-side function to save user aura via API
 export async function saveUserAura(
   userId: string,
   githubData: any,
   contributionDays: ContributionDay[]
 ): Promise<{ success: boolean; aura: number; error?: string }> {
   try {
-    const { calculateAndStoreUserAura } = await import("./aura-calculations");
+    const response = await fetch("/api/save-user-aura", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        githubUsername: githubData.login,
+        contributionDays,
+      }),
+    });
 
-    const result = await calculateAndStoreUserAura(
-      userId,
-      githubData.login,
-      contributionDays
-    );
+    const result = await response.json();
 
     if (result.success) {
       return {

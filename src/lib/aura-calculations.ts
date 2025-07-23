@@ -208,13 +208,16 @@ export async function calculateAndStoreUserAura(
     const githubResult = await fetchGitHubProfile(githubUsername);
     const githubProfile = githubResult.success ? githubResult.data : undefined;
 
+    console.log("githubProfile", githubProfile);
     // Calculate total aura
     const totalAura = calculateTotalAura(contributionDays);
     const currentStreak = calculateStreak(contributionDays);
-
+    console.log("currentStreak", currentStreak);
+    console.log("totalAura", totalAura);
     // Get the longest streak (for now, use current streak, but this could be enhanced)
     const longestStreak = currentStreak;
 
+    console.log("contributionDays", contributionDays);
     // Get the last contribution date
     const lastContributionDate = contributionDays
       .filter((day) => day.contributionCount > 0)
@@ -222,6 +225,7 @@ export async function calculateAndStoreUserAura(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       )[0]?.date;
 
+    console.log("lastContributionDate", lastContributionDate);
     // Update user's total aura and streak
     await prisma.user.update({
       where: { id: userId },
@@ -235,6 +239,7 @@ export async function calculateAndStoreUserAura(
       },
     });
 
+    console.log("userId", userId);
     // Create aura calculation for today (most recent)
     const today = new Date();
     await createAuraCalculation(userId, today, contributionDays, githubProfile);
@@ -242,18 +247,11 @@ export async function calculateAndStoreUserAura(
     // Update leaderboards
     await updateLeaderboards(userId, totalAura, contributionDays);
 
-    // Award badges to top 3 users (background process)
-    try {
-      await awardBadgesToTopUsers();
-    } catch (badgeError) {
-      console.error("❌ [Badge Award] Failed to award badges:", badgeError);
-      // Don't fail the whole process if badge awarding fails
-    }
-
     console.log(
-      `✅ [Aura Calc] Completed aura calculation for ${githubUsername}: ${totalAura} total aura`
+      `✅ [Leaderboard] Updated leaderboards for user ${userId} (ranks will be updated by cron job)`
     );
 
+    // Return success with calculated values
     return {
       success: true,
       totalAura,
@@ -273,77 +271,101 @@ export async function calculateAndStoreUserAura(
 }
 
 // Update leaderboards using Prisma
-export async function updateLeaderboards(
+async function updateLeaderboards(
   userId: string,
   totalAura: number,
   contributionDays: ContributionDay[]
 ) {
   try {
-    console.log(
-      `[Leaderboard] Updating leaderboards for user: ${userId} with ${totalAura} total aura`
-    );
-
-    // Check if user is banned before updating leaderboards
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { isBanned: true },
-    });
-
-    if (user?.isBanned) {
-      console.log(
-        `[Leaderboard] Skipping leaderboard update for banned user: ${userId}`
-      );
-      return {
-        success: true,
-        message: "User is banned, skipped leaderboard update",
-      };
-    }
-
-    // Get current month's contributions
+    // Get current month data
     const now = new Date();
     const currentMonthYear = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Calculate monthly aura and contributions
+    // Calculate monthly contributions
     const monthlyContributions = contributionDays.filter((day) => {
       const dayDate = new Date(day.date);
-      return (
-        dayDate.getFullYear() === now.getFullYear() &&
-        dayDate.getMonth() === now.getMonth()
-      );
+      return dayDate >= monthStart && dayDate <= monthEnd;
     });
-
-    const monthlyAura = monthlyContributions.reduce(
-      (sum, day) => sum + calculateBaseAura(day.contributionCount),
-      0
-    );
 
     const monthlyContributionsCount = monthlyContributions.reduce(
       (sum, day) => sum + day.contributionCount,
       0
     );
 
-    // Update monthly leaderboard
-    await prisma.monthlyLeaderboard.upsert({
+    const activeDays = monthlyContributions.filter(
+      (day) => day.contributionCount > 0
+    ).length;
+    const daysInMonth = monthEnd.getDate();
+    const monthlyAura = calculateMonthlyAura(
+      monthlyContributionsCount,
+      activeDays,
+      daysInMonth
+    );
+
+    console.log(
+      `📊 [updateLeaderboards] Monthly calculation for ${currentMonthYear}:`,
+      {
+        userId,
+        monthlyContributionsCount,
+        activeDays,
+        daysInMonth,
+        baseAura: calculateBaseAura(monthlyContributionsCount),
+        consistencyBonus: calculateConsistencyBonus(activeDays, daysInMonth),
+        finalMonthlyAura: monthlyAura,
+        totalAura,
+      }
+    );
+
+    // Check if monthly leaderboard entry was recently updated (within last 30 seconds)
+    // This prevents overwriting data from save-monthly-aura endpoint
+    const existingMonthlyEntry = await prisma.monthlyLeaderboard.findUnique({
       where: {
         userId_monthYear: {
           userId: userId,
           monthYear: currentMonthYear,
         },
       },
-      create: {
-        userId: userId,
-        monthYear: currentMonthYear,
-        totalAura: monthlyAura,
-        contributionsCount: monthlyContributionsCount,
-        rank: 0, // Will be updated by rank calculation
-      },
-      update: {
-        totalAura: monthlyAura,
-        contributionsCount: monthlyContributionsCount,
-      },
     });
+
+    const shouldUpdateMonthly =
+      !existingMonthlyEntry ||
+      new Date().getTime() - existingMonthlyEntry.createdAt.getTime() > 30000; // 30 seconds
+
+    if (shouldUpdateMonthly) {
+      console.log(
+        `🔄 [updateLeaderboards] Updating monthly leaderboard for ${currentMonthYear}:`,
+        { monthlyAura, monthlyContributionsCount, activeDays, daysInMonth }
+      );
+
+      // Update monthly leaderboard
+      await prisma.monthlyLeaderboard.upsert({
+        where: {
+          userId_monthYear: {
+            userId: userId,
+            monthYear: currentMonthYear,
+          },
+        },
+        create: {
+          userId: userId,
+          monthYear: currentMonthYear,
+          totalAura: monthlyAura,
+          contributionsCount: monthlyContributionsCount,
+          rank: 999999, // Will be recalculated
+        },
+        update: {
+          totalAura: monthlyAura,
+          contributionsCount: monthlyContributionsCount,
+        },
+      });
+    } else {
+      console.log(
+        `⏭️ [updateLeaderboards] Skipping monthly leaderboard update (recently updated by save-monthly-aura)`
+      );
+    }
 
     // Update global leaderboard
     await prisma.globalLeaderboard.upsert({
@@ -351,28 +373,27 @@ export async function updateLeaderboards(
       create: {
         userId: userId,
         totalAura: totalAura,
-        rank: 0, // Will be updated by rank calculation
+        rank: 999999, // Will be recalculated
         year: now.getFullYear().toString(),
         yearlyAura: totalAura,
       },
       update: {
         totalAura: totalAura,
-        year: now.getFullYear().toString(),
         yearlyAura: totalAura,
+        lastUpdated: now,
       },
     });
 
-    console.log(
-      `✅ [Leaderboard] Updated leaderboards - Monthly: ${monthlyAura}, Global: ${totalAura}`
-    );
+    // DON'T recalculate ranks during sync - let cron job handle this
+    // This prevents hundreds of database queries during user sync
+    // await recalculateMonthlyRanks(currentMonthYear);
+    // await recalculateGlobalRanks();
 
-    return { success: true, monthlyAura, totalAura };
+    console.log(
+      `✅ [Leaderboard] Updated leaderboards for user ${userId} (ranks will be updated by cron job)`
+    );
   } catch (error) {
-    console.error("Error updating leaderboards:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    console.error("❌ [Leaderboard] Error updating leaderboards:", error);
   }
 }
 
@@ -384,14 +405,19 @@ async function recalculateMonthlyRanks(monthYear: string) {
       orderBy: { totalAura: "desc" },
     });
 
-    const updates = leaderboard.map((entry, index) =>
-      prisma.monthlyLeaderboard.update({
-        where: { id: entry.id },
-        data: { rank: index + 1 },
-      })
-    );
+    // Process in batches to avoid connection pool timeout
+    const batchSize = 10;
+    for (let i = 0; i < leaderboard.length; i += batchSize) {
+      const batch = leaderboard.slice(i, i + batchSize);
+      const updates = batch.map((entry, batchIndex) =>
+        prisma.monthlyLeaderboard.update({
+          where: { id: entry.id },
+          data: { rank: i + batchIndex + 1 },
+        })
+      );
 
-    await Promise.all(updates);
+      await Promise.all(updates);
+    }
   } catch (error) {
     console.error("Error recalculating monthly ranks:", error);
   }
@@ -404,14 +430,19 @@ async function recalculateGlobalRanks() {
       orderBy: { totalAura: "desc" },
     });
 
-    const updates = leaderboard.map((entry, index) =>
-      prisma.globalLeaderboard.update({
-        where: { id: entry.id },
-        data: { rank: index + 1 },
-      })
-    );
+    // Process in batches to avoid connection pool timeout
+    const batchSize = 10;
+    for (let i = 0; i < leaderboard.length; i += batchSize) {
+      const batch = leaderboard.slice(i, i + batchSize);
+      const updates = batch.map((entry, batchIndex) =>
+        prisma.globalLeaderboard.update({
+          where: { id: entry.id },
+          data: { rank: i + batchIndex + 1 },
+        })
+      );
 
-    await Promise.all(updates);
+      await Promise.all(updates);
+    }
   } catch (error) {
     console.error("Error recalculating global ranks:", error);
   }
