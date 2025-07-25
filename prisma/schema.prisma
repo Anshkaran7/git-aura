@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,33 +8,28 @@ datasource db {
 }
 
 model User {
-  id                   String    @id @default(uuid())
-  email                String    @unique
-  githubUsername       String?   @unique @map("github_username")
-  githubId             String?   @unique @map("github_id")
-  displayName          String?   @map("display_name")
-  avatarUrl            String?   @map("avatar_url")
-  githubData           Json?     @map("github_data")
-  totalAura            Int       @default(0) @map("total_aura")
-  currentStreak        Int       @default(0) @map("current_streak")
-  longestStreak        Int       @default(0) @map("longest_streak")
-  lastContributionDate DateTime? @map("last_contribution_date")
-
-  // Ban management fields
-  isBanned     Boolean   @default(false) @map("is_banned")
-  banReason    String?   @map("ban_reason")
-  bannedAt     DateTime? @map("banned_at")
-  bannedBy     String?   @map("banned_by") // Admin user ID who applied the ban
-  banExpiresAt DateTime? @map("ban_expires_at") // For temporary bans
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  auraCalculations   AuraCalculation[]
-  userBadges         UserBadge[]
-  monthlyLeaderboard MonthlyLeaderboard[]
-  globalLeaderboard  GlobalLeaderboard?
+  id                   String               @id @default(uuid())
+  email                String               @unique
+  githubUsername       String?              @unique @map("github_username")
+  githubId             String?              @unique @map("github_id")
+  displayName          String?              @map("display_name")
+  avatarUrl            String?              @map("avatar_url")
+  githubData           Json?                @map("github_data")
+  totalAura            Int                  @default(0) @map("total_aura")
+  currentStreak        Int                  @default(0) @map("current_streak")
+  longestStreak        Int                  @default(0) @map("longest_streak")
+  lastContributionDate DateTime?            @map("last_contribution_date")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+  banExpiresAt         DateTime?            @map("ban_expires_at")
+  banReason            String?              @map("ban_reason")
+  bannedAt             DateTime?            @map("banned_at")
+  bannedBy             String?              @map("banned_by")
+  isBanned             Boolean              @default(false) @map("is_banned")
+  auraCalculations     AuraCalculation[]
+  userBadges           UserBadge[]
+  globalLeaderboard    GlobalLeaderboard?
+  monthlyLeaderboard   MonthlyLeaderboard[]
 
   @@map("users")
 }
@@ -55,11 +44,9 @@ model AuraCalculation {
   consistencyBonus   Int      @default(0) @map("consistency_bonus")
   qualityBonus       Int      @default(0) @map("quality_bonus")
   totalAura          Int      @default(0) @map("total_aura")
-  repositoriesData   Json?    @map("repositories_data") @db.JsonB
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz()
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repositoriesData   Json?    @map("repositories_data")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
   @@map("aura_calculations")
@@ -76,9 +63,7 @@ model Badge {
   isMonthly   Boolean     @default(false) @map("is_monthly")
   isActive    Boolean     @default(true) @map("is_active")
   createdAt   DateTime    @default(now()) @map("created_at")
-
-  // Relations
-  userBadges UserBadge[]
+  userBadges  UserBadge[]
 
   @@map("badges")
 }
@@ -88,13 +73,11 @@ model UserBadge {
   userId    String   @map("user_id")
   badgeId   String   @map("badge_id")
   earnedAt  DateTime @default(now()) @map("earned_at")
-  monthYear String?  @map("month_year") // Format: "2024-01"
+  monthYear String?  @map("month_year")
   rank      Int?
   metadata  Json?
-
-  // Relations
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badge Badge? @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, badgeId, monthYear])
   @@map("badge")
@@ -103,14 +86,12 @@ model UserBadge {
 model MonthlyLeaderboard {
   id                 String   @id @default(uuid())
   userId             String   @map("user_id")
-  monthYear          String   @map("month_year") // Format: "2024-01"
+  monthYear          String   @map("month_year")
   totalAura          Int      @default(0) @map("total_aura")
   contributionsCount Int      @default(0) @map("contributions_count")
   rank               Int
   createdAt          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, monthYear])
   @@map("monthly_leaderboards")
@@ -124,9 +105,7 @@ model GlobalLeaderboard {
   lastUpdated DateTime @default(now()) @map("last_updated")
   year        String?
   yearlyAura  Float    @default(0) @map("yearly_aura")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, year])
   @@map("global_leaderboard")
