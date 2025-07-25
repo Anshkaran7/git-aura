@@ -10,9 +10,10 @@ import { ProductHuntBanner } from "@/components/ProductHuntBanner";
 
 const monaSans = Mona_Sans({
   subsets: ["latin"],
-  variable: "--font-mona-sans",
-  display: "swap", // Add font-display: swap for performance
+  display: "swap",
   preload: true,
+  adjustFontFallback: true,
+  weight: ["200", "300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -184,7 +185,7 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="en" className="dark scroll-smooth">
+      <html lang="en" className={`dark scroll-smooth ${monaSans.className}`}>
         <head>
           {/* Preconnect to external domains for performance */}
           <link rel="preconnect" href="https://api.github.com" />
@@ -230,10 +231,7 @@ export default function RootLayout({
 
           <OrganizationStructuredData />
         </head>
-        <body
-          className={`${monaSans.variable} font-sans antialiased`}
-          suppressHydrationWarning={true}
-        >
+        <body className="antialiased" suppressHydrationWarning={true}>
           <Toaster
             theme="dark"
             position="top-right"
