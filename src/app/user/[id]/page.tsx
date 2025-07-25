@@ -91,12 +91,23 @@ function UserPage() {
     setError(null);
 
     try {
+      // Check if current user is viewing their own profile
+      const currentUserGithubUsername = user?.externalAccounts?.find(
+        (account) => account.provider === "github"
+      )?.username;
+      
+      const isViewingOwnProfile = isSignedIn && 
+        currentUserGithubUsername && 
+        currentUserGithubUsername.toLowerCase() === username.toLowerCase();
+
       // Fetch user profile and contributions
       const url = new URL(
         `/api/github/profile/${username}`,
         window.location.origin
       );
-      if (isSignedIn && user?.id) {
+      
+      // Only send userId parameter when viewing your own profile
+      if (isViewingOwnProfile && user?.id) {
         url.searchParams.set("userId", user.id);
       }
 
@@ -112,13 +123,14 @@ function UserPage() {
       setProfile(profileData);
       setContributions(contributionsData);
 
-      // Calculate aura
-      if (isSignedIn && user?.id) {
+      // Only calculate and save aura when viewing your own profile
+      if (isViewingOwnProfile && user?.id) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
+        // For other profiles or unauthenticated users, just calculate locally
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );

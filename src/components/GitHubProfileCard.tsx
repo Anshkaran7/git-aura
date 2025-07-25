@@ -104,13 +104,23 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     setSearchedUsername(username);
 
     try {
+      // Check if current user is viewing their own profile
+      const currentUserGithubUsername = user?.externalAccounts?.find(
+        (account) => account.provider === "github"
+      )?.username;
+      
+      const isViewingOwnProfile = isSignedIn && 
+        currentUserGithubUsername && 
+        currentUserGithubUsername.toLowerCase() === username.toLowerCase();
+
       // Fetch user profile and contributions in a single call
-      // Include userId for authenticated users to enable background aura saving
       const url = new URL(
         `/api/github/profile/${username}`,
         window.location.origin
       );
-      if (isSignedIn && user?.id) {
+      
+      // Only include userId for authenticated users viewing their own profile
+      if (isViewingOwnProfile && user?.id) {
         url.searchParams.set("userId", user.id);
       }
 
@@ -133,13 +143,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         window.history.pushState({}, "", newUrl);
       }
 
-      // Calculate aura
-      if (isSignedIn && user?.id) {
+      // Only calculate and save aura when viewing your own profile
+      if (isViewingOwnProfile && user?.id) {
         await calculateAndSaveAura(
           profileData,
           contributionsData.contributionDays
         );
       } else {
+        // For other profiles or unauthenticated users, just calculate locally
         const localAura = calculateTotalAura(
           contributionsData.contributionDays
         );
