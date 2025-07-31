@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   // Extract username from the URL path
   const username = request.nextUrl.pathname.split("/").pop();
@@ -30,13 +33,18 @@ export async function GET(request: NextRequest) {
     "Content-Type": "application/json",
     Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
     "User-Agent": "GitAura-App",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    Pragma: "no-cache",
   };
 
   try {
     // Fetch user profile and contributions in parallel
     const [profileResponse, contributionsResponse] = await Promise.all([
       // Fetch user profile
-      fetch(`https://api.github.com/users/${username}`, { headers }),
+      fetch(`https://api.github.com/users/${username}`, {
+        headers,
+        cache: "no-store",
+      }),
 
       // Fetch contributions using GraphQL
       (async () => {
@@ -68,6 +76,7 @@ export async function GET(request: NextRequest) {
           method: "POST",
           headers,
           body: JSON.stringify(graphqlQuery),
+          cache: "no-store",
         });
       })(),
     ]);
@@ -146,13 +155,21 @@ export async function GET(request: NextRequest) {
       contributionDays: allContributions,
     };
 
-    // Return combined data
-    const response = NextResponse.json({
-      profile: profileData,
-      contributions: contributionsResult,
-    });
+    // Return combined data with no-cache headers
+    const response = NextResponse.json(
+      {
+        profile: profileData,
+        contributions: contributionsResult,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
 
-    // If user is authenticated, save aura in background ONLY if viewing their own profile
     const userId = request.nextUrl.searchParams.get("userId");
     if (userId) {
       // Find user in database to get GitHub username
@@ -172,9 +189,7 @@ export async function GET(request: NextRequest) {
               ).catch((err) => {
                 console.error("Background aura calculation failed:", err);
               });
-            } else {
             }
-          } else {
           }
         })
         .catch((err) => {
@@ -183,7 +198,6 @@ export async function GET(request: NextRequest) {
             err
           );
         });
-    } else {
     }
 
     return response;
