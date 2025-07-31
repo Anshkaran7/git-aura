@@ -108,9 +108,10 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       const currentUserGithubUsername = user?.externalAccounts?.find(
         (account) => account.provider === "github"
       )?.username;
-      
-      const isViewingOwnProfile = isSignedIn && 
-        currentUserGithubUsername && 
+
+      const isViewingOwnProfile =
+        isSignedIn &&
+        currentUserGithubUsername &&
         currentUserGithubUsername.toLowerCase() === username.toLowerCase();
 
       // Fetch user profile and contributions in a single call
@@ -118,13 +119,24 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         `/api/github/profile/${username}`,
         window.location.origin
       );
-      
+
       // Only include userId for authenticated users viewing their own profile
       if (isViewingOwnProfile && user?.id) {
         url.searchParams.set("userId", user.id);
       }
 
-      const response = await fetch(url);
+      // Add timestamp to force fresh data
+      url.searchParams.set("t", Date.now().toString());
+
+      const response = await fetch(url, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch GitHub data");

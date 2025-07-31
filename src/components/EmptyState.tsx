@@ -14,6 +14,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   onLoadProfile,
 }) => {
   const { isSignedIn } = useUser();
+  const isDark = selectedTheme.name === "Dark";
 
   const handleQuickLoad = () => {
     const myUsername = prompt("Enter your GitHub username:");
@@ -25,7 +26,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div
       className={`text-center ${
-        selectedTheme.name === "Light" ? "text-gray-600" : "text-gray-300"
+        isDark ? "text-gray-300" : "text-gray-600"
       } mt-8 sm:mt-12 md:mt-16 lg:mt-20 font-mona-sans px-4 sm:px-6`}
     >
       {isSignedIn ? (
@@ -35,7 +36,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           </div>
           <h2
             className={`text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 ${
-              selectedTheme.name === "Light" ? "text-gray-800" : "text-gray-200"
+              isDark ? "text-gray-200" : "text-gray-800"
             }`}
           >
             Welcome to GitAura!
@@ -54,26 +55,24 @@ const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               onClick={handleQuickLoad}
               className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95 shadow-lg touch-manipulation text-sm sm:text-base ${
-                selectedTheme.name === "Light"
-                  ? "bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white"
-                  : "bg-gradient-to-r from-green-600 to-blue-700 hover:from-green-700 hover:to-blue-800 text-white"
+                isDark
+                  ? "bg-[#39d353] hover:bg-[#2ea043] text-black"
+                  : "bg-[#2ea043] hover:bg-[#39d353] text-white"
               }`}
             >
               🚀 Load My GitHub Profile
             </button>
           </div>
           <div
-            className={`mx-auto max-w-xs sm:max-w-sm md:max-w-lg p-3 sm:p-4 rounded-lg border-2 border-dashed ${
-              selectedTheme.name === "Light"
-                ? "bg-blue-50 border-blue-200"
-                : "bg-blue-900/20 border-blue-500/30"
+            className={`mx-auto max-w-xs sm:max-w-sm md:max-w-lg p-3 sm:p-4 rounded-lg border ${
+              isDark
+                ? "bg-[#161b22] border-[#30363d]"
+                : "bg-blue-50 border-blue-200"
             }`}
           >
             <h3
               className={`font-bold mb-2 text-sm sm:text-base ${
-                selectedTheme.name === "Light"
-                  ? "text-blue-700"
-                  : "text-blue-300"
+                isDark ? "text-[#39d353]" : "text-blue-700"
               }`}
             >
               💡 What's Aura?
@@ -89,7 +88,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
         <div className="max-w-md mx-auto">
           <Search
             className={`h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 mx-auto mb-3 sm:mb-4 ${
-              selectedTheme.name === "Light" ? "opacity-40" : "opacity-30"
+              isDark ? "opacity-30" : "opacity-40"
             }`}
           />
           <p className="text-base sm:text-lg">
