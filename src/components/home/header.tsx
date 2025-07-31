@@ -244,6 +244,14 @@ export const Header = ({
               Leaderboard
             </a>
 
+            {/* Monthly Winners link */}
+            <Link
+              href="/monthly-winners"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Monthly Winners
+            </Link>
+
             {/* Contribute link - shown on all pages */}
             <Link
               href="/contribute"
@@ -398,6 +406,14 @@ export const Header = ({
               >
                 Leaderboard
               </a>
+
+              {/* Monthly Winners link */}
+              <Link
+                href="/monthly-winners"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors"
+              >
+                Monthly Winners
+              </Link>
 
               {/* Contribute link - shown on all pages */}
               <Link
