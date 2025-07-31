@@ -30,6 +30,7 @@ model User {
   userBadges           UserBadge[]
   globalLeaderboard    GlobalLeaderboard?
   monthlyLeaderboard   MonthlyLeaderboard[]
+  monthlyWinners       MonthlyWinners[]
 
   @@map("users")
 }
@@ -95,6 +96,22 @@ model MonthlyLeaderboard {
 
   @@unique([userId, monthYear])
   @@map("monthly_leaderboards")
+}
+
+model MonthlyWinners {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  monthYear          String   @map("month_year")
+  rank               Int // 1, 2, or 3
+  totalAura          Int      @default(0) @map("total_aura")
+  contributionsCount Int      @default(0) @map("contributions_count")
+  badgeAwarded       Boolean  @default(false) @map("badge_awarded")
+  capturedAt         DateTime @default(now()) @map("captured_at")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthYear])
+  @@unique([monthYear, rank])
+  @@map("monthly_winners")
 }
 
 model GlobalLeaderboard {

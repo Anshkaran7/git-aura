@@ -7,7 +7,7 @@ const TOP_3_BADGES = [
   {
     name: "Monthly Champion",
     description: "Crowned #1 developer of the month! 🏆",
-    icon: "🏆",
+    icon: "/badge/1st.png",
     color: "#FFD700",
     rarity: "LEGENDARY",
     position: 1,
@@ -15,7 +15,7 @@ const TOP_3_BADGES = [
   {
     name: "Monthly Runner-up",
     description: "Amazing work! Secured #2 position! 🥈",
-    icon: "🥈",
+    icon: "/badge/2nd.png",
     color: "#C0C0C0",
     rarity: "EPIC",
     position: 2,
@@ -23,7 +23,7 @@ const TOP_3_BADGES = [
   {
     name: "Monthly Bronze",
     description: "Excellent performance! Earned #3 spot! 🥉",
-    icon: "🥉",
+    icon: "/badge/3rd.png",
     color: "#CD7F32",
     rarity: "RARE",
     position: 3,
