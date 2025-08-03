@@ -11,7 +11,15 @@ jobs:
     steps:
       - name: Refresh user data
         run: |
-          curl -X POST https://your-domain.com/api/cron/refresh-all-users \
+          curl -X POST https://git-aura.karandev.in/api/cron/refresh-all-users \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+      - name: Update ranks
+        run: |
+          curl -X POST https://git-aura.karandev.in/api/cron/update-ranks \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json"
         env:
