@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { fetchGitHubContributions } from "@/lib/github-contributions";
+import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
+import { shouldRefreshUserData } from "@/lib/refresh-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,111 +81,42 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch GitHub contributions using the existing utility function
-    const contributionsResult = await fetchGitHubContributions(
-      githubData.username
-    );
+    // Check if we should refresh user data
+    const refreshDecision = await shouldRefreshUserData(userId);
 
-    if (!contributionsResult.success || !contributionsResult.data) {
-      return NextResponse.json(
-        {
-          error: `Failed to fetch GitHub contributions: ${contributionsResult.error}`,
-        },
-        { status: 500 }
+    // Only fetch fresh contributions if refresh is needed
+    if (refreshDecision.shouldRefresh) {
+      console.log(
+        `[Sync] Refreshing data for ${githubData.username}: ${refreshDecision.reason}`
+      );
+
+      const contributionsResult = await fetchGitHubContributions(
+        githubData.username
+      );
+
+      if (contributionsResult.success && contributionsResult.data) {
+        // Recalculate aura with fresh data using the aura calculations
+        const auraResult = await calculateAndStoreUserAura(
+          user.id,
+          githubData.username,
+          contributionsResult.data.contributionDays
+        );
+
+        if (!auraResult.success) {
+          console.error(
+            `[Sync] Failed to calculate aura for ${githubData.username}: ${auraResult.error}`
+          );
+        }
+      } else {
+        console.error(
+          `[Sync] Failed to fetch contributions for ${githubData.username}: ${contributionsResult.error}`
+        );
+      }
+    } else {
+      console.log(
+        `[Sync] Skipping refresh for ${githubData.username}: ${refreshDecision.reason}`
       );
     }
-
-    const contributionsData = contributionsResult.data;
-    const totalContributions = contributionsData.totalContributions || 0;
-
-    // Get the current month's contributions
-    const now = new Date();
-    const currentMonthYear = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}`;
-
-    const monthlyContributions = contributionsData.contributionDays
-      .filter((day: { date: string }) => {
-        const date = new Date(day.date);
-        return (
-          date.getFullYear() === now.getFullYear() &&
-          date.getMonth() === now.getMonth()
-        );
-      })
-      .reduce(
-        (sum: number, day: { contributionCount: number }) =>
-          sum + day.contributionCount,
-        0
-      );
-
-    // Calculate aura based on contributions
-    // const monthlyAura = monthlyContributions * 10; // 10 points per contribution
-    const totalAura = totalContributions * 10; // 10 points per contribution
-    const activeDays = contributionsData.contributionDays.filter((day) => {
-      const date = new Date(day.date);
-      return (
-        date.getFullYear() === now.getFullYear() &&
-        date.getMonth() === now.getMonth() &&
-        day.contributionCount > 0
-      );
-    }).length;
-
-    const daysInMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0
-    ).getDate();
-
-    // Correct monthly aura calculation
-    const baseAura = monthlyContributions * 10; // 10 points per contribution
-    const consistencyBonus = Math.round((activeDays / daysInMonth) * 1000); // Consistency bonus
-    const monthlyAura = Math.round(
-      baseAura + activeDays * 50 + consistencyBonus
-    ); // Active days bonus
-
-    await prisma.monthlyLeaderboard.upsert({
-      where: {
-        userId_monthYear: {
-          userId: user.id,
-          monthYear: currentMonthYear,
-        },
-      },
-      update: {
-        totalAura: monthlyAura,
-        // Don't update rank here to avoid connection pool issues
-      },
-      create: {
-        userId: user.id,
-        monthYear: currentMonthYear,
-        totalAura: monthlyAura,
-        rank: 999999, // Will be updated by cron job
-      },
-    });
-
-    // Update global leaderboard without rank calculation
-    await prisma.globalLeaderboard.upsert({
-      where: { userId: user.id },
-      update: {
-        totalAura: totalAura,
-        lastUpdated: now,
-        // Don't update rank here to avoid connection pool issues
-      },
-      create: {
-        userId: user.id,
-        totalAura: totalAura,
-        rank: 999999, // Will be updated by cron job
-        year: now.getFullYear().toString(),
-        yearlyAura: totalAura,
-      },
-    });
-
-    // Update user's total aura
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        totalAura: totalAura,
-      },
-    });
 
     // Return the updated user data without expensive joins
     const updatedUser = await prisma.user.findUnique({
@@ -192,11 +125,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: {
-        ...updatedUser,
-        monthlyAura,
-        totalContributions,
-        monthlyContributions,
+      user: updatedUser,
+      refreshInfo: {
+        wasRefreshed: refreshDecision.shouldRefresh,
+        reason: refreshDecision.reason,
+        lastRefresh: refreshDecision.lastRefresh,
       },
     });
   } catch (error) {
