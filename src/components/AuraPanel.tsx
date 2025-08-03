@@ -588,8 +588,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
               {auraStatus.message}
             </p>
 
-            {/* AI Generated Funny Message */}
-            {isSignedIn && user && (
+            {/* {isSignedIn && user && (
               <div className="mb-4 p-3 rounded-lg border border-[#39d353]/30 bg-gradient-to-r from-[#0d1117]/50 to-[#161b21]/50 backdrop-blur-sm">
                 {isGeneratingAI ? (
                   <div className="flex items-center justify-center gap-2">
@@ -615,7 +614,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
                   </div>
                 ) : null}
               </div>
-            )}
+            )} */}
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
               <span
