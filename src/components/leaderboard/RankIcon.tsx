@@ -7,20 +7,14 @@ interface RankIconProps {
 export function RankIcon({ rank }: RankIconProps) {
   switch (rank) {
     case 1:
-      return (
-        <Crown className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-yellow-500" />
-      );
+      return <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />;
     case 2:
-      return (
-        <Medal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-400" />
-      );
+      return <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />;
     case 3:
-      return (
-        <Medal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-amber-600" />
-      );
+      return <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600" />;
     default:
       return (
-        <span className="text-base sm:text-lg font-bold text-[#7d8590] bg-[#21262d] rounded-full w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex items-center justify-center">
+        <span className="text-xs sm:text-sm font-bold text-[#7d8590] bg-[#21262d] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
           {rank}
         </span>
       );

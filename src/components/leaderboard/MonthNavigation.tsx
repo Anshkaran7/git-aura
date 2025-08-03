@@ -17,22 +17,22 @@ export function MonthNavigation({
   };
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center">
+    <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-center">
       <button
         onClick={() => onMonthChange("prev")}
-        className="p-1.5 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm"
+        className="p-1 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm"
       >
-        <ChevronLeft className="w-4 h-4 text-[#7d8590]" />
+        <ChevronLeft className="w-3.5 h-3.5 text-[#7d8590]" />
       </button>
-      <span className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-medium text-white whitespace-nowrap bg-[#0d1117] backdrop-blur-sm rounded border border-[#21262d]">
+      <span className="px-2 py-1 text-xs font-medium text-white whitespace-nowrap bg-[#0d1117] backdrop-blur-sm rounded border border-[#21262d]">
         {formatMonthYear(currentMonth)}
       </span>
       <button
         onClick={() => onMonthChange("next")}
-        className="p-1.5 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-1 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={currentMonth >= getCurrentMonthYear()}
       >
-        <ChevronRight className="w-4 h-4 text-[#7d8590]" />
+        <ChevronRight className="w-3.5 h-3.5 text-[#7d8590]" />
       </button>
     </div>
   );

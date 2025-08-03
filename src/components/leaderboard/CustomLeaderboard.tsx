@@ -28,13 +28,13 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(() => {
-    setDisplayCount((prev) => prev + 20);
+    setDisplayCount((prev) => Math.min(prev + 20, 100)); // Max 100 users
   }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !loading) {
+        if (entries[0].isIntersecting && !loading && displayCount < 100) {
           loadMore();
         }
       },
@@ -46,7 +46,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
     }
 
     return () => observer.disconnect();
-  }, [loading, loadMore]);
+  }, [loading, loadMore, displayCount]);
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -91,16 +91,25 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
 
         if (userEntry) {
           setCurrentUser(userEntry);
-          setLeaderboardData(sortedLeaderboard);
+          // Check if user is out of top 100
+          if (userEntry.rank > 100) {
+            setUserOutOfTop100(true);
+            // Only show top 100 in leaderboard
+            setLeaderboardData(sortedLeaderboard.slice(0, 100));
+          } else {
+            setUserOutOfTop100(false);
+            setLeaderboardData(sortedLeaderboard);
+          }
         } else {
           setLeaderboardData(sortedLeaderboard);
         }
       } else {
-        setLeaderboardData(sortedLeaderboard);
+        // For global leaderboard, only show top 100
+        setLeaderboardData(sortedLeaderboard.slice(0, 100));
       }
 
       // Update pagination info
-      setDisplayCount(sortedLeaderboard.length);
+      setDisplayCount(Math.min(sortedLeaderboard.length, 100));
     } catch (error) {
       console.error("❌ Error fetching leaderboard:", error);
     } finally {
@@ -137,9 +146,9 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
   const displayedData = leaderboardData.slice(0, displayCount);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* View Toggle and Month Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
         <ViewToggle view={view} onViewChange={setView} />
         {view === "monthly" && (
           <MonthNavigation
@@ -159,9 +168,9 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       )}
 
       {/* Leaderboard Entries */}
-      <div className="space-y-2 sm:space-y-3">
-        <h3 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">
-          All Developers
+      <div className="space-y-1.5 sm:space-y-2">
+        <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3">
+          Top 100 Developers
         </h3>
         <AnimatePresence>
           {displayedData.map((entry, index) => (
@@ -177,14 +186,15 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
         </AnimatePresence>
 
         {/* Infinite Scroll Observer */}
-        {displayedData.length < leaderboardData.length && (
-          <div
-            ref={observerTarget}
-            className="h-10 flex items-center justify-center"
-          >
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#39d353]"></div>
-          </div>
-        )}
+        {displayedData.length < leaderboardData.length &&
+          displayedData.length < 100 && (
+            <div
+              ref={observerTarget}
+              className="h-8 flex items-center justify-center"
+            >
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
+            </div>
+          )}
       </div>
 
       {/* Empty State */}
