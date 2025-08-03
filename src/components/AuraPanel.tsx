@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import { Theme, GitHubContributions } from "./types";
 import {
@@ -20,6 +21,7 @@ import {
   calculateStreak,
 } from "@/lib/utils2";
 import { calculateTotalAura } from "@/lib/aura";
+import { generateFunnyProfileMessage } from "@/lib/ai-service";
 import { toast } from "sonner";
 
 interface AuraPanelProps {
@@ -28,6 +30,12 @@ interface AuraPanelProps {
   currentStreak: number;
   contributions: GitHubContributions;
   isCalculatingAura: boolean;
+}
+
+interface AIProfileMessage {
+  funnyMessage: string;
+  personality: string;
+  motivation: string;
 }
 
 const AuraPanel: React.FC<AuraPanelProps> = ({
@@ -45,6 +53,8 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     activeDays: number;
   }>({ contributions: 0, aura: 0, activeDays: 0 });
   const [isSyncingManually, setIsSyncingManually] = useState(false);
+  const [aiMessage, setAiMessage] = useState<AIProfileMessage | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   // Calculate fallback total aura if userAura is 0 or invalid
   const fallbackTotalAura =
@@ -57,6 +67,85 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
     currentStreak > 0
       ? currentStreak
       : calculateStreak(contributions.contributionDays);
+
+  // Generate AI message based on profile data
+  const generateAIMessage = async () => {
+    if (!isSignedIn || !user || isGeneratingAI) return;
+
+    setIsGeneratingAI(true);
+
+    try {
+      const githubAccount = user.externalAccounts?.find(
+        (account) => account.provider === "github"
+      );
+
+      if (!githubAccount?.username) {
+        return;
+      }
+
+      // Fetch GitHub profile data
+      const profileResponse = await fetch(
+        `/api/github/profile/${githubAccount.username}`
+      );
+      let profileData = null;
+
+      if (profileResponse.ok) {
+        profileData = await profileResponse.json();
+      }
+
+      // Prepare data for AI
+      const aiProfileData = {
+        username: githubAccount.username,
+        displayName: profileData?.name || githubAccount.username,
+        bio: profileData?.bio,
+        location: profileData?.location,
+        company: profileData?.company,
+        publicRepos: profileData?.public_repos || 0,
+        followers: profileData?.followers || 0,
+        following: profileData?.following || 0,
+        createdAt: profileData?.created_at || user.createdAt,
+        contributions: contributions.contributionDays.reduce(
+          (sum, day) => sum + day.contributionCount,
+          0
+        ),
+        currentStreak: fallbackCurrentStreak,
+        totalAura: fallbackTotalAura,
+        monthlyAura: monthlyData.aura,
+        activeDays: monthlyData.activeDays,
+      };
+
+      const aiResponse = await generateFunnyProfileMessage(aiProfileData);
+      setAiMessage(aiResponse);
+    } catch (error) {
+      console.error("Error generating AI message:", error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  // Generate AI message when user data is available
+  useEffect(() => {
+    if (
+      isSignedIn &&
+      user &&
+      contributions.contributionDays.length > 0 &&
+      !isCalculatingAura
+    ) {
+      const timer = setTimeout(() => {
+        generateAIMessage();
+      }, 3000); // Delay to ensure all data is loaded
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    isSignedIn,
+    user,
+    contributions.contributionDays.length,
+    isCalculatingAura,
+    fallbackTotalAura,
+    fallbackCurrentStreak,
+    monthlyData,
+  ]);
 
   // Function to manually sync all aura data with backend
   const handleManualSync = async () => {
@@ -108,6 +197,9 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
 
       // Then sync total aura (this will respect the monthly data set above)
       await syncTotalAuraWithBackend();
+
+      // Regenerate AI message after sync
+      await generateAIMessage();
 
       // toast.success("✅ Aura data synced! Ranks will update shortly.", {
       //   duration: 4000,
@@ -348,6 +440,33 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
           )}
         </div>
       </div>
+
+      {/* AI Generated Funny Message */}
+      {isSignedIn && user && aiMessage && (
+        <div className="mb-4 sm:mb-6">
+          <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#39d353]/30 bg-gradient-to-r from-[#0d1117] to-[#161b21] backdrop-blur-sm">
+            <div className="flex items-start gap-3 mb-3">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#39d353] mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs sm:text-sm font-semibold text-[#39d353] bg-[#39d353]/10 px-2 py-1 rounded-full">
+                    {aiMessage.personality}
+                  </span>
+                  {isGeneratingAI && (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#39d353]"></div>
+                  )}
+                </div>
+                <p className="text-sm sm:text-base text-gray-200 mb-2 leading-relaxed">
+                  {aiMessage.funnyMessage}
+                </p>
+                <p className="text-xs sm:text-sm text-[#39d353] font-medium">
+                  {aiMessage.motivation}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Monthly View Toggle and Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
