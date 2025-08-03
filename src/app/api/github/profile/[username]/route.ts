@@ -8,6 +8,9 @@ export const revalidate = 0;
 export async function GET(request: NextRequest) {
   // Extract username from the URL path
   const username = request.nextUrl.pathname.split("/").pop();
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId");
+  const shouldRefresh = searchParams.get("refresh") === "true";
 
   if (!username) {
     return NextResponse.json(
@@ -170,7 +173,6 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const userId = request.nextUrl.searchParams.get("userId");
     if (userId) {
       // Find user in database to get GitHub username
       prisma.user
@@ -182,6 +184,11 @@ export async function GET(request: NextRequest) {
           if (user?.githubUsername) {
             // Only calculate aura if the logged-in user is viewing their own profile
             if (user.githubUsername.toLowerCase() === username.toLowerCase()) {
+              // Force refresh if requested
+              if (shouldRefresh) {
+                console.log(`[Profile API] Forcing refresh for ${username}`);
+              }
+
               calculateAndStoreUserAura(
                 userId,
                 user.githubUsername,

@@ -123,6 +123,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       // Only include userId for authenticated users viewing their own profile
       if (isViewingOwnProfile && user?.id) {
         url.searchParams.set("userId", user.id);
+        // Force refresh for own profile
+        url.searchParams.set("refresh", "true");
       }
 
       // Add timestamp to force fresh data

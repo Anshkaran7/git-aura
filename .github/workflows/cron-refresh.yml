@@ -1,0 +1,26 @@
+name: Refresh User Data
+
+on:
+  schedule:
+    - cron: "0 */2 * * *" # Every 2 hours
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  refresh-users:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh user data
+        run: |
+          curl -X POST https://git-aura.karandev.in/api/cron/refresh-all-users \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+      - name: Update ranks
+        run: |
+          curl -X POST https://git-aura.karandev.in/api/cron/update-ranks \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
