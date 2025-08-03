@@ -15,13 +15,17 @@ interface GitHubProfileData {
   totalAura: number;
   monthlyAura: number;
   activeDays: number;
+  userId: string;
+  accountAge: number;
+  averageContributions: number;
+  maxContributions: number;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const profileData: GitHubProfileData = await request.json();
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const openaiApiKey = process.env.OPEN_AI_API_KEY;
 
     if (!openaiApiKey) {
       // Return fallback message if no API key
@@ -41,6 +45,7 @@ export async function POST(request: NextRequest) {
     - Encouraging and motivational
     - Include emojis
     - Maximum 2 sentences
+    - Make it unique based on their specific data
     
     Developer Profile:
     - Username: ${profileData.username}
@@ -52,15 +57,23 @@ export async function POST(request: NextRequest) {
     - Followers: ${profileData.followers}
     - Following: ${profileData.following}
     - Account Created: ${profileData.createdAt}
+    - Account Age: ${profileData.accountAge} days
     - Total Contributions: ${profileData.contributions}
     - Current Streak: ${profileData.currentStreak} days
     - Total Aura: ${profileData.totalAura}
     - Monthly Aura: ${profileData.monthlyAura}
     - Active Days This Month: ${profileData.activeDays}
+    - Average Contributions per Day: ${profileData.averageContributions.toFixed(
+      1
+    )}
+    - Max Contributions in a Day: ${profileData.maxContributions}
+    - User ID: ${profileData.userId}
     
     Also provide:
-    - A personality type (e.g., "Git Master", "Code Warrior", "Commit Crusher")
+    - A personality type (e.g., "Code Deity", "Git Master", "Commit Crusher", "Code Enthusiast", "Rising Star")
     - A motivational message (1 sentence with emoji)
+    
+    Make the message unique and funny based on their specific stats. If they have high contributions, make it about being a coding machine. If they have a long streak, mention their consistency. If they're new, encourage them.
     
     Format the response as JSON with keys: funnyMessage, personality, motivation`;
 
@@ -76,7 +89,7 @@ export async function POST(request: NextRequest) {
           {
             role: "system",
             content:
-              "You are a funny, encouraging AI that creates personalized messages for developers based on their GitHub activity. Keep responses light-hearted and motivational.",
+              "You are a funny, encouraging AI that creates personalized messages for developers based on their GitHub activity. Keep responses light-hearted and motivational. Make each message unique based on the specific user's data.",
           },
           {
             role: "user",
@@ -84,7 +97,7 @@ export async function POST(request: NextRequest) {
           },
         ],
         max_tokens: 300,
-        temperature: 0.8,
+        temperature: 0.9, // Increased temperature for more creative responses
       }),
     });
 
@@ -132,6 +145,7 @@ export async function POST(request: NextRequest) {
 }
 
 function getPersonalityFromStats(profileData: GitHubProfileData): string {
+  if (profileData.contributions > 2000) return "Code Deity";
   if (profileData.contributions > 1000) return "Git Master";
   if (profileData.contributions > 500) return "Commit Crusher";
   if (profileData.contributions > 100) return "Code Enthusiast";
@@ -139,8 +153,12 @@ function getPersonalityFromStats(profileData: GitHubProfileData): string {
 }
 
 function getMotivationFromStats(profileData: GitHubProfileData): string {
+  if (profileData.currentStreak > 50)
+    return "You're absolutely unstoppable! 🔥 Don't let that streak die!";
   if (profileData.currentStreak > 30)
-    return "You're on fire! 🔥 Don't let that streak die!";
+    return "You're on fire! 🔥 Keep that streak alive!";
   if (profileData.currentStreak > 7) return "Nice streak! Keep it going! 💪";
+  if (profileData.currentStreak > 0)
+    return "Every streak starts with one commit! 🚀";
   return "Time to start a new streak! 🚀";
 }

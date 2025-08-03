@@ -93,7 +93,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         profileData = await profileResponse.json();
       }
 
-      // Prepare data for AI
+      // Prepare data for AI with more unique identifiers
       const aiProfileData = {
         username: githubAccount.username,
         displayName: profileData?.name || githubAccount.username,
@@ -112,6 +112,23 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         totalAura: fallbackTotalAura,
         monthlyAura: monthlyData.aura,
         activeDays: monthlyData.activeDays,
+        // Add more unique data for better AI generation
+        userId: user.id,
+        accountAge: Math.floor(
+          (Date.now() - new Date(user.createdAt || Date.now()).getTime()) /
+            (1000 * 60 * 60 * 24)
+        ),
+        averageContributions:
+          contributions.contributionDays.length > 0
+            ? contributions.contributionDays.reduce(
+                (sum, day) => sum + day.contributionCount,
+                0
+              ) / contributions.contributionDays.length
+            : 0,
+        maxContributions: Math.max(
+          ...contributions.contributionDays.map((day) => day.contributionCount),
+          0
+        ),
       };
 
       const aiResponse = await generateFunnyProfileMessage(aiProfileData);
@@ -441,33 +458,6 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         </div>
       </div>
 
-      {/* AI Generated Funny Message */}
-      {isSignedIn && user && aiMessage && (
-        <div className="mb-4 sm:mb-6">
-          <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#39d353]/30 bg-gradient-to-r from-[#0d1117] to-[#161b21] backdrop-blur-sm">
-            <div className="flex items-start gap-3 mb-3">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#39d353] mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs sm:text-sm font-semibold text-[#39d353] bg-[#39d353]/10 px-2 py-1 rounded-full">
-                    {aiMessage.personality}
-                  </span>
-                  {isGeneratingAI && (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#39d353]"></div>
-                  )}
-                </div>
-                <p className="text-sm sm:text-base text-gray-200 mb-2 leading-relaxed">
-                  {aiMessage.funnyMessage}
-                </p>
-                <p className="text-xs sm:text-sm text-[#39d353] font-medium">
-                  {aiMessage.motivation}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Monthly View Toggle and Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
@@ -597,6 +587,36 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
             <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-gray-200">
               {auraStatus.message}
             </p>
+
+            {/* AI Generated Funny Message */}
+            {isSignedIn && user && (
+              <div className="mb-4 p-3 rounded-lg border border-[#39d353]/30 bg-gradient-to-r from-[#0d1117]/50 to-[#161b21]/50 backdrop-blur-sm">
+                {isGeneratingAI ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
+                    <span className="text-sm text-[#39d353]">
+                      Generating AI message...
+                    </span>
+                  </div>
+                ) : aiMessage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#39d353]" />
+                      <span className="text-xs sm:text-sm font-semibold text-[#39d353] bg-[#39d353]/10 px-2 py-1 rounded-full">
+                        {aiMessage.personality}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-200 leading-relaxed">
+                      {aiMessage.funnyMessage}
+                    </p>
+                    <p className="text-xs text-[#39d353] font-medium">
+                      {aiMessage.motivation}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
               <span
                 className={`${auraStatus.color} font-semibold whitespace-nowrap`}
