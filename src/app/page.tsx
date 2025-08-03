@@ -21,7 +21,6 @@ export async function generateMetadata({
   const shareId = params.share as string;
   const ogImage = params.og_image as string;
 
-  // Base URL for canonical and OG URLs
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
 
