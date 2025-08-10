@@ -1,78 +1,179 @@
 # Environment Variables Setup
 
-This document explains the environment variables required for the secure API wrapper implementation.
+This document explains the environment variables required for GitAura application.
 
-## Required Environment Variables
+## 🚀 Quick Setup
 
-### Database
+1. Copy `env.example` to `.env.local`
+2. Fill in your values (see sections below)
+3. Run `npm run dev` to start
 
+## 📋 Required Environment Variables
+
+### Database (NeonDB)
+
+```env
+# NeonDB PostgreSQL Connection
+DATABASE_URL="postgresql://username:password@ep-xxx-xxx-xxx.region.aws.neon.tech/database?sslmode=require"
 ```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
 
-**Note:** The service role key is needed for admin operations like updating leaderboards.
+**How to get NeonDB URL:**
+
+1. Go to [neon.tech](https://neon.tech) and create account
+2. Create new project
+3. Copy the connection string from dashboard
+4. Replace `[YOUR-PASSWORD]` with your actual password
 
 ### GitHub API (Server-side only - SECURE)
 
-```
-GITHUB_TOKEN=your_github_personal_access_token
+```env
+# GitHub Personal Access Token
+GITHUB_TOKEN=ghp_your_github_personal_access_token_here
 ```
 
-**Important**: This replaces the old `NEXT_PUBLIC_GITHUB_TOKEN` which was exposed to the client. The new `GITHUB_TOKEN` is kept secure on the server.
+**How to create GitHub token:**
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. Click "Generate new token (classic)"
+3. Select scopes: `public_repo`, `user:read`
+4. Copy the token immediately
 
 ### Image Upload (Server-side only - SECURE)
 
-```
-IMGBB_API_KEY=your_imgbb_api_key
+```env
+# ImgBB API Key for image uploads
+IMGBB_API_KEY=your_imgbb_api_key_here
 ```
 
-**Important**: This replaces the old `NEXT_PUBLIC_IMGBB_API_KEY` which was exposed to the client. The new `IMGBB_API_KEY` is kept secure on the server.
+**How to get ImgBB key:**
+
+1. Go to [imgbb.com](https://imgbb.com) and create account
+2. Go to API section in settings
+3. Copy your API key
 
 ### Clerk Authentication
 
-```
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
+```env
+# Clerk Authentication Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
+CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
 NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 ```
 
-## Migration Notes
+**How to setup Clerk:**
 
-### Before (Insecure - API keys exposed to client)
+1. Go to [clerk.com](https://clerk.com) and create account
+2. Create new application
+3. Enable GitHub OAuth provider
+4. Copy the keys from dashboard
 
-- `NEXT_PUBLIC_GITHUB_TOKEN` - ❌ Exposed to client
-- `NEXT_PUBLIC_IMGBB_API_KEY` - ❌ Exposed to client
+### Application Configuration
 
-### After (Secure - API keys kept on server)
+```env
+# Your app URL (for internal API calls)
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
-- `GITHUB_TOKEN` - ✅ Server-side only
-- `IMGBB_API_KEY` - ✅ Server-side only
+# Cron job secret (for automated tasks)
+CRON_SECRET=your-secure-random-string-here
+```
 
-## API Endpoints Created
+## 🔒 Security Notes
 
-1. **GET `/api/github/profile/[username]`** - **[OPTIMIZED]** Fetches GitHub data + background aura saving
-2. **GET `/api/github/user/[username]`** - Fetches GitHub user profiles (legacy)
-3. **GET `/api/github/contributions/[username]`** - Fetches GitHub contributions (legacy)
-4. **POST `/api/save-monthly-aura`** - Manual monthly aura saving (legacy - now automatic)
-5. **POST `/api/upload-image`** - Handles image uploads to ImgBB
-6. **GET `/api/github/test-token`** - Tests GitHub token validity and shows rate limits
+### ✅ Secure (Server-side only)
 
-## Performance Optimizations
+- `GITHUB_TOKEN` - Never exposed to client
+- `IMGBB_API_KEY` - Never exposed to client
+- `CLERK_SECRET_KEY` - Never exposed to client
+- `CRON_SECRET` - Never exposed to client
 
-- **Single API Call**: Combined profile + contributions endpoint reduces frontend calls from 3 to 1
-- **Parallel Processing**: Server fetches profile and contributions simultaneously using `Promise.all()`
-- **Background Aura Saving**: Monthly aura calculation and leaderboard updates happen automatically in background (non-blocking)
-- **Eliminated Duplicate Calls**: Removed separate `/api/save-monthly-aura` calls from AuraPanel component
-- **Better Error Handling**: Unified error responses and rate limit detection
+### ⚠️ Public (Client-side accessible)
 
-## Security Benefits
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Safe to expose
+- `NEXT_PUBLIC_BASE_URL` - Safe to expose
 
-- API keys are no longer exposed in the client-side bundle
-- All external API calls are made from the server
-- Rate limiting and caching can be implemented at the API level
-- Better error handling and logging capabilities
+## 🗄️ Database Migration
+
+After setting up NeonDB:
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Push schema to database
+npx prisma db push
+
+# (Optional) View your data
+npx prisma studio
+```
+
+## 🧪 Testing Your Setup
+
+1. **Test Database Connection:**
+
+   ```bash
+   npx prisma db push
+   ```
+
+2. **Test GitHub API:**
+
+   ```bash
+   curl "http://localhost:3000/api/github/test-token"
+   ```
+
+3. **Test Clerk Auth:**
+   - Visit `/sign-in` page
+   - Try signing in with GitHub
+
+## 🚨 Common Issues
+
+### "Database connection failed"
+
+- Check your `DATABASE_URL` format
+- Ensure NeonDB project is active
+- Verify password in connection string
+
+### "GitHub API rate limit"
+
+- Add `GITHUB_TOKEN` to increase limits
+- Check token has correct scopes
+
+### "Authentication not working"
+
+- Verify Clerk keys are correct
+- Check GitHub OAuth is enabled in Clerk
+- Ensure redirect URLs are set correctly
+
+## 📝 Example .env.local
+
+```env
+# Database
+DATABASE_URL="postgresql://john:password123@ep-cool-name-123456.us-east-1.aws.neon.tech/gitaura?sslmode=require"
+
+# GitHub API
+GITHUB_TOKEN=ghp_1234567890abcdef1234567890abcdef12345678
+
+# Image Upload
+IMGBB_API_KEY=1234567890abcdef1234567890abcdef
+
+# Clerk Auth
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_1234567890abcdef
+CLERK_SECRET_KEY=sk_test_1234567890abcdef
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+
+# App Config
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+CRON_SECRET=my-super-secret-cron-key-123
+```
+
+## 🆘 Need Help?
+
+1. Check browser console for errors
+2. Verify all environment variables are set
+3. Test each service individually
+4. Create an issue on GitHub with error details
