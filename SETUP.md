@@ -11,89 +11,126 @@ A beautiful GitHub profile visualizer with an aura system, leaderboards, and bad
 - **Badge System**: Earn badges for achievements and share them
 - **Multiple Themes**: Light, Dark, and Ocean Dark themes
 - **Social Sharing**: Share profiles, badges, and achievements
+- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
+- **Admin Panel**: User management and moderation tools
 
-## 🔧 Setup Instructions
+## 🚀 Quick Start
 
-### 1. Environment Variables
-
-Create a `.env.local` file in the root directory with the following variables:
-
-```bash
-# Clerk Authentication
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-
-# Supabase Database
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
-
-# GitHub API
-NEXT_PUBLIC_GITHUB_TOKEN=your-github-token
-
-# ImgBB (for image uploads)
-NEXT_PUBLIC_IMGBB_API_KEY=your-imgbb-api-key
-
-# Application
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-```
-
-### 2. Clerk Setup
-
-1. Create a [Clerk](https://clerk.com) account
-2. Create a new application
-3. Enable GitHub OAuth provider:
-   - Go to "Social Providers" in Clerk dashboard
-   - Enable GitHub
-   - Add GitHub OAuth app credentials
-4. Configure sign-in/sign-up pages:
-   - Set sign-in URL: `/sign-in`
-   - Set sign-up URL: `/sign-up`
-   - Set after sign-in URL: `/`
-   - Set after sign-up URL: `/`
-
-### 3. Supabase Database Setup
-
-1. Create a [Supabase](https://supabase.com) account
-2. Create a new project
-3. Run the database schema from `database/schema.sql`:
-   - Go to SQL Editor in Supabase dashboard
-   - Copy and paste the schema
-   - Execute the queries
-4. Enable Row Level Security (RLS) policies
-5. Get your project URL and API keys
-
-### 4. GitHub Token Setup
-
-1. Go to GitHub Settings > Developer settings > Personal access tokens
-2. Generate a new token with the following scopes:
-   - `public_repo` (to read public repositories)
-   - `read:user` (to read user profile)
-3. Add the token to your environment variables
-
-### 5. ImgBB Setup (Optional)
-
-1. Create an [ImgBB](https://imgbb.com/api) account
-2. Get your API key
-3. Add it to environment variables (used for badge image sharing)
-
-### 6. Install Dependencies
+### 1. Clone and Install
 
 ```bash
+git clone https://github.com/Anshkaran7/git-aura.git
+cd git-aura
 npm install
 ```
 
-### 7. Run the Application
+### 2. Environment Setup
+
+Copy the example environment file:
+
+```bash
+cp env.example .env.local
+```
+
+Fill in your environment variables (see [Environment Setup Guide](./ENVIRONMENT_SETUP.md) for detailed instructions).
+
+### 3. Database Setup
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Push schema to NeonDB
+npx prisma db push
+
+# (Optional) View your data
+npx prisma studio
+```
+
+### 4. Start Development
 
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000` to see the application.
+Visit `http://localhost:3000` to see your app!
+
+## 📋 Required Services Setup
+
+### 1. NeonDB Database
+
+1. Go to [neon.tech](https://neon.tech) and create account
+2. Create new project
+3. Copy connection string to `DATABASE_URL`
+4. Run `npx prisma db push` to create tables
+
+### 2. Clerk Authentication
+
+1. Create account at [clerk.com](https://clerk.com)
+2. Create new application
+3. Enable GitHub OAuth provider
+4. Copy keys to environment variables
+
+### 3. GitHub API Token
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens)
+2. Generate new token with `public_repo` and `user:read` scopes
+3. Add to `GITHUB_TOKEN` environment variable
+
+### 4. ImgBB (Optional)
+
+1. Create account at [imgbb.com](https://imgbb.com)
+2. Get API key from settings
+3. Add to `IMGBB_API_KEY` environment variable
+
+## 🎯 Task Guidelines
+
+### For Contributors
+
+When working on issues, follow these guidelines:
+
+1. **Read the Issue**: Understand the problem completely
+2. **Test Locally**: Reproduce the issue on your machine
+3. **Check Existing Code**: Look at similar implementations
+4. **Follow Code Style**: Use TypeScript, functional components, Tailwind CSS
+5. **Test Responsively**: Ensure it works on mobile, tablet, and desktop
+6. **Add Documentation**: Update docs if needed
+
+### Code Standards
+
+- **TypeScript**: Use strict typing, interfaces over types
+- **React**: Functional components with hooks
+- **Styling**: Tailwind CSS with custom components
+- **Testing**: Test on multiple screen sizes
+- **Performance**: Optimize for mobile and slow connections
+
+### UI/UX Guidelines
+
+- **Responsive**: Must work on all screen sizes
+- **Accessible**: Follow WCAG guidelines
+- **Modern**: Clean, professional design
+- **Fast**: Optimize loading times
+- **Intuitive**: Easy to use and understand
+
+## 🏗️ Project Structure
+
+```
+git-aura/
+├── src/
+│   ├── app/                 # Next.js App Router pages
+│   │   ├── api/            # API routes
+│   │   ├── [username]/     # User profile pages
+│   │   └── admin/          # Admin panel
+│   ├── components/         # React components
+│   │   ├── ui/            # Reusable UI components
+│   │   ├── leaderboard/   # Leaderboard components
+│   │   └── home/          # Homepage components
+│   ├── lib/               # Utility functions
+│   └── types/             # TypeScript definitions
+├── prisma/                # Database schema
+├── public/                # Static assets
+└── scripts/               # Utility scripts
+```
 
 ## 🎮 How It Works
 
@@ -150,7 +187,7 @@ Users can earn badges for:
 
 - Only public GitHub data is accessed
 - User authentication handled by Clerk
-- Row Level Security (RLS) enabled on all database tables
+- Database security with NeonDB
 - No sensitive data stored
 
 ## 🚀 Deployment
@@ -171,7 +208,7 @@ Users can earn badges for:
 
 ### Database Schema
 
-The application uses the following main tables:
+The application uses these main tables:
 
 - `users`: User profiles and aura data
 - `aura_calculations`: Daily aura breakdowns
@@ -184,6 +221,8 @@ The application uses the following main tables:
 
 - `/api/sync-user`: Sync user data with GitHub
 - `/api/og`: Generate Open Graph images
+- `/api/leaderboard/*`: Leaderboard data
+- `/api/badges/*`: Badge management
 
 ### Key Components
 
@@ -196,8 +235,8 @@ The application uses the following main tables:
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
+3. Make your changes following the guidelines above
+4. Test thoroughly on different devices
 5. Submit a pull request
 
 ## 📄 License
@@ -209,7 +248,7 @@ MIT License - see LICENSE file for details.
 If you encounter any issues:
 
 1. Check the environment variables are correctly set
-2. Ensure all services (Clerk, Supabase, GitHub) are properly configured
+2. Ensure all services (Clerk, NeonDB, GitHub) are properly configured
 3. Check the browser console for errors
 4. Create an issue on GitHub for further assistance
 
