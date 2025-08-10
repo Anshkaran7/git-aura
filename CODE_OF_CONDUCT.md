@@ -21,11 +21,11 @@ To ensure a positive and constructive environment, we expect all members to upho
 ***Unacceptable Behavior***
 
 The following behaviors are considered unacceptable and will not be tolerated:
-**Harassment or Discrimination:** Any form of harassment, bullying, or discrimination based on identity, background, or personal characteristics.
-**Disrespectful Conduct:** Dismissive, derogatory, or aggressive behavior toward others.
-**Spam or Off-Topic Content:** Irrelevant promotions, advertisements, or disruptive messages.
-**Plagiarism or Misrepresentation:** Submitting work that is not your own without proper attribution.
-**Violations of Privacy:** Sharing personal information without consent or engaging in unwelcome private communication.
+- **Harassment or Discrimination:** Any form of harassment, bullying, or discrimination based on identity, background, or personal characteristics.
+- **Disrespectful Conduct:** Dismissive, derogatory, or aggressive behavior toward others.
+- **Spam or Off-Topic Content:** Irrelevant promotions, advertisements, or disruptive messages.
+- **Plagiarism or Misrepresentation:** Submitting work that is not your own without proper attribution.
+- **Violations of Privacy:** Sharing personal information without consent or engaging in unwelcome private communication.
 
 ---
 ***Scope***
