@@ -16,12 +16,13 @@ Git-Aura is the ultimate developer platform that transforms your hard-earned com
 - **Real-time Updates**: Automatic syncing of your GitHub data
 - **Admin Panel**: User management and moderation tools
 - **Modern UI**: Built with Next.js 14, TypeScript, and Tailwind CSS
+- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
 
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 14+ with App Router
 - **Language**: TypeScript for type safety
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with NeonDB and Prisma ORM
 - **Authentication**: Clerk
 - **Styling**: Tailwind CSS with custom components
 - **Deployment**: Optimized for Vercel
@@ -31,8 +32,8 @@ Git-Aura is the ultimate developer platform that transforms your hard-earned com
 
 ### Prerequisites
 
-- Node.js 18+ 
-- PostgreSQL database
+- Node.js 18+
+- NeonDB PostgreSQL database
 - GitHub account
 - Clerk account for authentication
 
@@ -58,10 +59,10 @@ pnpm install
 Copy the example environment file and configure your variables:
 
 ```bash
-cp .env.example .env.local
+cp env.example .env.local
 ```
 
-Fill in your environment variables (see [Environment Variables](#environment-variables) section below).
+Fill in your environment variables (see [Environment Setup Guide](./ENVIRONMENT_SETUP.md) for detailed instructions).
 
 ### 4. Database Setup
 
@@ -69,11 +70,11 @@ Fill in your environment variables (see [Environment Variables](#environment-var
 # Generate Prisma client
 npx prisma generate
 
-# Run database migrations
+# Push schema to NeonDB
 npx prisma db push
 
-# (Optional) Seed the database
-npx prisma db seed
+# (Optional) View your data
+npx prisma studio
 ```
 
 ### 5. Start Development Server
@@ -95,13 +96,12 @@ Create a `.env.local` file in the root directory with the following variables:
 ### Required Variables
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/gitaura"
+# Database (NeonDB)
+DATABASE_URL="postgresql://username:password@ep-xxx-xxx-xxx.region.aws.neon.tech/database?sslmode=require"
 
 # Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
 CLERK_SECRET_KEY=sk_test_your_clerk_secret_key
-CLERK_WEBHOOK_SECRET=whsec_your_webhook_secret
 
 # GitHub API (Server-side only)
 GITHUB_TOKEN=ghp_your_github_personal_access_token
@@ -111,6 +111,7 @@ IMGBB_API_KEY=your_imgbb_api_key
 
 # App Configuration
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
+CRON_SECRET=your-secure-cron-secret
 ```
 
 ### Optional Variables
@@ -125,6 +126,14 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
 ## 📋 Setup Guides
 
+### NeonDB Database Setup
+
+1. Create a NeonDB account at [neon.tech](https://neon.tech)
+2. Create a new project
+3. Copy the connection string from your dashboard
+4. Update your `DATABASE_URL` in `.env.local`
+5. Run Prisma migrations: `npx prisma db push`
+
 ### GitHub API Setup
 
 1. Create a GitHub Personal Access Token:
@@ -136,13 +145,8 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
 1. Create a Clerk application at [clerk.com](https://clerk.com)
 2. Configure your authentication settings
-3. Set up webhooks for user sync (see [WEBHOOK_SETUP.md](./WEBHOOK_SETUP.md))
-
-### Database Setup
-
-1. Create a PostgreSQL database
-2. Update your `DATABASE_URL` in `.env.local`
-3. Run Prisma migrations: `npx prisma db push`
+3. Enable GitHub OAuth provider
+4. Set up webhooks for user sync
 
 ### Image Upload Setup
 
@@ -182,6 +186,7 @@ git-aura/
 ### Other Platforms
 
 The app is compatible with any platform that supports Next.js:
+
 - Netlify
 - Railway
 - DigitalOcean App Platform
@@ -201,15 +206,16 @@ We welcome contributions! Here's how you can help:
 
 - Follow TypeScript best practices
 - Write meaningful commit messages
-- Test your changes thoroughly
+- Test your changes thoroughly on multiple devices
 - Update documentation as needed
+- Ensure responsive design works on all screen sizes
 
 ## 📚 Documentation
 
 - [Environment Setup](./ENVIRONMENT_SETUP.md) - Detailed environment configuration
 - [GitHub API Setup](./GITHUB_API_SETUP.md) - GitHub integration guide
-- [Webhook Setup](./WEBHOOK_SETUP.md) - Clerk webhook configuration
-- [Badge System](./BADGE_SYSTEM.md) - Badge system documentation
+- [Cron Job Setup](./CRON_SETUP.md) - Automated data refresh setup
+- [Monthly Winners Setup](./MONTHLY_WINNERS_SETUP.md) - Monthly winners system
 - [Setup Guide](./SETUP.md) - Complete setup walkthrough
 
 ## 🐛 Troubleshooting
@@ -217,7 +223,7 @@ We welcome contributions! Here's how you can help:
 ### Common Issues
 
 1. **Missing GitHub data**: Ensure your `GITHUB_TOKEN` is set correctly
-2. **Database connection errors**: Check your `DATABASE_URL` and database status
+2. **Database connection errors**: Check your `DATABASE_URL` and NeonDB project status
 3. **Authentication issues**: Verify your Clerk configuration
 4. **Image upload failures**: Confirm your `IMGBB_API_KEY` is valid
 
@@ -236,9 +242,9 @@ This project is open source and available under the [MIT License](LICENSE).
 - Built with ❤️ using Next.js and TypeScript
 - GitHub API for contribution data
 - Clerk for authentication
+- NeonDB for database hosting
 - All contributors who help improve this project
 
 ---
 
 **Ready to show off your coding achievements?** Get started with Git Aura today! 🚀
-
