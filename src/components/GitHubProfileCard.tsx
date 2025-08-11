@@ -310,7 +310,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       }
 
       // Open share window only after everything is ready
-      window.open(shareLink, "_blank", "width=600,height=400");
+      window.open(shareLink, "_blank");
     } catch (err) {
       console.error("Error sharing profile:", err);
       setIsGenerating(false);
