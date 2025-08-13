@@ -30,9 +30,9 @@ export function compareProfiles(profile1: GitHubProfileData, profile2: GitHubPro
     },
     {
       key: "created_at",
-      label: "Account Age",
-      value1: new Date(profile1.created_at).getTime(),
-      value2: new Date(profile2.created_at).getTime(),
+      label: "Account Age (yrs)",
+      value1: Math.max(0, (Date.now() - new Date(profile1.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365.25)),
+      value2: Math.max(0, (Date.now() - new Date(profile2.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365.25)),
     },
   ];
 
@@ -40,8 +40,8 @@ export function compareProfiles(profile1: GitHubProfileData, profile2: GitHubPro
   const results = metrics.map((m) => {
     let winner = null;
     if (m.key === "created_at") {
-      // Older account wins
-      winner = m.value1 < m.value2 ? "user1" : m.value1 > m.value2 ? "user2" : null;
+      // Older account wins (greater age in years)
+      winner = m.value1 > m.value2 ? "user1" : m.value1 < m.value2 ? "user2" : null;
     } else {
       winner = m.value1 > m.value2 ? "user1" : m.value1 < m.value2 ? "user2" : null;
     }
