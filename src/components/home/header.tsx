@@ -62,10 +62,11 @@ export const Header = ({
 
   // Memoize main navigation items
   const mainNavItems = useMemo(
+    
     () => [
       { href: leaderboardUrl, label: "Leaderboard" },
       { href: "/monthly-winners", label: "Monthly Winners" },
-  { href: "/battle", label: "Battle" },
+      { href: "/battle", label: "Profile Compare" },
       { href: "/contribute", label: "Contribute" },
     ],
     [leaderboardUrl]
