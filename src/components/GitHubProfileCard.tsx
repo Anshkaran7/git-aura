@@ -21,19 +21,24 @@ import {
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
 
+
 interface GitHubProfileCardProps {
   initialUsername?: string;
+  profile?: GitHubProfile;
+  highlight?: boolean;
 }
 
 const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   initialUsername,
+  profile: directProfile,
+  highlight = false,
 }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isSignedIn, user } = useUser();
   const [username, setUsername] = useState("");
   const [searchedUsername, setSearchedUsername] = useState("");
-  const [profile, setProfile] = useState<GitHubProfile | null>(null);
+  const [profile, setProfile] = useState<GitHubProfile | null>(directProfile || null);
   const [contributions, setContributions] = useState<GitHubContributions>({
     totalContributions: 0,
     contributionDays: [],
@@ -48,15 +53,19 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
+
   useEffect(() => {
+    if (directProfile) {
+      setProfile(directProfile);
+      return;
+    }
     // Check if we have a username in the URL or props
     const urlUsername = searchParams.get("username") || initialUsername;
-
     if (urlUsername && urlUsername !== searchedUsername && !loading) {
       setUsername(urlUsername);
       fetchProfile(urlUsername);
     }
-  }, [searchParams, initialUsername]);
+  }, [searchParams, initialUsername, directProfile]);
 
   // Auto-load user's own profile when they sign in (only if no URL username exists)
   useEffect(() => {
@@ -317,104 +326,29 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
-        {/* Error Message - Only show on profile view */}
-        {currentView === "profile" && error && (
-          <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-3 sm:p-4 md:p-5 rounded-lg mb-4 sm:mb-6 border border-gray-700/50 mx-1 sm:mx-0">
-            <p className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm">
-              <span className="text-red-400 text-base sm:text-lg">⚠️</span>
-              <span className="flex-1">{error}</span>
-            </p>
-          </div>
-        )}
 
-        {/* Content based on current view */}
-        {currentView === "profile" && (
-          <div className="space-y-4 sm:space-y-6 md:space-y-8">
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
-              </div>
-            ) : profile ? (
-              <>
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
-                  handleShareTwitter={() => handleShare("twitter")}
-                  handleShareLinkedin={() => handleShare("linkedin")}
-                  handleDownload={handleExportImage}
-                  isGenerating={isGenerating}
-                />
-                <MontlyContribution
-                  selectedTheme={selectedTheme}
-                  contributions={contributions}
-                />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </>
-            ) : (
-              !error && (
-                <EmptyState
-                  selectedTheme={selectedTheme}
-                  onLoadProfile={(username) => {
-                    if (username !== searchedUsername && !loading) {
-                      setUsername(username);
-                      fetchProfile(username);
-                    }
-                  }}
-                />
-              )
-            )}
-          </div>
-        )}
-
-        {/* Leaderboard View */}
-        {/* {currentView === "leaderboard" && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <Leaderboard
-              currentUserId={user?.id}
-              selectedTheme={selectedTheme}
-              contributions={contributions}
-            />
-          </div>
-        )} */}
-
-        {/* Badges View */}
-        {/* {currentView === "badges" && isSignedIn && user?.id && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
-          </div>
-        )} */}
+  // If directProfile is provided (battle mode), render a simple card
+  if (directProfile) {
+    return (
+      <div className={`rounded-lg p-4 bg-[#181c23] border-2 ${highlight ? 'border-yellow-400 shadow-lg scale-105' : 'border-gray-700'} flex flex-col items-center w-72`}>
+        <img src={directProfile.avatar_url} alt={directProfile.login} className="w-24 h-24 rounded-full border-4 border-gray-800 mb-2" />
+        <h2 className="text-xl font-bold text-white mb-1">{directProfile.name || directProfile.login}</h2>
+        <p className="text-gray-400 text-sm mb-2">@{directProfile.login}</p>
+        {directProfile.bio && <p className="text-gray-300 text-xs mb-2 text-center">{directProfile.bio}</p>}
+        <div className="flex gap-4 text-gray-300 text-sm mt-2">
+          <div><span className="font-semibold">Repos:</span> {directProfile.public_repos}</div>
+          <div><span className="font-semibold">Followers:</span> {directProfile.followers}</div>
+        </div>
+        <div className="flex gap-4 text-gray-300 text-sm mt-1">
+          <div><span className="font-semibold">Following:</span> {directProfile.following}</div>
+          <div><span className="font-semibold">Joined:</span> {new Date(directProfile.created_at).getFullYear()}</div>
+        </div>
+        {highlight && <div className="mt-3 px-3 py-1 bg-yellow-400 text-black rounded-full font-bold text-xs">Winner</div>}
       </div>
+    );
+  }
 
-      {/* Footer - Hide on badges view */}
-      {currentView !== "badges" && (
-        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-black/80 backdrop-blur-sm border-t border-gray-800/50">
-          <p className="text-[10px] sm:text-xs md:text-sm max-w-screen-xl mx-auto text-center">
-            Made with ❤️ by{" "}
-            <a
-              href="https://karandev.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:no-underline transition-all duration-200 text-gray-300 hover:text-white"
-            >
-              Karan
-            </a>
-          </p>
-        </footer>
-      )}
-    </div>
-  );
+  // ...existing code...
 };
 
 export default GitHubProfileCard;

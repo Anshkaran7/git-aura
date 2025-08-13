@@ -1,0 +1,26 @@
+.battleContainer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--background-secondary);
+  border-radius: 1rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+}
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.resultRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.vsText {
+  font-size: 2rem;
+  font-weight: bold;
+  align-self: center;
+}

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"; // avoid static pre-render, requires auth headers
 import UserManagement from "@/components/admin/UserManagement";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
