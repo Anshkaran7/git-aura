@@ -1,7 +1,5 @@
 "use client";
 
-export const dynamic = "force-dynamic"; // requires runtime headers/auth, skip prerender
-
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
