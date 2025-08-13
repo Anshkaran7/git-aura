@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic";
 import { GitHubSignIn } from "@/components/GitHubSignIn";
 import { Zap } from "lucide-react";
 
