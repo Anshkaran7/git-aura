@@ -329,21 +329,44 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
   // If directProfile is provided (battle mode), render a simple card
   if (directProfile) {
+    const joinedYear = new Date(directProfile.created_at).getFullYear();
+    const accountAgeYears = ((Date.now() - new Date(directProfile.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
     return (
-      <div className={`rounded-lg p-4 bg-[#181c23] border-2 ${highlight ? 'border-yellow-400 shadow-lg scale-105' : 'border-gray-700'} flex flex-col items-center w-72`}>
-        <img src={directProfile.avatar_url} alt={directProfile.login} className="w-24 h-24 rounded-full border-4 border-gray-800 mb-2" />
-        <h2 className="text-xl font-bold text-white mb-1">{directProfile.name || directProfile.login}</h2>
-        <p className="text-gray-400 text-sm mb-2">@{directProfile.login}</p>
-        {directProfile.bio && <p className="text-gray-300 text-xs mb-2 text-center">{directProfile.bio}</p>}
-        <div className="flex gap-4 text-gray-300 text-sm mt-2">
-          <div><span className="font-semibold">Repos:</span> {directProfile.public_repos}</div>
-          <div><span className="font-semibold">Followers:</span> {directProfile.followers}</div>
+      <div className={`relative w-[320px] md:w-[340px] rounded-xl border ${highlight ? 'border-yellow-400 shadow-[0_0_0_1px_rgba(250,204,21,0.4)]' : 'border-gray-800'} bg-gradient-to-b from-[#1d232c] to-[#161b21] p-5 flex flex-col gap-4`}>        
+        {/* Winner badge */}
+        {highlight && (
+          <span className="absolute -top-3 left-4 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-yellow-400 text-black shadow">WINNER</span>
+        )}
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <img src={directProfile.avatar_url} alt={directProfile.login} className="w-16 h-16 rounded-full border border-gray-700 object-cover" />
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-base font-semibold text-white truncate">{directProfile.name || directProfile.login}</h2>
+            <p className="text-xs text-gray-400 truncate">@{directProfile.login}</p>
+            <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-400">
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.public_repos} repos</span>
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.followers} followers</span>
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.following} following</span>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-4 text-gray-300 text-sm mt-1">
-          <div><span className="font-semibold">Following:</span> {directProfile.following}</div>
-          <div><span className="font-semibold">Joined:</span> {new Date(directProfile.created_at).getFullYear()}</div>
+        {/* Bio */}
+        {directProfile.bio && (
+          <p className="text-[11px] leading-relaxed text-gray-300 line-clamp-4">
+            {directProfile.bio}
+          </p>
+        )}
+        {/* Meta */}
+        <div className="grid grid-cols-2 gap-3 text-[11px]">
+          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
+            <span className="text-gray-400">Joined</span>
+            <span className="text-white font-medium">{joinedYear}</span>
+          </div>
+          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
+            <span className="text-gray-400">Age</span>
+            <span className="text-white font-medium">{accountAgeYears} yrs</span>
+          </div>
         </div>
-        {highlight && <div className="mt-3 px-3 py-1 bg-yellow-400 text-black rounded-full font-bold text-xs">Winner</div>}
       </div>
     );
   }
