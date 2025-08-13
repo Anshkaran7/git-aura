@@ -40,19 +40,36 @@ export default function BattlePage() {
   };
 
   return (
-    <div className="relative min-h-[80vh] w-full py-14 md:py-20 px-4 md:px-8">
+    <div className="relative min-h-[90vh] w-full py-16 md:py-20 px-4 md:px-8 bg-black text-white">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+        {/* Minimal navigation / back links */}
+        <div className="mb-8 flex items-center justify-between text-xs sm:text-sm">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+              </svg>
+              Home
+            </Link>
+            <span className="text-gray-600">/</span>
+            <span className="text-gray-300">Battle</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/leaderboard" className="text-gray-400 hover:text-white transition-colors">Leaderboard</Link>
+            <Link href="/contribute" className="text-gray-400 hover:text-white transition-colors">Contribute</Link>
+          </div>
+        </div>
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
             GitHub 1v1 Battle
           </h1>
-          <p className="mt-3 text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-            Compare two GitHub users across public repos, stars, followers and more. We highlight the winner for each metric and overall.
+          <p className="mt-4 text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
+            Enter two usernames and instantly see who wins each metric.
           </p>
         </div>
 
       <motion.div
-        className="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-4 mb-10"
+        className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-12"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -64,7 +81,7 @@ export default function BattlePage() {
           className="w-64 md:w-72"
           disabled={loading}
         />
-        <span className="font-semibold text-xl md:text-2xl text-muted-foreground">vs</span>
+  <span className="font-semibold text-xl md:text-2xl text-gray-400">VS</span>
         <Input
           placeholder="GitHub Username 2"
           value={user2}
@@ -90,19 +107,19 @@ export default function BattlePage() {
             transition={{ duration: 0.35 }}
             className="w-full"
           >
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-10 mb-10">
               <motion.div animate={result.winner === "user1" ? { scale: 1.03 } : {}}>
                 <GitHubProfileCard profile={result.user1} highlight={result.winner === "user1"} />
               </motion.div>
-              <span className="font-bold text-3xl md:text-4xl text-muted-foreground">VS</span>
+              <span className="font-bold text-3xl md:text-4xl text-gray-500">VS</span>
               <motion.div animate={result.winner === "user2" ? { scale: 1.03 } : {}}>
                 <GitHubProfileCard profile={result.user2} highlight={result.winner === "user2"} />
               </motion.div>
             </div>
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 md:p-6">
+            <div className="rounded-xl border border-gray-800 bg-zinc-900/50 backdrop-blur-sm p-4 md:p-6">
               <BattleResultTable results={result.results || []} />
             </div>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-10">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-10">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -122,8 +139,8 @@ export default function BattlePage() {
               >
                 Rematch
               </Button>
-              <Button variant="ghost" onClick={() => (window.location.href = "/leaderboard")}>
-                Back to Leaderboard
+              <Button variant="ghost" onClick={() => (window.location.href = "/leaderboard")} className="text-gray-300 hover:text-white">
+                Leaderboard
               </Button>
             </div>
           </motion.div>

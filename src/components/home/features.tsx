@@ -39,7 +39,7 @@ export const FeaturesSection = () => {
       icon: Target,
       title: "Profile Compare (1v1 Battle)",
       description:
-        "Challenge a friend or rival to a head-to-head GitHub profile battle! Enter two usernames, compare stats, and see who comes out on top. Winner is highlighted for each metric. Try it now!",
+  "Battle a friend: enter two GitHub usernames and see who wins each stat.",
       badge: "⚔️ New",
       gradient: "from-gray-900/5 to-slate-800/10",
       link: "/battle",
