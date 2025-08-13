@@ -75,7 +75,11 @@ export const Footer = () => {
   };
 
   const handleStartJourney = () => {
-    router.push("/sign-in");
+    if (isSignedIn) {
+      router.push("/dashboard");
+    } else {
+      router.push("/sign-in");
+    }
   };
 
   return (
