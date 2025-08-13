@@ -25,13 +25,24 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
           </tr>
         </thead>
         <tbody>
-          {safeResults.map((r) => (
-            <tr key={r.key} className="border-t border-gray-700">
-              <td className="py-2 px-4 font-semibold">{r.label}</td>
-              <td className={`py-2 px-4 text-center ${r.winner === "user1" ? "bg-yellow-900/40 font-bold" : ""}`}>{r.value1}</td>
-              <td className={`py-2 px-4 text-center ${r.winner === "user2" ? "bg-yellow-900/40 font-bold" : ""}`}>{r.value2}</td>
-            </tr>
-          ))}
+          {safeResults.map((r) => {
+            const formatValue = (val: number | string) => {
+              if (r.key === 'created_at') {
+                if (typeof val === 'number') {
+                  return `${val.toFixed(1)} yrs`;
+                }
+                return val;
+              }
+              return val;
+            };
+            return (
+              <tr key={r.key} className="border-t border-gray-700">
+                <td className="py-2 px-4 font-semibold">{r.label}</td>
+                <td className={`py-2 px-4 text-center ${r.winner === 'user1' ? 'bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value1)}</td>
+                <td className={`py-2 px-4 text-center ${r.winner === 'user2' ? 'bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value2)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
