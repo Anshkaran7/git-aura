@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Github, Menu, User, LogOut, RefreshCw } from "lucide-react";
-import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { toast } from "sonner";
-import Image from "next/image";
+import { Button } from '@/components/ui/button';
+import { Github, Menu, User, LogOut, RefreshCw } from 'lucide-react';
+import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+import Image from 'next/image';
 
 // Navigation items configuration
 const NAV_ITEMS = {
   home: [
-    { href: "#features", label: "Features" },
-    { href: "#how-it-works", label: "How It Works" },
+    { href: '#features', label: 'Features' },
+    { href: '#how-it-works', label: 'How It Works' },
   ],
   main: [
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/monthly-winners", label: "Monthly Winners" },
-    { href: "/contribute", label: "Contribute" },
+    { href: '/leaderboard', label: 'Leaderboard' },
+    { href: '/monthly-winners', label: 'Monthly Winners' },
+    { href: '/contribute', label: 'Contribute' },
   ],
 };
 
@@ -48,7 +48,7 @@ export const Header = ({
   // Memoize GitHub account lookup
   const githubAccount = useMemo(() => {
     return user?.externalAccounts?.find(
-      (account) => account.provider === "github"
+      (account) => account.provider === 'github'
     );
   }, [user?.externalAccounts]);
 
@@ -57,7 +57,7 @@ export const Header = ({
     if (isSignedIn && githubAccount?.username) {
       return `/${githubAccount.username}/leaderboard`;
     }
-    return "/leaderboard";
+    return '/leaderboard';
   }, [isSignedIn, githubAccount?.username]);
 
   // Memoize main navigation items
@@ -65,15 +65,15 @@ export const Header = ({
     () => [
       { href: leaderboardUrl, label: "Leaderboard" },
       { href: "/monthly-winners", label: "Monthly Winners" },
+  { href: "/battle", label: "Battle" },
       { href: "/contribute", label: "Contribute" },
-  { href: "/battle", label: "Profile Compare" },
     ],
     [leaderboardUrl]
   );
 
   // Memoize user profile URL
   const userProfileUrl = useMemo(() => {
-    return githubAccount?.username ? `/${githubAccount.username}` : "/profile";
+    return githubAccount?.username ? `/${githubAccount.username}` : '/profile';
   }, [githubAccount?.username]);
 
   // Optimize scroll handler with useCallback
@@ -83,8 +83,8 @@ export const Header = ({
   }, []);
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
   // Memoize navigation handlers
@@ -122,9 +122,9 @@ export const Header = ({
 
     try {
       setIsSyncing(true);
-      const response = await fetch("/api/sync-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/sync-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           githubUsername: githubAccount.username,
           displayName: user.firstName || githubAccount.username,
@@ -134,7 +134,7 @@ export const Header = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to sync data");
+        throw new Error('Failed to sync data');
       }
 
       const data = await response.json();
@@ -142,7 +142,7 @@ export const Header = ({
       //   toast.success("Data synced successfully!");
       // }
     } catch (error) {
-      console.error("Error syncing user data:", error);
+      console.error('Error syncing user data:', error);
     } finally {
       setIsSyncing(false);
     }
@@ -157,8 +157,8 @@ export const Header = ({
     return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 
     backdrop-blur-lg transition-all duration-500 ease-linear ${
       isScrolled
-        ? "w-[90%] md:w-[80%] rounded-2xl mt-8 border border-border"
-        : "w-full border-b border-border"
+        ? 'w-[90%] md:w-[80%] rounded-2xl mt-8 border border-border'
+        : 'w-full border-b border-border'
     }`;
   }, [isScrolled]);
 
@@ -170,7 +170,7 @@ export const Header = ({
           key={href}
           href={href}
           className={`text-sm text-muted-foreground hover:text-primary transition-colors ${
-            isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
+            isMobile ? 'px-4 py-2 hover:bg-muted/50 rounded-lg' : ''
           }`}
         >
           {label}
@@ -199,14 +199,14 @@ export const Header = ({
                 className="w-12 h-12 rounded-lg text-primary"
               />
             </div>
-            <span className="font-bold text-sm sm:text-base md:text-lg text-highlight">
+            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-highlight">
               Git Aura
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            {pathname === "/" && renderNavItems(NAV_ITEMS.home)}
+          <nav className="hidden xl:flex items-center gap-6 lg:gap-8">
+            {pathname === '/' && renderNavItems(NAV_ITEMS.home)}
             {renderNavItems(mainNavItems)}
           </nav>
 
@@ -229,20 +229,20 @@ export const Header = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden sm:flex items-center gap-2 h-8 px-2"
+                  className="flex items-center gap-2 h-8 px-2"
                   onClick={handleGoToProfile}
                 >
                   {user?.imageUrl ? (
                     <img
                       src={user.imageUrl}
-                      alt={user?.firstName || "Profile"}
+                      alt={user?.firstName || 'Profile'}
                       className="w-5 h-5 rounded-full"
                     />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
                   <span className="hidden md:inline text-sm">
-                    {user?.firstName || "Profile"}
+                    {user?.firstName || 'Profile'}
                   </span>
                 </Button>
 
@@ -250,7 +250,7 @@ export const Header = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="hidden md:flex h-8 px-3 text-sm"
+                    className="hidden sm:flex h-8 px-3 text-sm"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
@@ -274,7 +274,7 @@ export const Header = ({
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden h-8 w-8 px-0"
+              className="xl:hidden h-8 w-8 px-0"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <Menu className="w-4 h-4" />
@@ -284,9 +284,9 @@ export const Header = ({
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div className="xl:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {pathname === "/" && renderNavItems(NAV_ITEMS.home, true)}
+              {pathname === '/' && renderNavItems(NAV_ITEMS.home, true)}
               {renderNavItems(mainNavItems, true)}
               {isSignedIn && (
                 <>
@@ -301,7 +301,7 @@ export const Header = ({
                     Sync Data
                   </button> */}
                   <SignOutButton>
-                    <button className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
+                    <button className="sm:hidden w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
                       <LogOut className="w-4 h-4 inline mr-2" />
                       Sign Out
                     </button>
