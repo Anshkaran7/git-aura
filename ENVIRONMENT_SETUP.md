@@ -10,11 +10,15 @@ This document explains the environment variables required for GitAura applicatio
 
 ## 📋 Required Environment Variables
 
-### Database (NeonDB)
+### Database
 
 ```env
-# NeonDB PostgreSQL Connection
+# Option A: Postgres (e.g. NeonDB) for prod-like
 DATABASE_URL="postgresql://username:password@ep-xxx-xxx-xxx.region.aws.neon.tech/database?sslmode=require"
+
+# Option B: Local dev with SQLite (Prisma 6+)
+# Uncomment to use local file DB
+# DATABASE_URL="prisma://file:./dev.db"
 ```
 
 **How to get NeonDB URL:**
@@ -96,13 +100,13 @@ CRON_SECRET=your-secure-random-string-here
 
 ## 🗄️ Database Migration
 
-After setting up NeonDB:
+After setting up your DB:
 
 ```bash
 # Generate Prisma client
 npx prisma generate
 
-# Push schema to database
+# Push schema to database (creates tables)
 npx prisma db push
 
 # (Optional) View your data
@@ -129,11 +133,16 @@ npx prisma studio
 
 ## 🚨 Common Issues
 
+### "Prisma URL must start with prisma:// or prisma+postgres:// (P6001)"
+
+- For Prisma 6+ with serverless bundlers, use `prisma://...` or `prisma+postgres://...` URLs
+- For local SQLite, prefer `DATABASE_URL="prisma://file:./dev.db"`
+- For Neon Postgres, keep `postgresql://...` during dev plus run `npx prisma generate`
+
 ### "Database connection failed"
 
-- Check your `DATABASE_URL` format
-- Ensure NeonDB project is active
-- Verify password in connection string
+- Check your `DATABASE_URL` format and credentials
+- Ensure your database is reachable
 
 ### "GitHub API rate limit"
 

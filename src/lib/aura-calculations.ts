@@ -1,3 +1,67 @@
+// Compare two GitHub profiles for 1v1 battle
+
+
+export function compareProfiles(profile1: GitHubProfileData, profile2: GitHubProfileData) {
+  // Calculate scores for each metric
+  const metrics = [
+    {
+      key: "aura",
+      label: "Aura",
+      value1: calculateQualityBonus(profile1),
+      value2: calculateQualityBonus(profile2),
+    },
+    {
+      key: "public_repos",
+      label: "Repositories",
+      value1: profile1.public_repos,
+      value2: profile2.public_repos,
+    },
+    {
+      key: "followers",
+      label: "Followers",
+      value1: profile1.followers,
+      value2: profile2.followers,
+    },
+    {
+      key: "following",
+      label: "Following",
+      value1: profile1.following,
+      value2: profile2.following,
+    },
+    {
+      key: "created_at",
+      label: "Account Age",
+      value1: new Date(profile1.created_at).getTime(),
+      value2: new Date(profile2.created_at).getTime(),
+    },
+  ];
+
+  // Determine winner for each metric
+  const results = metrics.map((m) => {
+    let winner = null;
+    if (m.key === "created_at") {
+      // Older account wins
+      winner = m.value1 < m.value2 ? "user1" : m.value1 > m.value2 ? "user2" : null;
+    } else {
+      winner = m.value1 > m.value2 ? "user1" : m.value1 < m.value2 ? "user2" : null;
+    }
+    return { ...m, winner };
+  });
+
+  // Count wins
+  const user1Wins = results.filter((r) => r.winner === "user1").length;
+  const user2Wins = results.filter((r) => r.winner === "user2").length;
+  let overallWinner = null;
+  if (user1Wins > user2Wins) overallWinner = "user1";
+  else if (user2Wins > user1Wins) overallWinner = "user2";
+
+  return {
+    user1: profile1,
+    user2: profile2,
+    results,
+    winner: overallWinner,
+  };
+}
 import { prisma } from "./prisma";
 import { fetchGitHubProfile } from "./github-fetch";
 

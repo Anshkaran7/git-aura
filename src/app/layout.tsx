@@ -155,6 +155,13 @@ function OrganizationStructuredData() {
     />
   );
 }
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+if (!clerkPublishableKey) {
+  // eslint-disable-next-line no-console
+  console.warn("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY. Clerk auth hooks will fail until it's set.");
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -162,6 +169,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider
+      publishableKey={clerkPublishableKey}
       appearance={{
         baseTheme: dark,
         variables: {
