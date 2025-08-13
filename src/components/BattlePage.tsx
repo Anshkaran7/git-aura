@@ -141,6 +141,37 @@ export default function BattlePage() {
             <div className="rounded-xl border border-gray-800 bg-zinc-900/50 backdrop-blur-sm p-4 md:p-6">
               <BattleResultTable results={result.results || []} />
             </div>
+            {/* Winner explanation */}
+            {result && (
+              <div className="mt-6 max-w-3xl mx-auto text-sm md:text-base text-gray-300 leading-relaxed">
+                {(() => {
+                  const winners = (result.results || []).filter(r => r.winner);
+                  if (!winners.length) return <p>No decisive metrics — it’s a draw. Try users with more activity.</p>;
+                  const user1Wins = winners.filter(r => r.winner === 'user1');
+                  const user2Wins = winners.filter(r => r.winner === 'user2');
+                  const overall = result.winner;
+                  const explainMetric = (r: any) => {
+                    if (r.key === 'created_at') return `${r.label}: older account advantage`;
+                    return `${r.label}`;
+                  };
+                  const list = (arr: any[]) => arr.map(r => explainMetric(r)).join(', ');
+                  return (
+                    <div className="space-y-3">
+                      {overall && (
+                        <p className="font-semibold text-white">Overall Winner: <span className="text-yellow-300">{overall === 'user1' ? result.user1.login : result.user2.login}</span></p>
+                      )}
+                      {user1Wins.length > 0 && (
+                        <p><span className="text-white font-medium">{result.user1.login}</span> led in: <span className="text-gray-200">{list(user1Wins)}</span>.</p>
+                      )}
+                      {user2Wins.length > 0 && (
+                        <p><span className="text-white font-medium">{result.user2.login}</span> led in: <span className="text-gray-200">{list(user2Wins)}</span>.</p>
+                      )}
+                      <p className="text-xs text-gray-500">Older account age wins that metric; aura is a composite bonus from repos, followers & bio.</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-10">
               <Button
                 variant="outline"
