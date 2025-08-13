@@ -60,11 +60,11 @@ export default function BattlePage() {
           </div>
         </div>
         <div className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
             GitHub 1v1 Battle
           </h1>
           <p className="mt-4 text-sm md:text-base text-gray-400 max-w-2xl mx-auto">
-            Enter two usernames and instantly see who wins each metric.
+            Enter two GitHub usernames and see a head‑to‑head breakdown. We highlight the winner per metric and overall — no log in required.
           </p>
         </div>
 
@@ -97,6 +97,28 @@ export default function BattlePage() {
           {loading ? "Comparing..." : "Compare"}
         </Button>
       </motion.div>
+
+      {/* Info / Fun section when no result yet */}
+      {!result && (
+        <div className="mx-auto max-w-5xl mb-14">
+          <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {[ 
+              { title: 'Metrics Compared', body: 'Repos, followers, following, gists, total stars*, account age & aura (if present).' },
+              { title: 'Tie Handling', body: 'Equal values count as a draw for that metric — no points awarded.' },
+              { title: 'Stars Note *', body: 'Stars are summed from public non‑fork repos (approximate on first load).'},
+              { title: 'Rate Limits', body: 'Unauthenticated requests: 60/hour per IP. Add a GITHUB_TOKEN for higher limits.' },
+              { title: 'Fair Play', body: 'Recently renamed or empty accounts may appear weaker — activity history matters.' },
+              { title: 'Pro Tip', body: 'Consistent contributions + diverse repos often beats raw repo count.' },
+            ].map((f) => (
+              <div key={f.title} className="rounded-xl border border-gray-800 bg-zinc-900/40 p-4 md:p-5 hover:border-gray-700 transition-colors">
+                <h3 className="text-sm font-semibold text-white mb-1.5 tracking-wide">{f.title}</h3>
+                <p className="text-xs md:text-sm leading-relaxed text-gray-400">{f.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-[11px] md:text-xs text-gray-500 text-center">Data is fetched live from the GitHub REST API. Cached briefly in memory for performance.</p>
+        </div>
+      )}
 
       <AnimatePresence>
         {result && (
