@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Github, Menu, User, LogOut, RefreshCw } from 'lucide-react';
-import { useUser, SignInButton, SignOutButton } from '@clerk/nextjs';
-import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
-import Image from 'next/image';
+import { Button } from "@/components/ui/button";
+import { Github, Menu, User, LogOut, RefreshCw, Shield } from "lucide-react";
+import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 // Navigation items configuration
 const NAV_ITEMS = {
   home: [
-    { href: '#features', label: 'Features' },
-    { href: '#how-it-works', label: 'How It Works' },
+    { href: "#features", label: "Features" },
+    { href: "#how-it-works", label: "How It Works" },
   ],
   main: [
-    { href: '/leaderboard', label: 'Leaderboard' },
-    { href: '/monthly-winners', label: 'Monthly Winners' },
-    { href: '/contribute', label: 'Contribute' },
+    { href: "/leaderboard", label: "Leaderboard" },
+    { href: "/monthly-winners", label: "Monthly Winners" },
+    { href: "/contribute", label: "Contribute" },
   ],
 };
 
@@ -32,15 +32,9 @@ export const Header = ({
   profile?: boolean;
 }) => {
   const { isSignedIn, user, isLoaded } = useUser();
-  if (!isLoaded) {
-    return (
-      <header className="w-full flex items-center justify-center h-16">
-        <span className="text-xs text-muted-foreground">Loading...</span>
-      </header>
-    );
-  }
   const router = useRouter();
   const pathname = usePathname();
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -48,7 +42,7 @@ export const Header = ({
   // Memoize GitHub account lookup
   const githubAccount = useMemo(() => {
     return user?.externalAccounts?.find(
-      (account) => account.provider === 'github'
+      (account) => account.provider === "github"
     );
   }, [user?.externalAccounts]);
 
@@ -57,12 +51,11 @@ export const Header = ({
     if (isSignedIn && githubAccount?.username) {
       return `/${githubAccount.username}/leaderboard`;
     }
-    return '/leaderboard';
+    return "/leaderboard";
   }, [isSignedIn, githubAccount?.username]);
 
   // Memoize main navigation items
   const mainNavItems = useMemo(
-    
     () => [
       { href: leaderboardUrl, label: "Leaderboard" },
       { href: "/monthly-winners", label: "Monthly Winners" },
@@ -74,18 +67,52 @@ export const Header = ({
 
   // Memoize user profile URL
   const userProfileUrl = useMemo(() => {
-    return githubAccount?.username ? `/${githubAccount.username}` : '/profile';
+    return githubAccount?.username ? `/${githubAccount.username}` : "/profile";
   }, [githubAccount?.username]);
 
-  // Optimize scroll handler with useCallback
+  // Check if user is admin
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status when user signs in
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!isSignedIn || !user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/check-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user.emailAddresses?.[0]?.emailAddress,
+            githubUsername: githubAccount?.username,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.isAdmin);
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [isSignedIn, user, githubAccount?.username]);
+
+  // Scroll handler for floating navbar effect
   const handleScroll = useCallback(() => {
     const scrollPosition = window.scrollY;
     setIsScrolled(scrollPosition > 50);
   }, []);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
   // Memoize navigation handlers
@@ -123,9 +150,9 @@ export const Header = ({
 
     try {
       setIsSyncing(true);
-      const response = await fetch('/api/sync-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/sync-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           githubUsername: githubAccount.username,
           displayName: user.firstName || githubAccount.username,
@@ -135,7 +162,7 @@ export const Header = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to sync data');
+        throw new Error("Failed to sync data");
       }
 
       const data = await response.json();
@@ -143,7 +170,7 @@ export const Header = ({
       //   toast.success("Data synced successfully!");
       // }
     } catch (error) {
-      console.error('Error syncing user data:', error);
+      console.error("Error syncing user data:", error);
     } finally {
       setIsSyncing(false);
     }
@@ -153,13 +180,13 @@ export const Header = ({
     syncUserData();
   }, [syncUserData]);
 
-  // Memoize header classes
+  // Memoize header classes with scroll animation
   const headerClasses = useMemo(() => {
     return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 
     backdrop-blur-lg transition-all duration-500 ease-linear ${
       isScrolled
-        ? 'w-[90%] md:w-[80%] rounded-2xl mt-8 border border-border'
-        : 'w-full border-b border-border'
+        ? "w-[90%] md:w-[90%] rounded-2xl mt-8 border border-border shadow-lg"
+        : "w-full border-b border-border"
     }`;
   }, [isScrolled]);
 
@@ -171,7 +198,7 @@ export const Header = ({
           key={href}
           href={href}
           className={`text-sm text-muted-foreground hover:text-primary transition-colors ${
-            isMobile ? 'px-4 py-2 hover:bg-muted/50 rounded-lg' : ''
+            isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
           }`}
         >
           {label}
@@ -207,7 +234,7 @@ export const Header = ({
 
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center gap-6 lg:gap-8">
-            {pathname === '/' && renderNavItems(NAV_ITEMS.home)}
+            {pathname === "/" && renderNavItems(NAV_ITEMS.home)}
             {renderNavItems(mainNavItems)}
           </nav>
 
@@ -215,6 +242,20 @@ export const Header = ({
           <div className="flex items-center gap-2 sm:gap-3">
             {isSignedIn ? (
               <>
+                {/* Admin Button - Only show for admin users */}
+                {isAdmin && (
+                  <Link href="/admin/users">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-sm items-center gap-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span className="hidden sm:inline">Admin</span>
+                    </Button>
+                  </Link>
+                )}
+
                 {/* <Button
                   variant="ghost"
                   size="sm"
@@ -236,14 +277,14 @@ export const Header = ({
                   {user?.imageUrl ? (
                     <img
                       src={user.imageUrl}
-                      alt={user?.firstName || 'Profile'}
+                      alt={user?.firstName || "Profile"}
                       className="w-5 h-5 rounded-full"
                     />
                   ) : (
                     <User className="w-4 h-4" />
                   )}
                   <span className="hidden md:inline text-sm">
-                    {user?.firstName || 'Profile'}
+                    {user?.firstName || "Profile"}
                   </span>
                 </Button>
 
@@ -287,20 +328,30 @@ export const Header = ({
         {isMobileMenuOpen && (
           <div className="xl:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {pathname === '/' && renderNavItems(NAV_ITEMS.home, true)}
+              {pathname === "/" && renderNavItems(NAV_ITEMS.home, true)}
               {renderNavItems(mainNavItems, true)}
               {isSignedIn && (
                 <>
+                  {/* Admin Button in mobile menu */}
+                  {isAdmin && (
+                    <Link
+                      href="/admin/users"
+                      className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin Panel
+                    </Link>
+                  )}
                   {/* <button
-                    onClick={syncUserData}
-                    disabled={isSyncing}
-                    className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                    />
-                    Sync Data
-                  </button> */}
+                      onClick={syncUserData}
+                      disabled={isSyncing}
+                      className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                      />
+                      Sync Data
+                    </button> */}
                   <SignOutButton>
                     <button className="sm:hidden w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
                       <LogOut className="w-4 h-4 inline mr-2" />
