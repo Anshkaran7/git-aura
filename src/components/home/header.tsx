@@ -32,6 +32,13 @@ export const Header = ({
   profile?: boolean;
 }) => {
   const { isSignedIn, user, isLoaded } = useUser();
+  if (!isLoaded) {
+    return (
+      <header className="w-full flex items-center justify-center h-16">
+        <span className="text-xs text-muted-foreground">Loading...</span>
+      </header>
+    );
+  }
   const router = useRouter();
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,10 +62,12 @@ export const Header = ({
 
   // Memoize main navigation items
   const mainNavItems = useMemo(
+    
     () => [
-      { href: leaderboardUrl, label: 'Leaderboard' },
-      { href: '/monthly-winners', label: 'Monthly Winners' },
-      { href: '/contribute', label: 'Contribute' },
+      { href: leaderboardUrl, label: "Leaderboard" },
+      { href: "/monthly-winners", label: "Monthly Winners" },
+      { href: "/battle", label: "Profile Compare" },
+      { href: "/contribute", label: "Contribute" },
     ],
     [leaderboardUrl]
   );

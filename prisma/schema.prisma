@@ -38,7 +38,8 @@ model User {
 model AuraCalculation {
   id                 String   @id @default(uuid())
   userId             String   @map("user_id")
-  date               DateTime @db.Date
+  /// For Postgres: add @db.Date
+  date               DateTime
   contributionsCount Int      @default(0) @map("contributions_count")
   baseAura           Int      @default(0) @map("base_aura")
   streakBonus        Int      @default(0) @map("streak_bonus")
@@ -46,7 +47,8 @@ model AuraCalculation {
   qualityBonus       Int      @default(0) @map("quality_bonus")
   totalAura          Int      @default(0) @map("total_aura")
   repositoriesData   Json?    @map("repositories_data")
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// For Postgres: add @db.Timestamptz(6)
+  createdAt          DateTime @default(now()) @map("created_at")
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])

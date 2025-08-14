@@ -21,19 +21,24 @@ import {
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
 
+
 interface GitHubProfileCardProps {
   initialUsername?: string;
+  profile?: GitHubProfile;
+  highlight?: boolean;
 }
 
 const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   initialUsername,
+  profile: directProfile,
+  highlight = false,
 }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { isSignedIn, user } = useUser();
   const [username, setUsername] = useState("");
   const [searchedUsername, setSearchedUsername] = useState("");
-  const [profile, setProfile] = useState<GitHubProfile | null>(null);
+  const [profile, setProfile] = useState<GitHubProfile | null>(directProfile || null);
   const [contributions, setContributions] = useState<GitHubContributions>({
     totalContributions: 0,
     contributionDays: [],
@@ -48,15 +53,19 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
+
   useEffect(() => {
+    if (directProfile) {
+      setProfile(directProfile);
+      return;
+    }
     // Check if we have a username in the URL or props
     const urlUsername = searchParams.get("username") || initialUsername;
-
     if (urlUsername && urlUsername !== searchedUsername && !loading) {
       setUsername(urlUsername);
       fetchProfile(urlUsername);
     }
-  }, [searchParams, initialUsername]);
+  }, [searchParams, initialUsername, directProfile]);
 
   // Auto-load user's own profile when they sign in (only if no URL username exists)
   useEffect(() => {
@@ -317,104 +326,52 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
-        {/* Error Message - Only show on profile view */}
-        {currentView === "profile" && error && (
-          <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-3 sm:p-4 md:p-5 rounded-lg mb-4 sm:mb-6 border border-gray-700/50 mx-1 sm:mx-0">
-            <p className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm">
-              <span className="text-red-400 text-base sm:text-lg">⚠️</span>
-              <span className="flex-1">{error}</span>
-            </p>
-          </div>
+
+  // If directProfile is provided (battle mode), render a simple card
+  if (directProfile) {
+    const joinedYear = new Date(directProfile.created_at).getFullYear();
+    const accountAgeYears = ((Date.now() - new Date(directProfile.created_at).getTime()) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1);
+    return (
+      <div className={`relative w-[320px] md:w-[340px] rounded-xl border ${highlight ? 'border-yellow-400 shadow-[0_0_0_1px_rgba(250,204,21,0.4)]' : 'border-gray-800'} bg-gradient-to-b from-[#1d232c] to-[#161b21] p-5 flex flex-col gap-4`}>        
+        {/* Winner badge */}
+        {highlight && (
+          <span className="absolute -top-3 left-4 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-yellow-400 text-black shadow">WINNER</span>
         )}
-
-        {/* Content based on current view */}
-        {currentView === "profile" && (
-          <div className="space-y-4 sm:space-y-6 md:space-y-8">
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
-              </div>
-            ) : profile ? (
-              <>
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
-                  handleShareTwitter={() => handleShare("twitter")}
-                  handleShareLinkedin={() => handleShare("linkedin")}
-                  handleDownload={handleExportImage}
-                  isGenerating={isGenerating}
-                />
-                <MontlyContribution
-                  selectedTheme={selectedTheme}
-                  contributions={contributions}
-                />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </>
-            ) : (
-              !error && (
-                <EmptyState
-                  selectedTheme={selectedTheme}
-                  onLoadProfile={(username) => {
-                    if (username !== searchedUsername && !loading) {
-                      setUsername(username);
-                      fetchProfile(username);
-                    }
-                  }}
-                />
-              )
-            )}
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <img src={directProfile.avatar_url} alt={directProfile.login} className="w-16 h-16 rounded-full border border-gray-700 object-cover" />
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-base font-semibold text-white truncate">{directProfile.name || directProfile.login}</h2>
+            <p className="text-xs text-gray-400 truncate">@{directProfile.login}</p>
+            <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-400">
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.public_repos} repos</span>
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.followers} followers</span>
+              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">{directProfile.following} following</span>
+            </div>
           </div>
-        )}
-
-        {/* Leaderboard View */}
-        {/* {currentView === "leaderboard" && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <Leaderboard
-              currentUserId={user?.id}
-              selectedTheme={selectedTheme}
-              contributions={contributions}
-            />
-          </div>
-        )} */}
-
-        {/* Badges View */}
-        {/* {currentView === "badges" && isSignedIn && user?.id && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
-          </div>
-        )} */}
-      </div>
-
-      {/* Footer - Hide on badges view */}
-      {currentView !== "badges" && (
-        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-black/80 backdrop-blur-sm border-t border-gray-800/50">
-          <p className="text-[10px] sm:text-xs md:text-sm max-w-screen-xl mx-auto text-center">
-            Made with ❤️ by{" "}
-            <a
-              href="https://karandev.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:no-underline transition-all duration-200 text-gray-300 hover:text-white"
-            >
-              Karan
-            </a>
+        </div>
+        {/* Bio */}
+        {directProfile.bio && (
+          <p className="text-[11px] leading-relaxed text-gray-300 line-clamp-4">
+            {directProfile.bio}
           </p>
-        </footer>
-      )}
-    </div>
-  );
+        )}
+        {/* Meta */}
+        <div className="grid grid-cols-2 gap-3 text-[11px]">
+          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
+            <span className="text-gray-400">Joined</span>
+            <span className="text-white font-medium">{joinedYear}</span>
+          </div>
+          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
+            <span className="text-gray-400">Age</span>
+            <span className="text-white font-medium">{accountAgeYears} yrs</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ...existing code...
 };
 
 export default GitHubProfileCard;
