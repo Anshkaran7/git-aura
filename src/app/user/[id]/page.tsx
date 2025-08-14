@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
-import { toPng } from "html-to-image";
+import { toPng, toJpeg } from "html-to-image";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import { Header } from "@/components/home";
@@ -21,6 +21,8 @@ import {
 
 function UserPage() {
   const params = useParams();
+  // Download format state
+  const [downloadFormat, setDownloadFormat] = useState<string>('png');
   const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
   const userId = params.id as string;
@@ -179,25 +181,52 @@ function UserPage() {
     }
   };
 
-  const handleExportImage = async () => {
+  // Enhanced export: allow PNG/JPG, dynamic filename, and toast feedback
+  const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
-      const dataUrl = await toPng(profileRef.current, {
-        cacheBust: true,
-        backgroundColor: undefined,
-        pixelRatio: 2,
-        skipFonts: false,
-      });
-      const link = document.createElement("a");
-      link.download = `${profile?.login}-github-profile.png`;
+      let dataUrl;
+      if (format === 'png') {
+        dataUrl = await toPng(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+        });
+      } else {
+        dataUrl = await toJpeg(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+          quality: 0.95,
+        });
+      }
+      const githubHandle = profile?.login || 'profile';
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `${githubHandle}-profile-${date}.${format}`;
+      const link = document.createElement('a');
+      link.download = filename;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      if (typeof window !== 'undefined' && 'toast' in window) {
+        // If using a global toast system
+        (window as any).toast.success('Image downloaded!');
+      } else {
+        // fallback
+        alert('Image downloaded!');
+      }
     } catch (err) {
-      console.error("Failed to export image:", err);
+      console.error('Failed to export image:', err);
+      if (typeof window !== 'undefined' && 'toast' in window) {
+        (window as any).toast.error('Failed to download image. Check browser settings.');
+      } else {
+        alert('Failed to download image. Check browser settings.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -365,20 +394,42 @@ function UserPage() {
             </div>
           ) : profile ? (
             <div className="space-y-8 max-w-6xl mx-auto">
-              <ProfileCard
-                profile={profile}
-                contributions={contributions}
-                selectedTheme={selectedTheme}
-                profileRef={profileRef}
-                handleShareTwitter={() => handleShare("twitter")}
-                handleShareLinkedin={() => handleShare("linkedin")}
-                handleDownload={handleExportImage}
-                isGenerating={isGenerating}
-              />
-              <MontlyContribution
-                selectedTheme={selectedTheme}
-                contributions={contributions}
-              />
+              {/* Format selection and download */}
+              <div className="flex items-center gap-2 mb-2">
+                <label htmlFor="download-format" className="text-sm text-gray-300">Format:</label>
+                <select
+                  id="download-format"
+                  className="bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
+                  value={downloadFormat}
+                  onChange={e => setDownloadFormat(e.target.value as 'png' | 'jpg')}
+                  disabled={isGenerating}
+                >
+                  <option value="png">PNG</option>
+                  <option value="jpg">JPG</option>
+                </select>
+                <button
+                  onClick={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
+                  className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white"
+                  disabled={isGenerating}
+                  title="Download as Image"
+                >
+                  Download
+                </button>
+              </div>
+  <ProfileCard
+    profile={profile}
+    contributions={contributions}
+    selectedTheme={selectedTheme}
+    profileRef={profileRef}
+    handleShareTwitter={() => handleShare("twitter")}
+    handleShareLinkedin={() => handleShare("linkedin")}
+    handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
+    isGenerating={isGenerating}
+  />
+  <MontlyContribution
+    selectedTheme={selectedTheme}
+    contributions={contributions}
+  />
             </div>
           ) : (
             !error && (
