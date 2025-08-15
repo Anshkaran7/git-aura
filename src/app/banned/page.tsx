@@ -66,7 +66,7 @@ export default function BannedPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
           <p className="text-gray-400">Loading...</p>
@@ -76,7 +76,7 @@ export default function BannedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-8 text-center">
           <div className="flex justify-center mb-6">

@@ -97,7 +97,7 @@ export function LeaderboardEntry({
               <div className="flex flex-col min-w-0 flex-1">
                 <a
                   href={`/user/${entry.user.github_username}`}
-                  className="font-semibold text-xs sm:text-sm text-white hover:underline truncate"
+                  className="font-semibold text-xs sm:text-sm text-foreground hover:underline truncate"
                 >
                   {entry.user.display_name}
                   {isCurrentUser && (
@@ -117,7 +117,7 @@ export function LeaderboardEntry({
           <div className="flex items-center justify-end sm:justify-end gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Stats */}
             <div className="text-right">
-              <div className="text-xs sm:text-sm font-bold text-white">
+              <div className="text-xs sm:text-sm font-bold text-foreground">
                 {formatNumber(entry.aura)} Aura
               </div>
               {entry.contributions !== undefined && (

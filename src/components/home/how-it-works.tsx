@@ -78,7 +78,7 @@ export const HowItWorks = () => {
             ⚡ Simple 3-Step Process (No Cap)
           </Badge>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-            How It Works <span className="text-highlight">(The Magic)</span>
+            How It Works <span className="text-primary">(The Magic)</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             From zero to hero in three simple steps. Even a junior developer

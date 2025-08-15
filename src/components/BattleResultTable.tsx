@@ -16,9 +16,9 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
   const safeResults = Array.isArray(results) ? results : [];
   return (
     <div className="w-full max-w-xl mx-auto mt-6">
-      <table className="w-full border-collapse bg-[#181c23] rounded-lg overflow-hidden text-white">
+      <table className="w-full border-collapse bg-card rounded-lg overflow-hidden text-foreground">
         <thead>
-          <tr className="bg-[#23272f]">
+          <tr className="bg-muted">
             <th className="py-2 px-4 text-left">Metric</th>
             <th className="py-2 px-4 text-center">User 1</th>
             <th className="py-2 px-4 text-center">User 2</th>
@@ -36,10 +36,10 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
               return val;
             };
             return (
-              <tr key={r.key} className="border-t border-gray-700">
+              <tr key={r.key} className="border-t border-border">
                 <td className="py-2 px-4 font-semibold">{r.label}</td>
-                <td className={`py-2 px-4 text-center ${r.winner === 'user1' ? 'bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value1)}</td>
-                <td className={`py-2 px-4 text-center ${r.winner === 'user2' ? 'bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value2)}</td>
+                <td className={`py-2 px-4 text-center ${r.winner === 'user1' ? 'bg-yellow-300/20 dark:bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value1)}</td>
+                <td className={`py-2 px-4 text-center ${r.winner === 'user2' ? 'bg-yellow-300/20 dark:bg-yellow-900/40 font-bold' : ''}`}>{formatValue(r.value2)}</td>
               </tr>
             );
           })}

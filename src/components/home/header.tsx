@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 // Navigation items configuration
 const NAV_ITEMS = {
@@ -227,7 +228,7 @@ export const Header = ({
                 className="w-12 h-12 rounded-lg text-primary"
               />
             </div>
-            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-highlight">
+            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-foreground">
               Git Aura
             </span>
           </Link>
@@ -240,6 +241,7 @@ export const Header = ({
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             {isSignedIn ? (
               <>
                 {/* Admin Button - Only show for admin users */}

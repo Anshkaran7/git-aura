@@ -193,7 +193,7 @@ const WinnerCard = ({
   return (
     <div
       ref={cardRef}
-      className={`relative flex flex-col items-center bg-gray-700/20 rounded-lg p-4 ${
+      className={`relative flex flex-col items-center bg-card/80 dark:bg-card/20 rounded-lg p-4 ${
         winner.rank === 1
           ? "order-2 scale-105 md:scale-110 -translate-y-8 md:-translate-y-16"
           : winner.rank === 2
@@ -290,25 +290,25 @@ const WinnerCard = ({
 
       {/* Name and Username with Enhanced Typography */}
       <div className="text-center space-y-1">
-        <h3 className="text-white text-xl font-bold tracking-wide">
+        <h3 className="text-foreground text-xl font-bold tracking-wide">
           {winner.user.displayName}
         </h3>
-        <p className="text-[#7d8590] text-sm font-medium">
+        <p className="text-muted-foreground text-sm font-medium">
           @{winner.user.githubUsername}
         </p>
       </div>
 
       {/* Enhanced Stats Display */}
-      <div className="mt-4 flex gap-6 text-sm bg-white/5 px-6 py-3 backdrop-blur-sm">
+      <div className="mt-4 flex gap-6 text-sm bg-foreground/5 px-6 py-3 backdrop-blur-sm">
         <div className="text-center flex items-center gap-2">
           <Zap className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-[#7d8590] text-sm font-medium whitespace-nowrap">
+          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
             {winner.totalAura.toLocaleString()} Aura
           </p>
         </div>
         <div className="text-center flex items-center gap-2">
           <Users className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-[#7d8590] text-sm font-medium whitespace-nowrap">
+          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
             {winner.contributionsCount} Contribs
           </p>
         </div>
@@ -379,7 +379,6 @@ const Pagination = ({
         variant="outline"
         onClick={() => onPageChange(pagination.currentPage - 1)}
         disabled={!pagination.hasPrevPage}
-        className="bg-[#21262d] border-[#30363d] text-white hover:bg-[#30363d]"
         aria-label="Previous page"
       >
         <ChevronLeft className="w-4 h-4 mr-2" />
@@ -395,11 +394,6 @@ const Pagination = ({
               key={page}
               variant={isActive ? "default" : "outline"}
               onClick={() => onPageChange(page)}
-              className={
-                isActive
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-[#21262d] border-[#30363d] text-white hover:bg-[#30363d]"
-              }
               size="sm"
               aria-current={isActive ? "page" : undefined}
               aria-label={`Go to page ${page}`}
@@ -414,7 +408,6 @@ const Pagination = ({
         variant="outline"
         onClick={() => onPageChange(pagination.currentPage + 1)}
         disabled={!pagination.hasNextPage}
-        className="bg-[#21262d] border-[#30363d] text-white hover:bg-[#30363d]"
         aria-label="Next page"
       >
         Next
@@ -466,7 +459,7 @@ export default function MonthlyWinnersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={false} />
         <main
           className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10"
@@ -475,7 +468,7 @@ export default function MonthlyWinnersPage() {
         >
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto" />
-            <p className="text-white mt-4 text-xl">
+            <p className="text-foreground mt-4 text-xl">
               Loading Monthly Winners...
             </p>
           </div>
@@ -486,14 +479,14 @@ export default function MonthlyWinnersPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={false} />
         <main
           className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10"
           role="main"
         >
-          <Card className="bg-[#161b22] border border-red-600 p-6 text-center">
-            <h3 className="text-2xl font-bold text-red-400 mb-4">
+          <Card className="bg-destructive/10 border border-destructive p-6 text-center">
+            <h3 className="text-2xl font-bold text-red-400 mb-4 ">
               Error Loading Data
             </h3>
             <p className="text-red-300">{error}</p>
@@ -510,7 +503,7 @@ export default function MonthlyWinnersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Header leaderboard={false} dashboard={false} />
 
       <main
@@ -521,12 +514,12 @@ export default function MonthlyWinnersPage() {
         <section aria-label="Page Overview" className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-6">
             <Trophy className="w-12 h-12 text-yellow-400" />
-            <h1 className="text-4xl sm:text-5xl font-bold text-white">
+            <h1 className="text-4xl sm:text-5xl font-bold text-foreground">
               Monthly Winners
             </h1>
             <Trophy className="w-12 h-12 text-yellow-400" />
           </div>
-          <p className="text-lg sm:text-xl text-[#7d8590] max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
             Celebrating the top 3 developers who dominated the monthly
             leaderboard with their exceptional contributions and aura scores.
           </p>
@@ -544,10 +537,10 @@ export default function MonthlyWinnersPage() {
                 className="w-8 h-8 text-blue-400 mx-auto mb-2"
                 aria-hidden="true"
               />
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-foreground">
                 {pagination.totalMonths}
               </div>
-              <div className="text-[#7d8590]">Months Tracked</div>
+              <div className="text-muted-foreground">Months Tracked</div>
             </div>
             <div
               className="bg-[#161b22] border border-[#30363d] rounded-lg p-4"
@@ -558,10 +551,10 @@ export default function MonthlyWinnersPage() {
                 className="w-8 h-8 text-yellow-400 mx-auto mb-2"
                 aria-hidden="true"
               />
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-foreground">
                 {pagination.totalMonths}
               </div>
-              <div className="text-[#7d8590]">Champions Crowned</div>
+              <div className="text-muted-foreground">Champions Crowned</div>
             </div>
             <div
               className="bg-[#161b22] border border-[#30363d] rounded-lg p-4"
@@ -572,26 +565,26 @@ export default function MonthlyWinnersPage() {
                 className="w-8 h-8 text-gray-300 mx-auto mb-2"
                 aria-hidden="true"
               />
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-foreground">
                 {pagination.totalMonths * 3}
               </div>
-              <div className="text-[#7d8590]">Total Winners</div>
+              <div className="text-muted-foreground">Total Winners</div>
             </div>
           </div> */}
         </section>
 
         {/* Winners Grid */}
         {winnersData.length === 0 ? (
-          <Card className="bg-[#161b22] border border-[#30363d]">
+          <Card className="bg-card border border-border">
             <CardContent className="text-center py-20">
               <Trophy
-                className="w-24 h-24 text-gray-400 mx-auto mb-4"
+                className="w-24 h-24 text-muted-foreground mx-auto mb-4"
                 aria-hidden="true"
               />
-              <h3 className="text-2xl font-bold text-white mb-4">
+              <h3 className="text-2xl font-bold text-foreground mb-4">
                 No Monthly Winners Yet
               </h3>
-              <p className="text-[#7d8590]">
+              <p className="text-muted-foreground">
                 Winners will be captured automatically at the end of each month.
                 Check back soon!
               </p>
@@ -609,13 +602,13 @@ export default function MonthlyWinnersPage() {
                   aria-level={2}
                   role="heading"
                   id={`month-${monthData.monthYear}`}
-                  className="inline-flex items-center gap-3 bg-[#161b22] border border-[#30363d] rounded-full px-6 py-3 justify-center"
+                  className="inline-flex items-center gap-3 bg-card border border-border rounded-full px-6 py-3 justify-center"
                 >
                   <Calendar
-                    className="w-6 h-6 text-blue-400"
+                    className="w-6 h-6 text-primary"
                     aria-hidden="true"
                   />
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
                     {formatMonthYear(monthData.monthYear)}
                   </h2>
                 </div>

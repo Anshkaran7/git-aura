@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useUser, SignInButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
   Zap,
@@ -425,24 +426,24 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   const monthlyAuraStatus = getMonthlyAuraStatus(monthlyData.aura);
 
   return (
-    <div className="bg-[#161b21] backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-[#21262d] shadow-2xl mt-4 sm:mt-6 md:mt-8 mx-1 sm:mx-0">
+    <div className="bg-card backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-border shadow-2xl mt-4 sm:mt-6 md:mt-8 mx-1 sm:mx-0">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-        <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
+        <h3 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           <span className="truncate">Aura Analysis</span>
         </h3>
         <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
           {isCalculatingAura && (
             <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-[#7d8590]"></div>
-              <span className="text-sm text-[#7d8590]">Calculating...</span>
+              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-muted-foreground"></div>
+              <span className="text-sm text-muted-foreground">Calculating...</span>
             </div>
           )}
           {isSignedIn && user && (
             <button
               onClick={handleManualSync}
               disabled={isSyncingManually || isCalculatingAura}
-              className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm bg-[#21262d] hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed text-[#e6edf3] rounded-md transition-all border border-[#30363d] hover:border-[#40464d]"
+              className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed text-muted-foreground rounded-md transition-all border border-border bg-secondary hover:bg-muted"
               title="Sync aura data with backend"
             >
               <RefreshCw
@@ -461,41 +462,41 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       {/* Monthly View Toggle and Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
         <div className="flex items-center gap-2">
-          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590]" />
-          <span className="text-sm font-medium text-white">
+          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">
             Monthly Analysis
           </span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
           <button
             onClick={() => navigateMonth("prev")}
-            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm"
+            className="p-1.5 sm:p-2 rounded-md hover:bg-muted active:bg-secondary"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           </button>
-          <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white whitespace-nowrap bg-[#0d1117] backdrop-blur-sm rounded border border-[#21262d]">
+          <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap bg-background rounded border border-border">
             {formatMonthYear(currentMonth)}
           </span>
           <button
             onClick={() => navigateMonth("next")}
-            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-[#21262d] active:bg-[#161b21] transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:p-1.5 sm:p-2 rounded-md hover:bg-muted active:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={currentMonth >= getCurrentMonthYear()}
           >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-[#7d8590]" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           </button>
         </div>
       </div>
 
       {/* Monthly Aura Status Card */}
       <div className="mb-4 sm:mb-6">
-        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border-2 border-dashed bg-gradient-to-r from-[#0d1117] to-[#161b21] border-[#30363d] backdrop-blur-sm">
+        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border-2 border-dashed bg-secondary border-border backdrop-blur-sm">
           <div className="text-center">
             <h4
               className={`text-base sm:text-lg font-bold ${monthlyAuraStatus.color} mb-2`}
             >
               {monthlyAuraStatus.level}
             </h4>
-            <p className="text-sm sm:text-base md:text-lg mb-3 text-gray-200">
+            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-foreground">
               {formatMonthYear(currentMonth)} Performance
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
@@ -504,7 +505,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
               >
                 {formatNumber(monthlyData.aura)} Monthly Aura
               </span>
-              <span className="text-gray-300 font-semibold flex items-center gap-1 whitespace-nowrap">
+              <span className="text-foreground font-semibold flex items-center gap-1 whitespace-nowrap">
                 📊 {monthlyData.activeDays} Active Days
               </span>
             </div>
@@ -514,50 +515,50 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
 
       {/* Monthly Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
           <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               Monthly Aura
             </span>
           </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
             {formatNumber(monthlyData.aura)}
           </div>
         </div>
 
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
           <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <GitBranch className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
+            <GitBranch className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               Contributions
             </span>
           </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
             {monthlyData.contributions}
           </div>
         </div>
 
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
           <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
+            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               Active Days
             </span>
           </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
             {monthlyData.activeDays}
           </div>
         </div>
 
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-[#0d1117] backdrop-blur-sm border border-[#21262d] hover:bg-[#161b21] transition-all">
+        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
           <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#7d8590] shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-[#e6edf3] truncate">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               Consistency
             </span>
           </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">
+          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
             {Math.round(
               (monthlyData.activeDays /
                 new Date(
@@ -574,7 +575,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
 
       {/* Overall Aura Status Card */}
       <div className="mb-4 sm:mb-6">
-        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-[#21262d] bg-[#0d1117] backdrop-blur-sm">
+        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-border bg-background backdrop-blur-sm">
           <div className="text-center">
             <div className="text-2xl sm:text-3xl md:text-4xl mb-2">
               {auraStatus.emoji}
@@ -584,7 +585,7 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
             >
               {auraStatus.level}
             </h4>
-            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-gray-200">
+            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-foreground">
               {auraStatus.message}
             </p>
 
@@ -593,22 +594,22 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
                 {isGeneratingAI ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
-                    <span className="text-sm text-[#39d353]">
+                    <span className="text-sm text-muted-foreground">
                       Generating AI message...
                     </span>
                   </div>
                 ) : aiMessage ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
-                      <Sparkles className="w-4 h-4 text-[#39d353]" />
-                      <span className="text-xs sm:text-sm font-semibold text-[#39d353] bg-[#39d353]/10 px-2 py-1 rounded-full">
+                      <Sparkles className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs sm:text-sm font-semibold text-muted-foreground bg-[#39d353]/10 px-2 py-1 rounded-full">
                         {aiMessage.personality}
                       </span>
                     </div>
                     <p className="text-sm text-gray-200 leading-relaxed">
                       {aiMessage.funnyMessage}
                     </p>
-                    <p className="text-xs text-[#39d353] font-medium">
+                    <p className="text-xs text-muted-foreground font-medium">
                       {aiMessage.motivation}
                     </p>
                   </div>
@@ -633,21 +634,21 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       </div>
 
       {!isSignedIn && (
-        <div className="mt-4 sm:mt-6 p-3 sm:p-4 md:p-6 rounded-lg border-2 border-dashed border-[#30363d] text-center bg-[#0d1117] backdrop-blur-sm">
+        <div className="mt-4 sm:mt-6 p-3 sm:p-4 md:p-6 rounded-lg border-2 border-dashed border-border text-center bg-card backdrop-blur-sm">
           <div className="text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3">
             🚀
           </div>
-          <h4 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 text-white">
+          <h4 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 text-foreground">
             Ready to join the aura game?
           </h4>
-          <p className="mb-3 sm:mb-4 text-sm sm:text-base px-2 text-gray-400">
+          <p className="mb-3 sm:mb-4 text-sm sm:text-base px-2 text-muted-foreground">
             Sign in to save your aura, earn epic badges, and dominate the
             leaderboard! 💪
           </p>
           <SignInButton mode="modal">
-            <button className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-gray-700 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-500 transition-all transform hover:scale-105 active:scale-95 font-semibold text-sm sm:text-base touch-manipulation border border-gray-600/50 shadow-lg">
+            <Button variant="secondary" size="lg">
               🔥 Start My Aura Journey
-            </button>
+            </Button>
           </SignInButton>
         </div>
       )}

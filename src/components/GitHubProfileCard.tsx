@@ -355,7 +355,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
             className="w-16 h-16 rounded-full border border-gray-700 object-cover"
           />
           <div className="flex flex-col min-w-0">
-            <h2 className="text-base font-semibold text-white truncate">
+            <h2 className="text-base font-semibold text-foreground truncate">
               {directProfile.name || directProfile.login}
             </h2>
             <p className="text-xs text-gray-400 truncate">
@@ -384,11 +384,11 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         <div className="grid grid-cols-2 gap-3 text-[11px]">
           <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
             <span className="text-gray-400">Joined</span>
-            <span className="text-white font-medium">{joinedYear}</span>
+            <span className="text-foreground font-medium">{joinedYear}</span>
           </div>
           <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
             <span className="text-gray-400">Age</span>
-            <span className="text-white font-medium">
+            <span className="text-foreground font-medium">
               {accountAgeYears} yrs
             </span>
           </div>
@@ -397,7 +397,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     );
   }
   return (
-    <div className="min-h-screen bg-black font-mona-sans transition-colors duration-300">
+    <div className="min-h-screen bg-background font-mona-sans transition-colors duration-300">
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
@@ -478,14 +478,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
       {/* Footer - Hide on badges view */}
       {currentView !== "badges" && (
-        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-black/80 backdrop-blur-sm border-t border-gray-800/50">
+        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-background/80 backdrop-blur-sm border-t border-gray-800/50">
           <p className="text-[10px] sm:text-xs md:text-sm max-w-screen-xl mx-auto text-center">
             Made with ❤️ by{" "}
             <a
               href="https://karandev.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:no-underline transition-all duration-200 text-gray-300 hover:text-white"
+              className="underline hover:no-underline transition-all duration-200 text-gray-300 hover:text-foreground"
             >
               Karan
             </a>
