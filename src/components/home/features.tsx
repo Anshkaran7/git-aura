@@ -1,4 +1,4 @@
-import Link from "next/link"; // ✅ import Link
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Users, Download } from "lucide-react";

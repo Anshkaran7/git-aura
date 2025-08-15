@@ -19,7 +19,7 @@ export const HowItWorks = () => {
       ],
       color: "text-primary",
       bgColor: "bg-primary/10",
-      href: "/connect-github", // link target
+      href: "/connect-github", 
     },
     {
       number: "02",
