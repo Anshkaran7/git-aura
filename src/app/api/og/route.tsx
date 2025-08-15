@@ -400,7 +400,9 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (e) {
-    console.log(`${e.message}`);
+    const errorMessage =
+      e instanceof Error ? e.message : "Unknown error occurred";
+    console.log(errorMessage);
     return new Response(`Failed to generate the image`, {
       status: 500,
     });
