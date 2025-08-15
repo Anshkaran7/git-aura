@@ -219,7 +219,7 @@ export default function TopAuraUsers() {
 
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
             {getMonthName(monthYear)}'s{" "}
-            <span className="text-highlight">Aura Legends</span> 👑
+            <span className="text-primary">Aura Legends</span> 👑
           </h2>
 
           <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">

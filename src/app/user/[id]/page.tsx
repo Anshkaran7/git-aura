@@ -279,7 +279,7 @@ function UserPage() {
   // Show loading while checking Clerk auth status or user registration
   if (!isLoaded || checkingRegistration) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <div className="pt-20">
           <Header leaderboard={false} profile={true} />
           <div className="flex items-center justify-center w-full py-20">
@@ -293,7 +293,7 @@ function UserPage() {
   // Show auth required message if user is not registered
   if (isUserRegistered === false) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <div className="pt-20">
           <Header leaderboard={false} profile={true} />
           <div className="max-w-4xl mx-auto px-4 py-20">
@@ -303,7 +303,7 @@ function UserPage() {
                 <h2 className="text-2xl font-bold mb-4">User Not Found</h2>
                 <p className="text-gray-400 mb-6">
                   The user{" "}
-                  <span className="text-white font-mono">@{userId}</span> is not
+                  <span className="text-foreground font-mono">@{userId}</span> is not
                   registered on our platform.
                   {!isSignedIn && " You need to sign in to view user profiles."}
                 </p>
@@ -315,7 +315,7 @@ function UserPage() {
                     Sign in with GitHub to join our community and view profiles
                   </p>
                   <SignInButton mode="modal">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                    <button className="bg-blue-600 hover:bg-blue-700 text-foreground px-6 py-3 rounded-lg font-semibold transition-colors">
                       Sign In to Continue
                     </button>
                   </SignInButton>
@@ -327,7 +327,7 @@ function UserPage() {
                   </p>
                   <button
                     onClick={() => window.history.back()}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                    className="bg-gray-600 hover:bg-gray-700 text-foreground px-6 py-3 rounded-lg font-semibold transition-colors"
                   >
                     Go Back
                   </button>
@@ -342,7 +342,7 @@ function UserPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <div className="pt-20">
           <Header leaderboard={false} profile={true} />
 

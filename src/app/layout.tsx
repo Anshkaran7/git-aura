@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeAwareProviders } from "@/components/theme-aware-providers"; // Import the ThemeAwareProviders to wrap the app
 import { Analytics } from "@vercel/analytics/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
@@ -155,12 +157,7 @@ function OrganizationStructuredData() {
     />
   );
 }
-const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-if (!clerkPublishableKey) {
-  // eslint-disable-next-line no-console
-  console.warn("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY. Clerk auth hooks will fail until it's set.");
-}
 
 export default function RootLayout({
   children,
@@ -168,32 +165,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      publishableKey={clerkPublishableKey}
-      appearance={{
-        baseTheme: dark,
-        variables: {
-          colorPrimary: "#d4d4d8", // Light gray primary
-          colorBackground: "#0a0a0a", // Deep black background
-          colorInputBackground: "#1a1a1a", // Dark gray inputs
-          colorInputText: "#f5f5f5", // Light text
-          colorText: "#ffffff", // White text
-          colorTextSecondary: "#a3a3a3", // Gray secondary text
-        },
-        elements: {
-          card: "bg-[#0f0f0f] border border-gray-800",
-          headerTitle: "text-white",
-          headerSubtitle: "text-gray-400",
-          socialButtonsBlockButton:
-            "bg-[#1a1a1a] border border-gray-700 text-white hover:bg-[#262626]",
-          formButtonPrimary: "bg-gray-200 hover:bg-white text-black",
-          footerActionLink: "text-gray-300 hover:text-white",
-          formFieldInput: "bg-[#1a1a1a] border-gray-700 text-white",
-          formFieldLabel: "text-gray-300",
-        },
-      }}
-    >
-      <html lang="en" className={`dark scroll-smooth ${monaSans.className}`}>
+      <html lang="en" suppressHydrationWarning className={`scroll-smooth ${monaSans.className}`}>
         <head>
           {/* Preconnect to external domains for performance */}
           <link rel="preconnect" href="https://api.github.com" />
@@ -239,37 +211,20 @@ export default function RootLayout({
 
           <OrganizationStructuredData />
         </head>
-        <body className="antialiased" suppressHydrationWarning={true}>
-          <Toaster
-            theme="dark"
-            position="top-right"
-            closeButton
-            richColors
-            toastOptions={{
-              style: {
-                background: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                color: "#ffffff",
-              },
-            }}
-          />
-          {/* Skip to main content for accessibility */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50"
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
           >
-            Skip to main content
-          </a>
-
-          <UserSync />
-
-          <main id="main-content">{children}</main>
-
-          <Analytics />
-
-          {/* Additional performance monitoring could be added here */}
+            <ThemeAwareProviders>
+              {children}
+            </ThemeAwareProviders>
+            
+            <Analytics />
+          </ThemeProvider>
         </body>
       </html>
-    </ClerkProvider>
   );
 }

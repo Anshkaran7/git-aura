@@ -33,7 +33,7 @@ export const themes: Theme[] = [
     name: "Ocean Dark",
     background: "bg-[#0f172a]",
     cardBackground: "bg-[#1e293b]",
-    text: "text-[#e2e8f0]",
+    text: "text-muted-foreground",
     border: "border-[#1e293b]",
     contribution: {
       level0: "bg-[#0f172a]",

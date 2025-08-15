@@ -12,11 +12,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   selectedTheme,
 }) => {
   const getContributionColor = (count: number): string => {
-    if (count > 12) return "bg-[#39d353]"; // High activity - bright green like GitHub
-    if (count > 7) return "bg-[#26a641]"; // Good activity - medium green
-    if (count > 3) return "bg-[#006d32]"; // Moderate activity - darker green
-    if (count > 0) return "bg-[#0e4429]"; // Low activity - dark green
-    return "bg-[#161b22]"; // No activity - dark black like GitHub
+    if (count > 12) return "bg-[oklch(var(--contribution-level-4))]";
+    if (count > 7) return "bg-[oklch(var(--contribution-level-3))]";
+    if (count > 3) return "bg-[oklch(var(--contribution-level-2))]";
+    if (count > 0) return "bg-[oklch(var(--contribution-level-1))]";
+    return "bg-[oklch(var(--contribution-level-0))]";
   };
 
   const generateCommitGrid = () => {
@@ -27,7 +27,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     grid.push(
       <div
         key="weekdays"
-        className="flex flex-col gap-[1px] sm:gap-[2px] text-xs text-[#7d8590] pr-1 sm:pr-2 pt-3 sm:pt-4 shrink-0"
+        className="flex flex-col gap-[1px] sm:gap-[2px] text-xs text-muted-foreground pr-1 sm:pr-2 pt-3 sm:pt-4 shrink-0"
       >
         {weekdays.map((day, i) => (
           <div
@@ -82,9 +82,9 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
           <div
             key={`${week}-${day}`}
             className={`w-[7px] h-[7px] sm:w-[9px] sm:h-[9px] md:w-[11px] md:h-[11px] rounded-sm ${getContributionColor(
-              contributionCount
-            )} hover:ring-1 sm:hover:ring-2 hover:ring-[#8b949e] hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-[#0d1117] transition-all cursor-pointer touch-manipulation hover:scale-110`}
-            title={`${date.toDateString()}: ${contributionCount} contributions`}
+            contributionCount
+          )} hover:ring-1 sm:hover:ring-2 hover:ring-ring hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-background transition-all cursor-pointer touch-manipulation hover:scale-110`}
+          title={`${date.toDateString()}: ${contributionCount} contributions`}
           />
         );
       }
@@ -115,7 +115,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
     ];
 
     return (
-      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-[#7d8590] ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">
+      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-muted-foreground ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">
         {months.map((month, i) => (
           <div key={i} className="text-xs truncate text-center">
             <span className="hidden sm:inline">{month}</span>
@@ -128,14 +128,14 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
 
   return (
     <div className="w-full flex justify-center">
-      <div className="bg-[#0d1117] backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 border border-[#21262d] shadow-inner max-w-full">
+      <div className="bg-card backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 border border-border shadow-inner max-w-full">
         <div className="w-full overflow-hidden">
           {getMonthLabels()}
           <div className="pb-2 w-full overflow-hidden">{generateCommitGrid()}</div>
         </div>
         <div className="flex items-center justify-between sm:justify-end mt-2 sm:mt-3 md:mt-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-1 sm:gap-2 text-xs">
-            <span className="text-[#7d8590] font-mona-sans whitespace-nowrap">
+            <span className="text-muted-foreground font-mona-sans whitespace-nowrap">
               Less
             </span>
             <div className="flex gap-0.5 sm:gap-1">
@@ -148,7 +148,7 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
                 />
               ))}
             </div>
-            <span className="text-[#7d8590] font-mona-sans whitespace-nowrap">
+            <span className="text-muted-foreground font-mona-sans whitespace-nowrap">
               More
             </span>
           </div>
