@@ -49,7 +49,7 @@ export const HowItWorks = () => {
       ],
       color: "text-secondary",
       bgColor: "bg-secondary/10",
-      href: "/leaderboards",
+      href: "/leaderboard",
     },
   ];
 
