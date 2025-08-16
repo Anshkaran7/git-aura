@@ -12,11 +12,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   selectedTheme,
 }) => {
   const getContributionColor = (count: number): string => {
-    if (count > 12) return "bg-[oklch(var(--contribution-level-4))]";
-    if (count > 7) return "bg-[oklch(var(--contribution-level-3))]";
-    if (count > 3) return "bg-[oklch(var(--contribution-level-2))]";
-    if (count > 0) return "bg-[oklch(var(--contribution-level-1))]";
-    return "bg-[oklch(var(--contribution-level-0))]";
+    if (count > 12) return "bg-green-500 dark:bg-green-400";
+    if (count > 7) return "bg-green-400 dark:bg-green-500";
+    if (count > 3) return "bg-green-300 dark:bg-green-600";
+    if (count > 0) return "bg-green-200 dark:bg-green-700";
+    return "bg-gray-100 dark:bg-gray-800";
   };
 
   const generateCommitGrid = () => {
@@ -82,9 +82,9 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
           <div
             key={`${week}-${day}`}
             className={`w-[7px] h-[7px] sm:w-[9px] sm:h-[9px] md:w-[11px] md:h-[11px] rounded-sm ${getContributionColor(
-            contributionCount
-          )} hover:ring-1 sm:hover:ring-2 hover:ring-ring hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-background transition-all cursor-pointer touch-manipulation hover:scale-110`}
-          title={`${date.toDateString()}: ${contributionCount} contributions`}
+              contributionCount
+            )} hover:ring-1 sm:hover:ring-2 hover:ring-ring hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-background transition-all cursor-pointer touch-manipulation hover:scale-110`}
+            title={`${date.toDateString()}: ${contributionCount} contributions`}
           />
         );
       }
@@ -95,7 +95,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
       );
     }
 
-    return <div className="flex gap-[1px] sm:gap-[2px] justify-center w-full overflow-hidden">{grid}</div>;
+    return (
+      <div className="flex gap-[1px] sm:gap-[2px] justify-center w-full overflow-hidden">
+        {grid}
+      </div>
+    );
   };
 
   const getMonthLabels = () => {
@@ -131,7 +135,9 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
       <div className="bg-card backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 border border-border shadow-inner max-w-full">
         <div className="w-full overflow-hidden">
           {getMonthLabels()}
-          <div className="pb-2 w-full overflow-hidden">{generateCommitGrid()}</div>
+          <div className="pb-2 w-full overflow-hidden">
+            {generateCommitGrid()}
+          </div>
         </div>
         <div className="flex items-center justify-between sm:justify-end mt-2 sm:mt-3 md:mt-4 gap-2 sm:gap-3">
           <div className="flex items-center gap-1 sm:gap-2 text-xs">
@@ -139,11 +145,11 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
               Less
             </span>
             <div className="flex gap-0.5 sm:gap-1">
-              {[0, 1, 2, 3, 4].map((level) => (
+              {[0, 1, 4, 8, 13].map((level, index) => (
                 <div
-                  key={level}
+                  key={index}
                   className={`w-[7px] h-[7px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 rounded-sm ${getContributionColor(
-                    level * 4
+                    level
                   )}`}
                 />
               ))}
