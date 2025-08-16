@@ -68,7 +68,7 @@ export const FeaturesSection = () => {
           </Badge>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Features Overview{" "}
-            <span className="text-highlight">(The Good Stuff)</span>
+            <span className="text-primary">(The Good Stuff)</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             Stop being a commit ghost and start building your developer street
