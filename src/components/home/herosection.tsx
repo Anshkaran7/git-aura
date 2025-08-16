@@ -6,7 +6,8 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Squares from "../ui/Squares";
-import { useTheme } from "next-themes"; 
+import { useTheme } from "next-themes";
+import Image from "next/image";
 
 // Types for hero stats
 interface HeroStats {
@@ -23,7 +24,7 @@ export const HeroSection = () => {
     totalDevelopers: 0,
     totalAuraPoints: 0,
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const handleGoToProfile = () => {
@@ -80,27 +81,37 @@ export const HeroSection = () => {
     </div>
   );
 
-  const gridBorderColor = resolvedTheme === 'dark' 
-    ? '#ffffff15' // The original semi-transparent white for dark mode
-    : '#a0b0c0';   // A nice, visible light blue-gray for light mode
+  const gridBorderColor =
+    resolvedTheme === "dark"
+      ? "#ffffff15" // The original semi-transparent white for dark mode
+      : "#a0b0c0"; // A nice, visible light blue-gray for light mode
 
-  const subheadlineTextColor = resolvedTheme === 'dark'
-    ? 'text-muted-foreground' // The original gray/white for dark mode
-    : 'text-slate-600';      // A readable blue-gray for light mode
-    
+  const subheadlineTextColor =
+    resolvedTheme === "dark"
+      ? "text-muted-foreground" // The original gray/white for dark mode
+      : "text-slate-600"; // A readable blue-gray for light mode
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center bg-background overflow-hidden py-8">
-      <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0"/>
-        <div className="absolute w-full h-full z-10 pointer-events-auto">
-        <Squares
-          speed={0.3}
-          squareSize={20}
-          direction="diagonal"
-          borderColor={resolvedTheme === 'dark' ? '#ffffff15' : '#a0b0c0'}
-          hoverFillColor="#00ff25"
-        />
+    <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8">
+      <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
+      {resolvedTheme === "dark" && (
+        <div className="absolute w-full bg-black h-full z-30 pointer-events-auto">
+          <Squares
+            speed={0.3}
+            squareSize={20}
+            direction="diagonal"
+            borderColor="#ffffff15"
+            hoverFillColor="#00ff25"
+          />
         </div>
-
+      )}
+      <Image
+        src="/background.png"
+        alt="Hero Background"
+        width={1000}
+        height={1000}
+        className="absolute top-10 left-0 w-full h-[110vh] z-20 pointer-events-none"
+      />
       <div className="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden" />
       <div className="container mx-auto px-4 text-center relative z-30 pointer-events-none">
         <div className="max-w-3xl mx-auto slide-up">
@@ -112,12 +123,16 @@ export const HeroSection = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className={`text-lg mb-8 max-w-2xl mx-auto leading-relaxed ${resolvedTheme === 'dark' ? 'text-muted-foreground' : 'text-slate-600'}`}>
-            
-              {isSignedIn
-                ? "Check your aura score and climb the leaderboard. Let's see how you stack up."
-                : "Join developers who turned their contributions into measurable impact. Get recognized for your work."}
-            
+          <p
+            className={`text-lg mb-8 max-w-2xl mx-auto leading-relaxed ${
+              resolvedTheme === "dark"
+                ? "text-muted-foreground"
+                : "text-slate-600"
+            }`}
+          >
+            {isSignedIn
+              ? "Check your aura score and climb the leaderboard. Let's see how you stack up."
+              : "Join developers who turned their contributions into measurable impact. Get recognized for your work."}
           </p>
 
           {/* {!loading && stats.totalDevelopers > 0 && ( */}

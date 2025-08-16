@@ -158,73 +158,74 @@ function OrganizationStructuredData() {
   );
 }
 
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en" suppressHydrationWarning className={`scroll-smooth ${monaSans.className}`}>
-        <head>
-          {/* Preconnect to external domains for performance */}
-          <link rel="preconnect" href="https://api.github.com" />
-          <link rel="preconnect" href="https://avatars.githubusercontent.com" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`scroll-smooth ${monaSans.className}`}
+    >
+      <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://api.github.com" />
+        <link rel="preconnect" href="https://avatars.githubusercontent.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
 
-          {/* DNS prefetch for faster lookups */}
-          <link rel="dns-prefetch" href="//api.github.com" />
-          <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
+        {/* DNS prefetch for faster lookups */}
+        <link rel="dns-prefetch" href="//api.github.com" />
+        <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
 
-          {/* Performance hints */}
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, viewport-fit=cover"
-          />
-          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        {/* Performance hints */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
 
-          {/* Security headers */}
-          <meta
-            httpEquiv="Content-Security-Policy"
-            content="upgrade-insecure-requests"
-          />
-          <meta name="referrer" content="origin-when-cross-origin" />
+        {/* Security headers */}
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="upgrade-insecure-requests"
+        />
+        <meta name="referrer" content="origin-when-cross-origin" />
 
-          {/* Additional SEO meta tags */}
-          <meta name="language" content="English" />
-          <meta name="revisit-after" content="7 days" />
-          <meta name="distribution" content="global" />
-          <meta name="rating" content="general" />
+        {/* Additional SEO meta tags */}
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
 
-          {/* Rich snippets support */}
-          <meta itemProp="name" content="GitAura" />
-          <meta
-            itemProp="description"
-            content="Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics."
-          />
-          <meta itemProp="image" content="/api/og" />
+        {/* Rich snippets support */}
+        <meta itemProp="name" content="GitAura" />
+        <meta
+          itemProp="description"
+          content="Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics."
+        />
+        <meta itemProp="image" content="/api/og" />
 
-          <OrganizationStructuredData />
-        </head>
-        <body>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ThemeAwareProviders>
-              {children}
-            </ThemeAwareProviders>
-            
-            <Analytics />
-          </ThemeProvider>
-        </body>
-      </html>
+        <OrganizationStructuredData />
+      </head>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ThemeAwareProviders>{children}</ThemeAwareProviders>
+
+          <Analytics />
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

@@ -23,12 +23,12 @@ export function UserCard({
       animate={{ opacity: 1, scale: 1 }}
       className={`relative overflow-hidden rounded-lg p-2 sm:p-3 ${
         userOutOfTop100
-          ? "border border-orange-500 bg-gradient-to-r from-orange-900/20 to-red-900/20"
-          : "border border-[#39d353] bg-gradient-to-r from-[#161b21] to-[#0d1117]"
+          ? "border border-orange-500 bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-900/20 dark:to-red-900/20"
+          : "border border-[#39d353] bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#161b21] dark:to-[#0d1117]"
       }`}
     >
       {!userOutOfTop100 && (
-        <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/10 to-[#26a641]/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#39d353]/10 dark:to-[#26a641]/10"></div>
       )}
       <div className="relative">
         <div className="flex items-center gap-1 mb-2">
@@ -70,7 +70,7 @@ export function UserCard({
         </div>
 
         {userOutOfTop100 && (
-          <div className="flex items-start gap-2 pt-2 border-t border-orange-500/20">
+          <div className="flex items-start gap-2 pt-2 border-t border-orange-500/30 dark:border-orange-500/20">
             <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 shrink-0" />
             <div>
               <h3 className="text-xs sm:text-sm font-semibold text-orange-200 mb-1">
