@@ -14,7 +14,8 @@ interface CustomLeaderboardProps {
 }
 
 export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
-  const [view, setView] = useState<ViewType>("monthly");
+  // Set default view to "alltime" when no username (global leaderboard)
+  const [view, setView] = useState<ViewType>(username ? "monthly" : "alltime");
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
     []
@@ -57,16 +58,21 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
     setUserOutOfTop100(false);
     try {
       let response;
+      let apiUrl = "";
 
       if (view === "monthly") {
         const params = new URLSearchParams({
           monthYear: currentMonth,
           ...(username && { username }),
         });
-        response = await fetch(`/api/leaderboard/monthly?${params}`);
+        apiUrl = `/api/leaderboard/monthly?${params}`;
       } else {
-        response = await fetch(`/api/leaderboard/alltime`);
+        // For alltime view, don't pass username if it's empty
+        const params = username ? `?username=${username}` : "";
+        apiUrl = `/api/leaderboard/alltime${params}`;
       }
+
+      response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
@@ -150,7 +156,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       {/* View Toggle and Month Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
         <ViewToggle view={view} onViewChange={setView} />
-        {view === "monthly" && (
+        {view === "monthly" && username && (
           <MonthNavigation
             currentMonth={currentMonth}
             onMonthChange={handleMonthChange}

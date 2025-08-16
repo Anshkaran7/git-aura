@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get("userId");
 
     // Fetch all leaderboard data, ordered by totalAura descending, excluding banned users
+    // Get the most recent entry for each user (highest year or null year)
     const alltimeData = await prisma.globalLeaderboard.findMany({
       where: {
         user: {
@@ -56,43 +57,63 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: {
-        totalAura: "desc",
-      },
+      orderBy: [
+        { totalAura: "desc" },
+        { year: "desc" }, // Prefer records with year, then null year
+      ],
+    });
+
+    // Group by userId and take the best entry for each user
+    const userBestEntries = new Map();
+    alltimeData.forEach((entry) => {
+      const existing = userBestEntries.get(entry.userId);
+      if (!existing || entry.totalAura > existing.totalAura) {
+        userBestEntries.set(entry.userId, entry);
+      }
     });
 
     // Transform the data and add calculated ranks
-    const transformedData = alltimeData.map((entry, index) => ({
-      rank: index + 1, // Calculate rank based on position
-      user: {
-        id: entry.user.id,
-        display_name: entry.user.displayName || entry.user.githubUsername || "",
-        github_username: entry.user.githubUsername || "",
-        avatar_url:
-          entry.user.avatarUrl ||
-          `https://github.com/${entry.user.githubUsername}.png`,
-        current_streak: entry.user.currentStreak || 0,
-      },
-      aura: entry.totalAura,
-      badges: entry.user.userBadges
-        .filter(
-          (
-            ub
-          ): ub is UserBadgeWithBadge & {
-            badge: NonNullable<UserBadgeWithBadge["badge"]>;
-          } => ub.badge !== null
-        )
-        .map((ub) => ({
-          id: ub.badge.id,
-          name: ub.badge.name,
-          description: ub.badge.description || "",
-          icon: ub.badge.icon || "",
-          color: ub.badge.color || "",
-          rarity: (ub.badge.rarity || "COMMON").toLowerCase(),
-          month_year: ub.monthYear || null,
-          rank: ub.rank || null,
-        })),
-    }));
+    const transformedData = Array.from(userBestEntries.values())
+      .sort((a, b) => b.totalAura - a.totalAura)
+      .map((entry, index) => ({
+        rank: index + 1, // Calculate rank based on position
+        user: {
+          id: entry.user.id,
+          display_name:
+            entry.user.displayName || entry.user.githubUsername || "",
+          github_username: entry.user.githubUsername || "",
+          avatar_url:
+            entry.user.avatarUrl ||
+            `https://github.com/${entry.user.githubUsername}.png`,
+          total_aura: entry.totalAura, // Changed from current_streak to total_aura
+          current_streak: entry.user.currentStreak || 0,
+        },
+        aura: entry.totalAura,
+        badges: entry.user.userBadges
+          .filter(
+            (
+              ub: UserBadgeWithBadge
+            ): ub is UserBadgeWithBadge & {
+              badge: NonNullable<UserBadgeWithBadge["badge"]>;
+            } => ub.badge !== null
+          )
+          .map(
+            (
+              ub: UserBadgeWithBadge & {
+                badge: NonNullable<UserBadgeWithBadge["badge"]>;
+              }
+            ) => ({
+              id: ub.badge.id,
+              name: ub.badge.name,
+              description: ub.badge.description || "",
+              icon: ub.badge.icon || "",
+              color: ub.badge.color || "",
+              rarity: (ub.badge.rarity || "COMMON").toLowerCase(),
+              month_year: ub.monthYear || null,
+              rank: ub.rank || null,
+            })
+          ),
+      }));
 
     // If userId is provided, find user's rank
     let userRank = null;
