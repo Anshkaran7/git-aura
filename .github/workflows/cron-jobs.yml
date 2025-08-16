@@ -1,0 +1,30 @@
+name: Scheduled Tasks
+
+on:
+  schedule:
+    # Refresh all users daily at midnight UTC
+    - cron: "0 0 * * *"
+    # Update ranks daily at 1 AM UTC
+    - cron: "0 1 * * *"
+    # Save monthly winners on 1st of every month
+    - cron: "0 0 1 * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  daily-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Daily Tasks (Refresh Users + Update Ranks)
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/cron/daily-tasks" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
+
+  save-monthly-winners:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 0 1 * *'
+    steps:
+      - name: Save Monthly Winners
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/cron/save-monthly-winners" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

@@ -83,7 +83,8 @@ export async function syncCurrentUserToSupabase() {
           updatedAt: new Date(user.updatedAt),
         },
         update: {
-          email: actualEmail || `${user.id}@clerk.local`,
+          // Only update email if it's different to avoid unique constraint conflicts
+          ...(actualEmail && { email: actualEmail }),
           githubUsername: githubUsername,
           githubId: githubId,
           displayName: displayName,

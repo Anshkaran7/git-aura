@@ -48,24 +48,24 @@ export async function fetchGitHubProfile(
       error: "Username is required",
     };
   }
+  // Normalize username (strip pasted GitHub URL if provided)
+  const normalized = username
+    .trim()
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/\s+/g, "")
+    .split("/")[0];
 
-  if (!process.env.GITHUB_TOKEN) {
-    console.warn("GitHub token not found in environment variables");
-    return {
-      success: false,
-      error: "GitHub token not configured",
-    };
-  }
+  const hasToken = Boolean(process.env.GITHUB_TOKEN);
 
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+    ...(hasToken ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
     "User-Agent": "GitAura-App",
   };
 
   try {
-    const response = await fetch(`https://api.github.com/users/${username}`, {
+  const response = await fetch(`https://api.github.com/users/${normalized}`, {
       headers,
     });
 
@@ -73,13 +73,12 @@ export async function fetchGitHubProfile(
       const errorData = await response.json().catch(() => ({}));
       console.error("GitHub API Error:", errorData);
 
-      if (
-        response.status === 403 &&
-        errorData.message?.includes("rate limit")
-      ) {
+      if (response.status === 403 && errorData.message?.toLowerCase().includes("rate limit")) {
         return {
           success: false,
-          error: "GitHub API rate limit exceeded",
+          error: hasToken
+            ? "GitHub API rate limit exceeded"
+            : "GitHub API rate limit exceeded (add GITHUB_TOKEN to .env.local for higher limits)",
         };
       }
 

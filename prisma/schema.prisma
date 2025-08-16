@@ -119,7 +119,7 @@ model GlobalLeaderboard {
   userId      String   @unique @map("user_id")
   totalAura   Int      @default(0) @map("total_aura")
   rank        Int
-  lastUpdated DateTime @default(now()) @map("last_updated")
+  lastUpdated DateTime @default(now()) @map("last_updated") @db.Timestamptz(6)
   year        String?
   yearlyAura  Float    @default(0) @map("yearly_aura")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

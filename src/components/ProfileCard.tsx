@@ -1,16 +1,11 @@
 "use client";
 import React from "react";
-import {
-  Users,
-  UserPlus,
-  Coffee,
-  Twitter,
-  Linkedin,
-  Download,
-} from "lucide-react";
+import { Users, UserPlus, Coffee, X, Linkedin, Download } from "lucide-react";
 import { Theme, GitHubProfile, GitHubContributions } from "./types";
 import ContributionGrid from "./ContributionGrid";
 import MontlyContribution from "./MontlyContribution";
+
+import Image from "next/image";
 
 interface ProfileCardProps {
   profile: GitHubProfile;
@@ -41,21 +36,20 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
     <div
       ref={profileRef}
       data-profile-card
-      className="bg-[#161b21] backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-[#21262d] mx-1 sm:mx-0"
-    >
+      className="bg-card backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border mx-1 sm:mx-0">
       {/* Browser Window Controls */}
-      <div className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 bg-[#0d1117] backdrop-blur-sm border-b border-[#21262d]">
+      <div className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 bg-background backdrop-blur-sm border-b border-border">
         <div className="flex gap-1 sm:gap-1.5">
           <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/90" />
           <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-500/90" />
           <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-green-500/90" />
         </div>
-        <div className="flex-1 flex items-center justify-center mx-2 sm:mx-auto text-white">
+        <div className="flex-1 flex items-center justify-center mx-2 sm:mx-auto text-foreground">
           <a
             href={`https://github.com/${profile?.login}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 sm:gap-2 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 rounded-md bg-[#161b21] hover:bg-[#21262d] backdrop-blur-sm border border-[#30363d] transition-all touch-manipulation max-w-full overflow-hidden group"
+            className="flex items-center gap-1 sm:gap-2 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 rounded-md bg-secondary hover:bg-muted backdrop-blur-sm border border-border transition-all touch-manipulation max-w-full overflow-hidden group"
           >
             <span className="opacity-60 shrink-0 text-[10px] sm:text-xs md:text-sm">
               github.com/
@@ -69,71 +63,90 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 ml-auto">
           <button
             onClick={handleShareTwitter}
-            className="p-1.5 sm:p-2 rounded-md bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] transition-colors text-white"
-            title="Share on Twitter"
+
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#000000] hover:bg-[#181818] active:bg-[#272727]"
+            }`}
+            title={isGenerating ? "Generating image..." : "Share on Twitter"}
           >
-            <Twitter className="w-4 h-4" />
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Image
+                alt="X logo"
+                width={0}
+                height={0}
+                src="/twitter.png"
+                className="w-4 h-4"
+              />
+            )}
           </button>
           <button
             onClick={handleShareLinkedin}
-            className="p-1.5 sm:p-2 rounded-md bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86] transition-colors text-white"
-            title="Share on LinkedIn"
-          >
-            <Linkedin className="w-4 h-4" />
-          </button>
-          <div className="flex items-center gap-1">
-            {setDownloadFormat && (
-              <select
-                value={downloadFormat}
-                onChange={e => setDownloadFormat(e.target.value)}
-                className="bg-gray-800 text-white px-0.5 py-1 rounded border border-gray-700 focus:outline-none"
-                style={{ minWidth: 60 }}
-                title="Select image format"
-              >
-                <option value="png">PNG</option>
-                <option value="jpg">JPG</option>
-              </select>
-            )}
-            <button
-              onClick={handleDownload}
-              className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white"
-              title={`Download as ${downloadFormat ? downloadFormat.toUpperCase() : 'Image'}`}
-              style={{height: 28, display: 'flex', alignItems: 'center'}}
-            >
-              <Download className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
 
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86]"
+            }`}
+            title={isGenerating ? "Generating image..." : "Share on LinkedIn"}
+          >
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Linkedin className="w-4 h-4" />
+            )}
+          </button>
+
+
+          <button
+            onClick={handleDownload}
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+            }`}
+            title={isGenerating ? "Generating image..." : "Download as Image"}
+          >
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+          </button>
+        </div>
       </div>
 
-      
-
       {/* Profile Content */}
-      <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-[#161b21] to-[#0d1117] ">
+      <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-card to-background">
         {/* Profile Header */}
         <div className="flex flex-col sm:flex-row items-center justify-between sm:items-start gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
             <img
               src={profile.avatar_url}
               alt={profile.name || profile.login}
-              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full ring-2 ring-[#30363d] shadow-md"
+              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full ring-2 ring-border shadow-md"
             />
             <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-white mb-1 font-mona-sans truncate">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-1 font-mona-sans truncate">
                 {profile.name || profile.login}
               </h1>
-              <p className="text-sm sm:text-base text-gray-400 mb-2 sm:mb-3 font-mona-sans truncate">
+              <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-3 font-mona-sans truncate">
                 @{profile.login}
               </p>
               <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 text-xs sm:text-sm font-mona-sans">
-                <div className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors">
+                <div className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                   <Users className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="whitespace-nowrap">
                     {profile.followers.toLocaleString()} Followers
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors">
+                <div className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
                   <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="whitespace-nowrap">
                     {profile.following.toLocaleString()} Following
@@ -144,10 +157,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
 
           <div className="text-center sm:text-right w-full sm:w-auto">
-            <div className="text-lg sm:text-xl md:text-2xl font-semibold text-white font-mona-sans">
+            <div className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground font-mona-sans">
               {profile.public_repos.toLocaleString()}
             </div>
-            <div className="text-xs sm:text-sm text-gray-400 font-mona-sans">
+            <div className="text-xs sm:text-sm text-muted-foreground font-mona-sans">
               Repositories
             </div>
           </div>
@@ -156,8 +169,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         {/* Bio */}
         {profile.bio && (
           <div className="mb-4 sm:mb-6 md:mb-8">
-            <p className="flex flex-col sm:flex-row items-center sm:items-start gap-2 text-sm sm:text-base leading-relaxed text-gray-200 font-mona-sans">
-              <Coffee className="h-4 w-4 shrink-0 text-gray-400" />
+            <p className="flex flex-col sm:flex-row items-center sm:items-start gap-2 text-sm sm:text-base leading-relaxed text-foreground font-mona-sans">
+              <Coffee className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-center sm:text-left break-words">
                 {profile.bio}
               </span>
@@ -168,10 +181,10 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         {/* Contribution section */}
         <div className="mt-4 sm:mt-6 md:mt-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-4">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-white font-mona-sans text-center sm:text-left">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground font-mona-sans text-center sm:text-left">
               {contributions.totalContributions.toLocaleString()} contributions
             </h2>
-            <div className="text-xs sm:text-sm text-gray-400 font-mona-sans whitespace-nowrap">
+            <div className="text-xs sm:text-sm text-muted-foreground font-mona-sans whitespace-nowrap">
               {new Date(profile.created_at).getFullYear()} - Present
             </div>
           </div>

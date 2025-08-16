@@ -14,7 +14,8 @@ interface CustomLeaderboardProps {
 }
 
 export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
-  const [view, setView] = useState<ViewType>("monthly");
+  // Set default view to "alltime" when no username (global leaderboard)
+  const [view, setView] = useState<ViewType>(username ? "monthly" : "alltime");
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>(
     []
@@ -57,16 +58,21 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
     setUserOutOfTop100(false);
     try {
       let response;
+      let apiUrl = "";
 
       if (view === "monthly") {
         const params = new URLSearchParams({
           monthYear: currentMonth,
-          ...(username && { username }),
+          // Don't filter by username - we want to see all users in the leaderboard
+          // The username is only used for highlighting the specific user
         });
-        response = await fetch(`/api/leaderboard/monthly?${params}`);
+        apiUrl = `/api/leaderboard/monthly?${params}`;
       } else {
-        response = await fetch(`/api/leaderboard/alltime`);
+        // For alltime view, don't pass username filter - show all users
+        apiUrl = `/api/leaderboard/alltime`;
       }
+
+      response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
@@ -150,7 +156,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       {/* View Toggle and Month Navigation */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
         <ViewToggle view={view} onViewChange={setView} />
-        {view === "monthly" && (
+        {view === "monthly" && username && (
           <MonthNavigation
             currentMonth={currentMonth}
             onMonthChange={handleMonthChange}
@@ -169,7 +175,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
 
       {/* Leaderboard Entries */}
       <div className="space-y-1.5 sm:space-y-2">
-        <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3">
+        <h3 className="text-sm sm:text-base font-bold text-foreground mb-2 sm:mb-3">
           Top 100 Developers
         </h3>
         <AnimatePresence>
@@ -192,7 +198,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
               ref={observerTarget}
               className="h-8 flex items-center justify-center"
             >
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             </div>
           )}
       </div>

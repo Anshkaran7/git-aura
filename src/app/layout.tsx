@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeAwareProviders } from "@/components/theme-aware-providers"; // Import the ThemeAwareProviders to wrap the app
 import { Analytics } from "@vercel/analytics/react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
@@ -155,113 +157,75 @@ function OrganizationStructuredData() {
     />
   );
 }
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider
-      appearance={{
-        baseTheme: dark,
-        variables: {
-          colorPrimary: "#d4d4d8", // Light gray primary
-          colorBackground: "#0a0a0a", // Deep black background
-          colorInputBackground: "#1a1a1a", // Dark gray inputs
-          colorInputText: "#f5f5f5", // Light text
-          colorText: "#ffffff", // White text
-          colorTextSecondary: "#a3a3a3", // Gray secondary text
-        },
-        elements: {
-          card: "bg-[#0f0f0f] border border-gray-800",
-          headerTitle: "text-white",
-          headerSubtitle: "text-gray-400",
-          socialButtonsBlockButton:
-            "bg-[#1a1a1a] border border-gray-700 text-white hover:bg-[#262626]",
-          formButtonPrimary: "bg-gray-200 hover:bg-white text-black",
-          footerActionLink: "text-gray-300 hover:text-white",
-          formFieldInput: "bg-[#1a1a1a] border-gray-700 text-white",
-          formFieldLabel: "text-gray-300",
-        },
-      }}
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`scroll-smooth ${monaSans.className}`}
     >
-      <html lang="en" className={`dark scroll-smooth ${monaSans.className}`}>
-        <head>
-          {/* Preconnect to external domains for performance */}
-          <link rel="preconnect" href="https://api.github.com" />
-          <link rel="preconnect" href="https://avatars.githubusercontent.com" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
+      <head>
+        {/* Preconnect to external domains for performance */}
+        <link rel="preconnect" href="https://api.github.com" />
+        <link rel="preconnect" href="https://avatars.githubusercontent.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
 
-          {/* DNS prefetch for faster lookups */}
-          <link rel="dns-prefetch" href="//api.github.com" />
-          <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
+        {/* DNS prefetch for faster lookups */}
+        <link rel="dns-prefetch" href="//api.github.com" />
+        <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
 
-          {/* Performance hints */}
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, viewport-fit=cover"
-          />
-          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        {/* Performance hints */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
 
-          {/* Security headers */}
-          <meta
-            httpEquiv="Content-Security-Policy"
-            content="upgrade-insecure-requests"
-          />
-          <meta name="referrer" content="origin-when-cross-origin" />
+        {/* Security headers */}
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="upgrade-insecure-requests"
+        />
+        <meta name="referrer" content="origin-when-cross-origin" />
 
-          {/* Additional SEO meta tags */}
-          <meta name="language" content="English" />
-          <meta name="revisit-after" content="7 days" />
-          <meta name="distribution" content="global" />
-          <meta name="rating" content="general" />
+        {/* Additional SEO meta tags */}
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
 
-          {/* Rich snippets support */}
-          <meta itemProp="name" content="GitAura" />
-          <meta
-            itemProp="description"
-            content="Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics."
-          />
-          <meta itemProp="image" content="/api/og" />
+        {/* Rich snippets support */}
+        <meta itemProp="name" content="GitAura" />
+        <meta
+          itemProp="description"
+          content="Create stunning visualizations of any GitHub profile with beautiful contribution graphs and statistics."
+        />
+        <meta itemProp="image" content="/api/og" />
 
-          <OrganizationStructuredData />
-        </head>
-        <body className="antialiased" suppressHydrationWarning={true}>
-          <Toaster
-            theme="dark"
-            position="top-right"
-            closeButton
-            richColors
-            toastOptions={{
-              style: {
-                background: "#1a1a1a",
-                border: "1px solid #2a2a2a",
-                color: "#ffffff",
-              },
-            }}
-          />
-          {/* Skip to main content for accessibility */}
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded-md z-50"
-          >
-            Skip to main content
-          </a>
-
-          <UserSync />
-
-          <main id="main-content">{children}</main>
+        <OrganizationStructuredData />
+      </head>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ThemeAwareProviders>{children}</ThemeAwareProviders>
 
           <Analytics />
-
-          {/* Additional performance monitoring could be added here */}
-        </body>
-      </html>
-    </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

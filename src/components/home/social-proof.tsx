@@ -113,7 +113,7 @@ export const SocialProof = () => {
           </Badge>
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Social Proof{" "}
-            <span className="text-highlight">(The Flexing Zone)</span>
+            <span className="text-primary">(The Flexing Zone)</span>
           </h2>
         </div>
 

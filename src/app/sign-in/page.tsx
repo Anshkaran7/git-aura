@@ -3,7 +3,7 @@ import { Zap } from "lucide-react";
 
 export default function SignInPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-xl border border-border">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">

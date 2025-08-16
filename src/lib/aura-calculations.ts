@@ -1,3 +1,96 @@
+// Compare two GitHub profiles for 1v1 battle - DEPRECATED
+// This function is kept for backward compatibility but should not be used
+// Use the new battle system in the BattlePage component instead
+export function compareProfiles(
+  profile1: GitHubProfileData,
+  profile2: GitHubProfileData
+) {
+  console.warn(
+    "compareProfiles is deprecated. Use the new battle system instead."
+  );
+
+  // Calculate scores for each metric
+  const metrics = [
+    {
+      key: "aura",
+      label: "Aura",
+      value1: calculateQualityBonus(profile1),
+      value2: calculateQualityBonus(profile2),
+    },
+    {
+      key: "public_repos",
+      label: "Repositories",
+      value1: profile1.public_repos,
+      value2: profile2.public_repos,
+    },
+    {
+      key: "followers",
+      label: "Followers",
+      value1: profile1.followers,
+      value2: profile2.following,
+    },
+    {
+      key: "following",
+      label: "Following",
+      value1: profile1.following,
+      value2: profile2.following,
+    },
+    {
+      key: "created_at",
+      label: "Account Age (yrs)",
+      value1: Math.max(
+        0,
+        (Date.now() - new Date(profile1.created_at).getTime()) /
+          (1000 * 60 * 60 * 24 * 365.25)
+      ),
+      value2: Math.max(
+        0,
+        (Date.now() - new Date(profile2.created_at).getTime()) /
+          (1000 * 60 * 60 * 24 * 365.25)
+      ),
+    },
+  ];
+
+  // Determine winner for each metric
+  const results = metrics.map((m) => {
+    let winner = null;
+    if (m.key === "created_at") {
+      // Older account wins (greater age in years)
+      winner =
+        m.value1 > m.value2 ? "user1" : m.value1 < m.value2 ? "user2" : null;
+    } else {
+      winner =
+        m.value1 > m.value2 ? "user1" : m.value1 < m.value2 ? "user2" : null;
+    }
+    return { ...m, winner };
+  });
+
+  // Count wins
+  const user1Wins = results.filter((r) => r.winner === "user1").length;
+  const user2Wins = results.filter((r) => r.winner === "user2").length;
+  let overallWinner = null;
+  if (user1Wins > user2Wins) overallWinner = "user1";
+  else if (user2Wins > user1Wins) overallWinner = "user2";
+
+  return {
+    user1: profile1,
+    user2: profile2,
+    results,
+    winner: overallWinner,
+  };
+}
+
+// NEW: Battle-specific aura calculation function
+export function calculateBattleAura(
+  profile: GitHubProfileData,
+  contributionDays: ContributionDay[]
+): number {
+  // Use the same calculation as the main aura system
+  const baseAura = calculateTotalAura(contributionDays);
+  const qualityBonus = calculateQualityBonus(profile);
+
+  return baseAura + qualityBonus;
+}
 import { prisma } from "./prisma";
 import { fetchGitHubProfile } from "./github-fetch";
 
@@ -138,7 +231,11 @@ export async function createAuraCalculation(
   githubProfile?: GitHubProfileData
 ) {
   try {
-    const dateString = date.toISOString().split("T")[0]; // YYYY-MM-DD
+    // Ensure date is properly formatted for PostgreSQL DATE type
+    const dateForDB = new Date(date);
+    dateForDB.setHours(0, 0, 0, 0); // Reset time to midnight
+
+    const dateString = dateForDB.toISOString().split("T")[0]; // YYYY-MM-DD
     const dayContributions =
       contributionDays.find((day) => day.date === dateString)
         ?.contributionCount || 0;
@@ -163,14 +260,22 @@ export async function createAuraCalculation(
       },
       create: {
         userId: userId,
-        date: date,
+        date: dateForDB,
         contributionsCount: dayContributions,
         baseAura: baseAura,
         streakBonus: streakBonus,
         consistencyBonus: consistencyBonus,
         qualityBonus: qualityBonus,
         totalAura: totalAura,
-        repositoriesData: githubProfile ? (githubProfile as any) : undefined,
+        repositoriesData: githubProfile
+          ? {
+              public_repos: githubProfile.public_repos,
+              followers: githubProfile.followers,
+              following: githubProfile.following,
+              bio: githubProfile.bio,
+              created_at: githubProfile.created_at,
+            }
+          : undefined,
       },
       update: {
         contributionsCount: dayContributions,
@@ -179,7 +284,15 @@ export async function createAuraCalculation(
         consistencyBonus: consistencyBonus,
         qualityBonus: qualityBonus,
         totalAura: totalAura,
-        repositoriesData: githubProfile ? (githubProfile as any) : undefined,
+        repositoriesData: githubProfile
+          ? {
+              public_repos: githubProfile.public_repos,
+              followers: githubProfile.followers,
+              following: githubProfile.following,
+              bio: githubProfile.bio,
+              created_at: githubProfile.created_at,
+            }
+          : undefined,
       },
     });
 

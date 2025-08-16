@@ -225,7 +225,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
         >
           {/* Position Number (Top Right) */}
           <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 md:-top-4 md:-right-4 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 sm:border-4 border-white shadow-lg">
-            <span className="text-white font-bold text-xs sm:text-sm md:text-lg">
+            <span className="text-foreground font-bold text-xs sm:text-sm md:text-lg">
               #{badge.position}
             </span>
           </div>
@@ -234,7 +234,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           <div
             className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br ${badge.color} rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-xl`}
           >
-            <div className="text-white scale-75 sm:scale-90 md:scale-100">
+            <div className="text-foreground scale-75 sm:scale-90 md:scale-100">
               {badge.icon}
             </div>
           </div>
@@ -243,7 +243,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           <div className="text-center">
             <h2
               className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 ${
-                selectedTheme.name === "Light" ? "text-gray-800" : "text-white"
+                selectedTheme.name === "Light" ? "text-gray-800" : "text-foreground"
               } px-2`}
             >
               {badge.name}

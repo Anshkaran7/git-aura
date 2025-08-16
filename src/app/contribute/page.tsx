@@ -1,8 +1,11 @@
-import type { Metadata } from "next";
+"use client";
+
+// import type { Metadata } from "next"; // Uncomment if you want to use metadata for this page
 import { Header } from "@/components/home";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "next-themes";
 import {
   Github,
   GitFork,
@@ -16,24 +19,25 @@ import {
 import Link from "next/link";
 import Squares from "@/components/ui/Squares";
 import Contributors from "@/components/Contributors";
+import Image from "next/image";
 
-export const metadata: Metadata = {
-  title: "Contribute to GitAura | Help Build the Future of GitHub Analytics",
-  description:
-    "Join the GitAura community! Learn how to contribute by finding bugs, raising issues, and submitting pull requests to make GitAura even better.",
-  openGraph: {
-    title: "Contribute to GitAura",
-    description:
-      "Help build the future of GitHub analytics. Contribute to GitAura by reporting bugs, suggesting features, or submitting code.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Contribute to GitAura",
-    description:
-      "Help build the future of GitHub analytics. Join our open-source community!",
-  },
-};
+// export const metadata: Metadata = {
+//   title: "Contribute to GitAura | Help Build the Future of GitHub Analytics",
+//   description:
+//     "Join the GitAura community! Learn how to contribute by finding bugs, raising issues, and submitting pull requests to make GitAura even better.",
+//   openGraph: {
+//     title: "Contribute to GitAura",
+//     description:
+//       "Help build the future of GitHub analytics. Contribute to GitAura by reporting bugs, suggesting features, or submitting code.",
+//     type: "website",
+//   },
+//   twitter: {
+//     card: "summary_large_image",
+//     title: "Contribute to GitAura",
+//     description:
+//       "Help build the future of GitHub analytics. Join our open-source community!",
+//   },
+// };
 
 const contributionSteps = [
   {
@@ -152,41 +156,52 @@ const guidelines = [
 ];
 
 export default function ContributePage() {
+  const { resolvedTheme } = useTheme();
   return (
     <>
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
+      <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
+        <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
+        <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden z-10 pointer-events-none" />
         {/* Animated Squares Background */}
-        <div className="absolute w-full h-full z-30 pointer-events-auto">
-          <Squares
-            speed={0.3}
-            squareSize={20}
-            direction="diagonal"
-            borderColor="#ffffff15"
-            hoverFillColor="#00ff25"
-          />
-        </div>
-
+        {resolvedTheme === "dark" && (
+          <div className="absolute bg-black w-full h-full z-30 pointer-events-auto">
+            <Squares
+              speed={0.3}
+              squareSize={20}
+              direction="diagonal"
+              borderColor="#ffffff15"
+              hoverFillColor="#00ff25"
+            />
+          </div>
+        )}
+        <Image
+          src="/background.png"
+          alt="Hero Background"
+          width={1000}
+          height={1000}
+          className="absolute top-10 left-0 w-full h-[110vh] z-20 pointer-events-none"
+        />
         {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-accent/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden">
+          <div className="absolute top-0 left-1/4 ... bg-muted/10 ..."></div>
+          <div className="absolute bottom-0 right-1/4 ... bg-accent/10 ..."></div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-40 pointer-events-none">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-30 pointer-events-none">
           <div className="max-w-4xl mx-auto">
             {/* Badge */}
             <Badge
               variant="outline"
-              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
+              className="mb-3 sm:mb-4 border-black text-primary text-xs sm:text-sm px-3 py-1"
             >
               🚀 Open Source Project
             </Badge>
 
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
-              Help Build <span className="text-highlight">GitAura</span>
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-foreground">
+              Help Build <span className="text-primary">GitAura</span>
             </h1>
 
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
@@ -258,7 +273,7 @@ export default function ContributePage() {
               🔥 Multiple Ways to Help
             </Badge>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Ways to <span className="text-highlight">Contribute</span>
+              Ways to <span className="text-primary">Contribute</span>
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               From code warriors to documentation heroes - there's a place for
@@ -283,7 +298,10 @@ export default function ContributePage() {
                     <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
                       <type.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                    <Badge variant="secondary" className="text-xs shrink-0 px-2 py-1">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs shrink-0 px-2 py-1"
+                    >
                       {type.badge}
                     </Badge>
                   </div>
@@ -319,7 +337,7 @@ export default function ContributePage() {
               📋 Simple 4-Step Process
             </Badge>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              How to <span className="text-highlight">Contribute</span>
+              How to <span className="text-primary">Contribute</span>
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               From finding issues to merging PRs - here's your roadmap to
@@ -387,7 +405,9 @@ export default function ContributePage() {
                 {techStack.map((tech, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">{tech}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">
+                      {tech}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -402,7 +422,9 @@ export default function ContributePage() {
                 {guidelines.map((guideline, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent rounded-full mt-2 flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">{guideline}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">
+                      {guideline}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -428,7 +450,7 @@ export default function ContributePage() {
               👥 Community Heroes
             </Badge>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Meet Our <span className="text-highlight">Contributors</span>
+              Meet Our <span className="text-primary">Contributors</span>
             </h2>
             <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
               These amazing developers are building the future of GitHub
@@ -446,7 +468,7 @@ export default function ContributePage() {
           <div className="text-center">
             <Card className="card-hover p-6 sm:p-8 lg:p-12 max-w-4xl mx-auto border border-border bg-gradient-to-br from-muted/50 to-background">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-                Ready to <span className="text-highlight">Contribute</span>?
+                Ready to <span className="text-primary">Contribute</span>?
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
                 Join our community of contributors and help make GitAura the

@@ -5,7 +5,17 @@ const isProtectedRoute = createRouteMatcher([
   "/[username]/(.*)", // User profile pages and sub-pages
 ]);
 
+// Define routes that should be excluded from Clerk middleware (CRON endpoints)
+const isPublicRoute = createRouteMatcher([
+  "/api/cron/(.*)", // All CRON endpoints should bypass Clerk auth
+]);
+
 export default clerkMiddleware((auth, req) => {
+  // Skip Clerk auth for CRON endpoints
+  if (isPublicRoute(req)) {
+    return;
+  }
+
   // For protected routes, we'll handle authorization at the page level
   // This middleware ensures the user is tracked by Clerk
   if (isProtectedRoute(req)) {

@@ -35,6 +35,15 @@ export const FeaturesSection = () => {
       badge: "📊 Professional",
       gradient: "from-slate-800/5 to-zinc-900/10",
     },
+    {
+      icon: Target,
+      title: "Profile Compare (1v1 Battle)",
+      description:
+  "Battle a friend: enter two GitHub usernames and see who wins each stat.",
+      badge: "⚔️ New",
+      gradient: "from-gray-900/5 to-slate-800/10",
+      link: "/battle",
+    },
   ];
 
   return (
@@ -59,7 +68,7 @@ export const FeaturesSection = () => {
           </Badge>
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
             Features Overview{" "}
-            <span className="text-highlight">(The Good Stuff)</span>
+            <span className="text-primary">(The Good Stuff)</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
             Stop being a commit ghost and start building your developer street
@@ -69,42 +78,50 @@ export const FeaturesSection = () => {
 
         {/* Features Grid - Optimized for 4 features */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
-          {features.map((feature, index) => (
-            <Card
-              key={index}
-              className={`
-                group relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
-                border border-border bg-gradient-to-br ${feature.gradient}
-                hover:shadow-lg hover:shadow-primary/5
-                animate-in fade-in-50 slide-in-from-bottom-10
-              `}
-              style={{
-                animationDelay: `${index * 0.1}s`,
-              }}
-            >
-              {/* Background gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {features.map((feature, index) => {
+            const cardContent = (
+              <Card
+                key={index}
+                className={`
+                  group relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
+                  border border-border bg-gradient-to-br ${feature.gradient}
+                  hover:shadow-lg hover:shadow-primary/5
+                  animate-in fade-in-50 slide-in-from-bottom-10
+                `}
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                }}
+              >
+                {/* Background gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-              <div className="relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
-                    <feature.icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
+                      <feature.icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                    </div>
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {feature.badge}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {feature.badge}
-                  </Badge>
+
+                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm">
+                    {feature.description}
+                  </p>
                 </div>
-
-                <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
-                  {feature.title}
-                </h3>
-
-                <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm">
-                  {feature.description}
-                </p>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+            // If the feature has a link, wrap the card in an anchor
+            return feature.link ? (
+              <a href={feature.link} key={index} className="block focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl">
+                {cardContent}
+              </a>
+            ) : cardContent;
+          })}
         </div>
 
         {/* Bottom CTA */}

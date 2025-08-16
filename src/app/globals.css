@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -43,24 +44,33 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(1 0 0);            /* --- Pure White Background --- */
+  --foreground: oklch(0.12 0.01 240);    /* --- Nearly Black Text --- */
+
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.12 0.01 240);
+
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.12 0.01 240);
+
+  --primary: oklch(0.5 0.18 230);        /* --- A Clean, Strong Blue Accent --- */
+  --primary-foreground: oklch(1 0 0);    /* --- White text on blue buttons --- */
+
+  --secondary: oklch(0.96 0.01 240);      /* --- Light Gray for secondary elements --- */
+  --secondary-foreground: oklch(0.2 0 0);
+
+  --muted: oklch(0.96 0.01 240);
+  --muted-foreground: oklch(0.45 0 0);
+
+  --accent: oklch(0.96 0.01 240);
+  --accent-foreground: oklch(0.2 0 0);
+
+  --destructive: oklch(0.57 0.24 27);
+  --border: oklch(0.92 0.01 240);      /* --- A very light gray border --- */
+  --input: oklch(0.95 0.01 240);
+  --ring: oklch(0.55 0.18 230);          /* --- Blue focus ring --- */
+ /* Ring color matches primary */
+  /* ... keep the rest of your variables (chart, sidebar, etc.) */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -74,6 +84,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --contribution-level-0: oklch(0.96 0.01 240); /* Light Gray (like GitHub light theme) */
+  --contribution-level-1: oklch(0.85 0.1 140);  /* Pale Green */
+  --contribution-level-2: oklch(0.75 0.15 140);  /* Light Green */
+  --contribution-level-3: oklch(0.65 0.2 140);  /* Medium Green */
+  --contribution-level-4: oklch(0.55 0.25 140);  /* Dark Green */
 }
 
 .dark {
@@ -107,7 +122,12 @@
   --sidebar-accent: oklch(0.2 0 0);
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.25 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  --sidebar-ring: oklch(0.7 0 0);   /* The original subtle dark grid line */
+  --contribution-level-0: oklch(0.1 0 0);    /* Dark Gray (like GitHub dark theme) */
+  --contribution-level-1: oklch(0.2 0.05 140); /* Darkest Green */
+  --contribution-level-2: oklch(0.3 0.1 140);  /* Dark Green */
+  --contribution-level-3: oklch(0.4 0.15 140);  /* Medium Green */
+  --contribution-level-4: oklch(0.5 0.2 140);  /* Brightest Green */
 }
 
 @layer base {
@@ -124,9 +144,37 @@
   }
   
   body {
-    @apply bg-background text-foreground;
+  /* This will force the clean white background and remove the ugly gradient */
+    background-color: oklch(var(--background)) !important;
+    background-image: none !important; 
+    
+    @apply text-foreground;
     font-family: var(--font-mona), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
+
+.dark body {
+    /* This ensures the dark theme is also clean */
+    background-color: oklch(var(--background)) !important;
+    background-image: none !important;
+  }
+  /* Style for Light Mode */
+.cl-formButtonPrimary {
+  background-color: oklch(var(--primary)) !important;
+  color: oklch(var(--primary-foreground)) !important;
+  opacity: 1 !important;
+  border: 1px solid oklch(var(--border)) !important; 
+}
+
+/* Make it slightly dimmer on hover */
+.cl-formButtonPrimary:hover {
+  opacity: 0.9 !important;
+}
+
+/* Style for Dark Mode (uses the same variables, which are theme-aware) */
+.dark .cl-formButtonPrimary {
+  background-color: oklch(var(--primary)) !important;
+  color: oklch(var(--primary-foreground)) !important;
+}
   
   /* Custom dark theme utilities */
   .text-highlight {
