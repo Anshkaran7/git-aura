@@ -8,6 +8,8 @@ import { Input } from "./ui/input";
 import type { GitHubProfile } from "./types";
 import { motion, AnimatePresence } from "framer-motion";
 import { toPng } from "html-to-image";
+import { useToast } from "../hooks/useToast";
+import { ToastContainer } from "./Toast";
 
 type MetricResult = {
   key: string;
@@ -15,6 +17,7 @@ type MetricResult = {
   value1: number | string;
   value2: number | string;
   winner: "user1" | "user2" | null;
+  description?: string;
 };
 
 type BattleResult = {
@@ -22,6 +25,12 @@ type BattleResult = {
   user2: GitHubProfile;
   results: MetricResult[];
   winner: "user1" | "user2" | null;
+  metrics?: {
+    user1Wins: number;
+    user2Wins: number;
+    totalMetrics: number;
+    note?: string;
+  };
 };
 
 export default function BattlePage() {
@@ -31,14 +40,57 @@ export default function BattlePage() {
   const [loading, setLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const battleRef = useRef<HTMLDivElement>(null);
+  const { toasts, addToast, removeToast } = useToast();
 
   const handleBattle = async () => {
+    if (!user1.trim() || !user2.trim()) {
+      addToast("error", "Invalid Input", "Please enter both usernames");
+      return;
+    }
+
     setLoading(true);
     setResult(null);
-    const res = await fetch(`/api/battle?user1=${user1}&user2=${user2}`);
-    const data = await res.json();
-    setResult(data);
-    setLoading(false);
+
+    try {
+      const res = await fetch(
+        `/api/battle?user1=${user1.trim()}&user2=${user2.trim()}`
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          addToast(
+            "error",
+            "User Not Found",
+            data.error || "One or both usernames do not exist on GitHub"
+          );
+        } else {
+          addToast(
+            "error",
+            "Battle Failed",
+            data.error || "Failed to compare profiles. Please try again."
+          );
+        }
+        setLoading(false);
+        return;
+      }
+
+      setResult(data);
+      addToast(
+        "success",
+        "Battle Complete!",
+        `Successfully compared ${user1} vs ${user2}`
+      );
+    } catch (error) {
+      console.error("Battle error:", error);
+      addToast(
+        "error",
+        "Battle Failed",
+        "An unexpected error occurred. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShareResult = async () => {
@@ -46,50 +98,20 @@ export default function BattlePage() {
 
     try {
       setIsGenerating(true);
-
-      // Generate image from the battle result
       const dataUrl = await toPng(battleRef.current, {
         cacheBust: true,
         backgroundColor: "#000000",
         pixelRatio: 2,
         skipFonts: false,
       });
-
-      // Convert data URL to blob
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-
-      // Upload image
-      const formData = new FormData();
-      formData.append("image", blob);
-      formData.append(
-        "name",
-        `battle-${result.user1.login}-vs-${result.user2.login}`
-      );
-
-      const uploadResponse = await fetch("/api/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (uploadResponse.ok) {
-        const uploadData = await uploadResponse.json();
-        const imageUrl = uploadData.url;
-
-        // Create share URL with image
-        const shareUrl = `${window.location.origin}/battle?user1=${
-          result.user1.login
-        }&user2=${result.user2.login}&og_image=${encodeURIComponent(imageUrl)}`;
-
-        // Copy to clipboard
-        await navigator.clipboard.writeText(shareUrl);
-
-        // Show success message (you can use toast here)
-        alert("Battle result link copied to clipboard!");
-      }
-    } catch (error) {
-      console.error("Error sharing result:", error);
-      alert("Failed to share result. Please try again.");
+      const link = document.createElement("a");
+      link.download = `github-battle-result.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Failed to export battle image:", err);
     } finally {
       setIsGenerating(false);
     }
@@ -97,14 +119,18 @@ export default function BattlePage() {
 
   return (
     <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
       {/* Page Header */}
       <div className="mb-8 sm:mb-12 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
           GitHub 1v1 Battle
         </h1>
         <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
-          Enter two GitHub usernames and see a head‑to‑head breakdown. We
-          highlight the winner per metric and overall — no login required.
+          Enter two GitHub usernames and see a comprehensive head‑to‑head
+          breakdown. We compare 8 metrics including contributions, stars,
+          repositories, and more!
         </p>
       </div>
 
@@ -136,7 +162,7 @@ export default function BattlePage() {
         />
         <Button
           onClick={handleBattle}
-          disabled={!user1 || !user2 || loading}
+          disabled={!user1.trim() || !user2.trim() || loading}
           className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white"
         >
           {loading ? "Comparing..." : "Compare"}
@@ -149,28 +175,28 @@ export default function BattlePage() {
           <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-3">
             {[
               {
-                title: "Metrics Compared",
-                body: "Repos, followers, following, gists, total stars*, account age & aura (if present).",
+                title: "Enhanced Metrics",
+                body: "8 metrics: Aura, Contributions, Repos, Stars, Gists, Followers & more!",
               },
               {
-                title: "Tie Handling",
-                body: "Equal values count as a draw for that metric — no points awarded.",
+                title: "Smart Comparison",
+                body: "We analyze contributions, repository quality, and community engagement for fair battles.",
               },
               {
-                title: "Stars Note *",
-                body: "Stars are summed from public non‑fork repos (approximate on first load).",
+                title: "Real-time Data",
+                body: "Fresh data from GitHub API including recent contributions and repository statistics.",
               },
               {
                 title: "Rate Limits",
-                body: "Unauthenticated requests: 60/hour per IP. Add a GITHUB_TOKEN for higher limits.",
+                body: "Unauthenticated: 60/hour per IP. Add GITHUB_TOKEN for higher limits & detailed data.",
               },
               {
                 title: "Fair Play",
-                body: "Recently renamed or empty accounts may appear weaker — activity history matters.",
+                body: "We consider repository quality, contribution consistency, and community impact.",
               },
               {
                 title: "Pro Tip",
-                body: "Consistent contributions + diverse repos often beats raw repo count.",
+                body: "Active contributions + quality repos often beats raw numbers. Consistency matters!",
               },
             ].map((f) => (
               <div
@@ -187,8 +213,8 @@ export default function BattlePage() {
             ))}
           </div>
           <p className="mt-6 text-[11px] md:text-xs text-gray-500 text-center">
-            Data is fetched live from the GitHub REST API. Cached briefly in
-            memory for performance.
+            Data is fetched live from GitHub REST & GraphQL APIs. Enhanced
+            metrics require GitHub token.
           </p>
         </div>
       )}
@@ -267,7 +293,9 @@ export default function BattlePage() {
                             {overall === "user1"
                               ? result.user1.login
                               : result.user2.login}
-                          </span>
+                          </span>{" "}
+                          ({result.metrics?.user1Wins || 0} -{" "}
+                          {result.metrics?.user2Wins || 0})
                         </p>
                       )}
                       {user1Wins.length > 0 && (
@@ -297,9 +325,18 @@ export default function BattlePage() {
                         </p>
                       )}
                       <p className="text-xs text-gray-500">
-                        Older account age wins that metric; aura is a composite
-                        bonus from repos, followers & bio.
+                        We compare {result.metrics?.totalMetrics || 0} metrics
+                        including contributions, repository quality, and
+                        community engagement. Aura is a composite score based on
+                        activity patterns and consistency.
                       </p>
+                      {result.metrics?.note && (
+                        <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+                          <p className="text-xs text-blue-300">
+                            ℹ️ {result.metrics.note}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
