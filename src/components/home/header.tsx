@@ -9,18 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
 
-// Navigation items configuration
-const NAV_ITEMS = {
-  home: [
-    { href: "#features", label: "Features" },
-    { href: "#how-it-works", label: "How It Works" },
-  ],
-  main: [
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/monthly-winners", label: "Monthly Winners" },
-    { href: "/contribute", label: "Contribute" },
-  ],
-};
+// Navigation items configuration - now unified for consistency across all pages
 
 export const Header = ({
   leaderboard = false,
@@ -54,9 +43,11 @@ export const Header = ({
     return "/leaderboard";
   }, [isSignedIn, githubAccount?.username]);
 
-  // Memoize main navigation items
-  const mainNavItems = useMemo(
+  // Memoize all navigation items (always show all 6 items)
+  const allNavItems = useMemo(
     () => [
+      { href: "/#features", label: "Features" },
+      { href: "/#how-it-works", label: "How It Works" },
       { href: leaderboardUrl, label: "Leaderboard" },
       { href: "/monthly-winners", label: "Monthly Winners" },
       { href: "/battle", label: "Profile Compare" },
@@ -190,22 +181,39 @@ export const Header = ({
     }`;
   }, [isScrolled]);
 
-  // Render navigation items
+  // Helper function to check if a link is active
+  const isActiveLink = useCallback((href: string) => {
+    if (href.startsWith('/#')) {
+      // For homepage sections, only active when on homepage
+      return pathname === "/" && window.location.hash === href.slice(1);
+    }
+    // For other pages, exact match or starts with the path
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
+  }, [pathname]);
+
+  // Render navigation items with active state styling
   const renderNavItems = useCallback(
     (items: Array<{ href: string; label: string }>, isMobile = false) => {
-      return items.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          className={`text-sm text-muted-foreground hover:text-primary transition-colors ${
-            isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
-          }`}
-        >
-          {label}
-        </Link>
-      ));
+      return items.map(({ href, label }) => {
+        const isActive = isActiveLink(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`text-sm transition-colors ${
+              isActive 
+                ? "text-primary font-semibold" 
+                : "text-muted-foreground hover:text-primary"
+            } ${
+              isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
+            }`}
+          >
+            {label}
+          </Link>
+        );
+      });
     },
-    []
+    [isActiveLink]
   );
 
   return (
@@ -234,8 +242,7 @@ export const Header = ({
 
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center gap-6 lg:gap-8">
-            {pathname === "/" && renderNavItems(NAV_ITEMS.home)}
-            {renderNavItems(mainNavItems)}
+            {renderNavItems(allNavItems)}
           </nav>
 
           {/* CTA Buttons */}
@@ -328,8 +335,7 @@ export const Header = ({
         {isMobileMenuOpen && (
           <div className="xl:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {pathname === "/" && renderNavItems(NAV_ITEMS.home, true)}
-              {renderNavItems(mainNavItems, true)}
+              {renderNavItems(allNavItems, true)}
               {isSignedIn && (
                 <>
                   {/* Admin Button in mobile menu */}
