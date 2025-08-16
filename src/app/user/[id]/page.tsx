@@ -29,6 +29,14 @@ function UserPage() {
   const [contributions, setContributions] = useState<GitHubContributions>({
     totalContributions: 0,
     contributionDays: [],
+    totalIssues: 0,
+    totalPullRequests: 0,
+    totalRepositories: 0,
+    totalGists: 0,
+    totalFollowers: 0,
+    totalFollowing: 0,
+    accountAge: 0,
+    totalStars: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,9 +103,10 @@ function UserPage() {
       const currentUserGithubUsername = user?.externalAccounts?.find(
         (account) => account.provider === "github"
       )?.username;
-      
-      const isViewingOwnProfile = isSignedIn && 
-        currentUserGithubUsername && 
+
+      const isViewingOwnProfile =
+        isSignedIn &&
+        currentUserGithubUsername &&
         currentUserGithubUsername.toLowerCase() === username.toLowerCase();
 
       // Fetch user profile and contributions
@@ -105,7 +114,7 @@ function UserPage() {
         `/api/github/profile/${username}`,
         window.location.origin
       );
-      
+
       // Only send userId parameter when viewing your own profile
       if (isViewingOwnProfile && user?.id) {
         url.searchParams.set("userId", user.id);
@@ -148,7 +157,18 @@ function UserPage() {
           : errorMessage
       );
       setProfile(null);
-      setContributions({ totalContributions: 0, contributionDays: [] });
+      setContributions({
+        totalContributions: 0,
+        contributionDays: [],
+        totalIssues: 0,
+        totalPullRequests: 0,
+        totalRepositories: 0,
+        totalGists: 0,
+        totalFollowers: 0,
+        totalFollowing: 0,
+        accountAge: 0,
+        totalStars: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -270,11 +290,6 @@ function UserPage() {
       setIsGenerating(false);
     }
   };
-
-
-
-
-
 
   // Show loading while checking Clerk auth status or user registration
   if (!isLoaded || checkingRegistration) {
