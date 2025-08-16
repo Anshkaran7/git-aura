@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import Squares from "@/components/ui/Squares";
 import Contributors from "@/components/Contributors";
+import Image from "next/image";
 
 // export const metadata: Metadata = {
 //   title: "Contribute to GitAura | Help Build the Future of GitHub Analytics",
@@ -161,22 +162,30 @@ export default function ContributePage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[100vh] sm:min-h-[90vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
+      <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
         <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
         <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden z-10 pointer-events-none" />
         {/* Animated Squares Background */}
-        <div className="absolute w-full h-full z-10 pointer-events-auto">
-          <Squares
-            speed={0.3}
-            squareSize={20}
-            direction="diagonal"
-            borderColor={resolvedTheme === 'dark' ? '#ffffff15' : '#a0b0c0'}
-            hoverFillColor='#00ff25' 
-          />
-        </div>
-
+        {resolvedTheme === "dark" && (
+          <div className="absolute bg-black w-full h-full z-30 pointer-events-auto">
+            <Squares
+              speed={0.3}
+              squareSize={20}
+              direction="diagonal"
+              borderColor="#ffffff15"
+              hoverFillColor="#00ff25"
+            />
+          </div>
+        )}
+        <Image
+          src="/background.png"
+          alt="Hero Background"
+          width={1000}
+          height={1000}
+          className="absolute top-10 left-0 w-full h-[110vh] z-20 pointer-events-none"
+        />
         {/* Background Effects */}
-        <div className="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden" >
+        <div className="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden">
           <div className="absolute top-0 left-1/4 ... bg-muted/10 ..."></div>
           <div className="absolute bottom-0 right-1/4 ... bg-accent/10 ..."></div>
         </div>
@@ -289,7 +298,10 @@ export default function ContributePage() {
                     <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
                       <type.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                    <Badge variant="secondary" className="text-xs shrink-0 px-2 py-1">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs shrink-0 px-2 py-1"
+                    >
                       {type.badge}
                     </Badge>
                   </div>
@@ -393,7 +405,9 @@ export default function ContributePage() {
                 {techStack.map((tech, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">{tech}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">
+                      {tech}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -408,7 +422,9 @@ export default function ContributePage() {
                 {guidelines.map((guideline, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent rounded-full mt-2 flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">{guideline}</span>
+                    <span className="text-muted-foreground text-sm sm:text-base">
+                      {guideline}
+                    </span>
                   </div>
                 ))}
               </div>

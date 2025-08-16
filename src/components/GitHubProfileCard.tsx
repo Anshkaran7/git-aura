@@ -369,8 +369,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         className={`relative w-[320px] md:w-[340px] rounded-xl border ${
           highlight
             ? "border-yellow-400 shadow-[0_0_0_1px_rgba(250,204,21,0.4)]"
-            : "border-gray-800"
-        } bg-gradient-to-b from-[#1d232c] to-[#161b21] p-5 flex flex-col gap-4`}
+            : "border-border"
+        } bg-gradient-to-b from-card to-card/80 p-5 flex flex-col gap-4`}
       >
         {/* Winner badge */}
         {highlight && (
@@ -383,23 +383,23 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           <img
             src={directProfile.avatar_url}
             alt={directProfile.login}
-            className="w-16 h-16 rounded-full border border-gray-700 object-cover"
+            className="w-16 h-16 rounded-full border border-border object-cover"
           />
           <div className="flex flex-col min-w-0">
             <h2 className="text-base font-semibold text-foreground truncate">
               {directProfile.name || directProfile.login}
             </h2>
-            <p className="text-xs text-gray-400 truncate">
+            <p className="text-xs text-muted-foreground truncate">
               @{directProfile.login}
             </p>
-            <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-gray-400">
-              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">
+            <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
                 {directProfile.public_repos} repos
               </span>
-              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">
+              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
                 {directProfile.followers} followers
               </span>
-              <span className="px-1.5 py-0.5 bg-gray-800/60 rounded border border-gray-700">
+              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
                 {directProfile.following} following
               </span>
             </div>
@@ -407,18 +407,18 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         </div>
         {/* Bio */}
         {directProfile.bio && (
-          <p className="text-[11px] leading-relaxed text-gray-300 line-clamp-4">
+          <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-4">
             {directProfile.bio}
           </p>
         )}
         {/* Meta */}
         <div className="grid grid-cols-2 gap-3 text-[11px]">
-          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
-            <span className="text-gray-400">Joined</span>
+          <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
+            <span className="text-muted-foreground">Joined</span>
             <span className="text-foreground font-medium">{joinedYear}</span>
           </div>
-          <div className="flex flex-col gap-1 bg-gray-800/30 rounded-lg p-2 border border-gray-700/60">
-            <span className="text-gray-400">Age</span>
+          <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
+            <span className="text-muted-foreground">Age</span>
             <span className="text-foreground font-medium">
               {accountAgeYears} yrs
             </span>
