@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Users, UserPlus, Coffee, X, Linkedin, Download } from "lucide-react";
+import { Users, UserPlus, Coffee, Twitter, Linkedin, Download } from "lucide-react";
 import { Theme, GitHubProfile, GitHubContributions } from "./types";
 import ContributionGrid from "./ContributionGrid";
 import MontlyContribution from "./MontlyContribution";
@@ -61,29 +61,22 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-          <button
-            onClick={handleShareTwitter}
-
-            disabled={isGenerating}
-            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-              isGenerating
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-[#000000] hover:bg-[#181818] active:bg-[#272727]"
-            }`}
-            title={isGenerating ? "Generating image..." : "Share on Twitter"}
-          >
-            {isGenerating ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <Image
-                alt="X logo"
-                width={0}
-                height={0}
-                src="/twitter.png"
-                className="w-4 h-4"
-              />
-            )}
-          </button>
+                      <button
+              onClick={handleShareTwitter}
+              disabled={isGenerating}
+              className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+                isGenerating
+                  ? "bg-gray-600 cursor-not-allowed opacity-50"
+                  : "bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc]"
+              }`}
+              title={isGenerating ? "Generating image..." : "Share on Twitter"}
+            >
+              {isGenerating ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Twitter className="w-4 h-4" />
+              )}
+            </button>
           <button
             onClick={handleShareLinkedin}
 
@@ -100,10 +93,30 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             ) : (
               <Linkedin className="w-4 h-4" />
             )}
-          </button>
+                      </button>
 
+            {/* Format selector */}
+            {setDownloadFormat && (
+              <div className="relative">
+                <select
+                  value={downloadFormat}
+                  onChange={e => setDownloadFormat(e.target.value)}
+                  className="bg-gray-800 text-white px-2 py-1.5 sm:px-2 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500 text-xs sm:text-sm hover:bg-gray-700 transition-colors relative z-50 font-medium appearance-none pr-6"
+                  style={{ minWidth: 50, position: 'relative' }}
+                  title={`Current format: ${downloadFormat?.toUpperCase()}`}
+                >
+                  <option value="png">PNG</option>
+                  <option value="jpg">JPG</option>
+                </select>
+                <div className="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            )}
 
-          <button
+            <button
             onClick={handleDownload}
             disabled={isGenerating}
             className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
@@ -111,7 +124,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 ? "bg-gray-600 cursor-not-allowed opacity-50"
                 : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
             }`}
-            title={isGenerating ? "Generating image..." : "Download as Image"}
+            title={isGenerating ? "Generating image..." : `Download as ${downloadFormat ? downloadFormat.toUpperCase() : 'Image'}`}
           >
             {isGenerating ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { toPng } from "html-to-image";
+import { toPng, toJpeg } from "html-to-image";
 import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
@@ -61,9 +61,10 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [userAura, setUserAura] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<string>('png');
   const profileRef = useRef<HTMLDivElement>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     if (directProfile) {
@@ -259,25 +260,52 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  const handleExportImage = async () => {
+  const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
-      const dataUrl = await toPng(profileRef.current, {
-        cacheBust: true,
-        backgroundColor: undefined,
-        pixelRatio: 2,
-        skipFonts: false,
-      });
+      let dataUrl: string;
+      
+      if (format === 'jpg') {
+        dataUrl = await toJpeg(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+          quality: 0.95,
+        });
+      } else {
+        dataUrl = await toPng(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+        });
+      }
+      
+      const githubHandle = searchedUsername || 'profile';
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `${githubHandle}-profile-${date}.${format}`;
       const link = document.createElement("a");
-      link.download = `${searchedUsername}-github-profile.png`;
+      link.download = filename;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      if (typeof window !== 'undefined' && 'toast' in window) {
+        (window as any).toast.success('Image downloaded!');
+      } else {
+        alert('Image downloaded!');
+      }
     } catch (err) {
       console.error("Failed to export image:", err);
+      if (typeof window !== 'undefined' && 'toast' in window) {
+        (window as any).toast.error('Failed to download image. Check browser settings.');
+      } else {
+        alert('Failed to download image. Check browser settings.');
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -455,10 +483,12 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
                   contributions={contributions}
                   selectedTheme={selectedTheme}
                   profileRef={profileRef}
-                  handleShareTwitter={openShareModal}
-                  handleShareLinkedin={openShareModal}
-                  handleDownload={handleExportImage}
+                  handleShareTwitter={() => handleShare("twitter")}
+                  handleShareLinkedin={() => handleShare("linkedin")}
+                  handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
                   isGenerating={isGenerating}
+                  downloadFormat={downloadFormat}
+                  setDownloadFormat={setDownloadFormat}
                 />
                 <MontlyContribution
                   selectedTheme={selectedTheme}
