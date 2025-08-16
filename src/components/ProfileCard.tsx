@@ -21,6 +21,8 @@ interface ProfileCardProps {
   handleShareLinkedin: () => void;
   handleDownload: () => void;
   isGenerating?: boolean;
+  downloadFormat?: string;
+  setDownloadFormat?: (format: string) => void;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -32,6 +34,8 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   handleShareLinkedin,
   handleDownload,
   isGenerating = false,
+  downloadFormat,
+  setDownloadFormat,
 }) => {
   return (
     <div
@@ -62,7 +66,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </a>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
           <button
             onClick={handleShareTwitter}
             className="p-1.5 sm:p-2 rounded-md bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] transition-colors text-white"
@@ -77,14 +81,29 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           >
             <Linkedin className="w-4 h-4" />
           </button>
+          <div className="flex items-center gap-1">
+            {setDownloadFormat && (
+              <select
+                value={downloadFormat}
+                onChange={e => setDownloadFormat(e.target.value)}
+                className="bg-gray-800 text-white px-0.5 py-1 rounded border border-gray-700 focus:outline-none"
+                style={{ minWidth: 60 }}
+                title="Select image format"
+              >
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+              </select>
+            )}
             <button
               onClick={handleDownload}
               className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white"
-              title="Download as Image"
+              title={`Download as ${downloadFormat ? downloadFormat.toUpperCase() : 'Image'}`}
+              style={{height: 28, display: 'flex', alignItems: 'center'}}
             >
               <Download className="w-4 h-4" />
             </button>
           </div>
+        </div>
 
       </div>
 

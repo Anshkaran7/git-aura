@@ -394,42 +394,22 @@ function UserPage() {
             </div>
           ) : profile ? (
             <div className="space-y-8 max-w-6xl mx-auto">
-              {/* Format selection and download */}
-              <div className="flex items-center gap-2 mb-2">
-                <label htmlFor="download-format" className="text-sm text-gray-300">Format:</label>
-                <select
-                  id="download-format"
-                  className="bg-gray-800 text-white rounded px-2 py-1 border border-gray-700"
-                  value={downloadFormat}
-                  onChange={e => setDownloadFormat(e.target.value as 'png' | 'jpg')}
-                  disabled={isGenerating}
-                >
-                  <option value="png">PNG</option>
-                  <option value="jpg">JPG</option>
-                </select>
-                <button
-                  onClick={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
-                  className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-white"
-                  disabled={isGenerating}
-                  title="Download as Image"
-                >
-                  Download
-                </button>
-              </div>
-  <ProfileCard
-    profile={profile}
-    contributions={contributions}
-    selectedTheme={selectedTheme}
-    profileRef={profileRef}
-    handleShareTwitter={() => handleShare("twitter")}
-    handleShareLinkedin={() => handleShare("linkedin")}
-    handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
-    isGenerating={isGenerating}
-  />
-  <MontlyContribution
-    selectedTheme={selectedTheme}
-    contributions={contributions}
-  />
+              <ProfileCard
+                profile={profile}
+                contributions={contributions}
+                selectedTheme={selectedTheme}
+                profileRef={profileRef}
+                handleShareTwitter={() => handleShare("twitter")}
+                handleShareLinkedin={() => handleShare("linkedin")}
+                handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
+                isGenerating={isGenerating}
+                downloadFormat={downloadFormat}
+                setDownloadFormat={setDownloadFormat}
+              />
+              <MontlyContribution
+                selectedTheme={selectedTheme}
+                contributions={contributions}
+              />
             </div>
           ) : (
             !error && (
