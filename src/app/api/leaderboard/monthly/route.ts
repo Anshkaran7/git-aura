@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const monthYear = searchParams.get("monthYear");
-    const userId = searchParams.get("userId");
+    const username = searchParams.get("username");
 
     if (!monthYear) {
       return NextResponse.json(
@@ -54,6 +54,13 @@ export async function GET(request: NextRequest) {
         createdAt: {
           lte: monthEnd, // User must have joined before or during this month
         },
+        // If username is provided, filter by it
+        ...(username && {
+          githubUsername: {
+            equals: username,
+            mode: "insensitive",
+          },
+        }),
       },
       select: {
         id: true,
@@ -79,6 +86,13 @@ export async function GET(request: NextRequest) {
         monthYear: monthYear,
         user: {
           isBanned: false,
+          // If username is provided, filter by it
+          ...(username && {
+            githubUsername: {
+              equals: username,
+              mode: "insensitive",
+            },
+          }),
         },
       },
       include: {
@@ -107,6 +121,7 @@ export async function GET(request: NextRequest) {
           github_username: user.githubUsername || "",
           avatar_url:
             user.avatarUrl || `https://github.com/${user.githubUsername}.png`,
+          total_aura: monthlyEntry?.totalAura || 0, // Add missing total_aura field
           current_streak: user.currentStreak || 0,
         },
         aura: monthlyEntry?.totalAura || 0,
@@ -142,9 +157,9 @@ export async function GET(request: NextRequest) {
 
     // Find user's rank if userId is provided
     let userRank = null;
-    if (userId) {
+    if (username) {
       const userIndex = sortedData.findIndex(
-        (entry) => entry.user.id === userId
+        (entry) => entry.user.github_username === username
       );
       userRank = userIndex !== -1 ? userIndex + 1 : null;
     }
