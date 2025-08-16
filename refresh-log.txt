@@ -1,0 +1,21 @@
+Starting full user refresh...
+Error in full refresh: PrismaClientInitializationError: 
+Invalid `prisma.user.findMany()` invocation in
+/Users/karan/Developer/Codehub/Personal/git-aura/scripts/refresh-all-users-manual.js:14:37
+
+  11 console.log('Starting full user refresh...');
+  12 
+  13 // Get all users
+→ 14 const users = await prisma.user.findMany(
+Can't reach database server at `ep-polished-bar-adezczbv-pooler.c-2.us-east-1.aws.neon.tech:5432`
+
+Please make sure your database server is running at `ep-polished-bar-adezczbv-pooler.c-2.us-east-1.aws.neon.tech:5432`.
+    at ri.handleRequestError (/Users/karan/Developer/Codehub/Personal/git-aura/node_modules/@prisma/client/runtime/library.js:121:7759)
+    at ri.handleAndLogRequestError (/Users/karan/Developer/Codehub/Personal/git-aura/node_modules/@prisma/client/runtime/library.js:121:6784)
+    at ri.request (/Users/karan/Developer/Codehub/Personal/git-aura/node_modules/@prisma/client/runtime/library.js:121:6491)
+    at async l (/Users/karan/Developer/Codehub/Personal/git-aura/node_modules/@prisma/client/runtime/library.js:130:9812)
+    at async refreshAllUsers (/Users/karan/Developer/Codehub/Personal/git-aura/scripts/refresh-all-users-manual.js:14:19) {
+  clientVersion: '6.12.0',
+  errorCode: undefined,
+  retryable: undefined
+}

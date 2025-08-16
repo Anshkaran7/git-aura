@@ -63,13 +63,13 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       if (view === "monthly") {
         const params = new URLSearchParams({
           monthYear: currentMonth,
-          ...(username && { username }),
+          // Don't filter by username - we want to see all users in the leaderboard
+          // The username is only used for highlighting the specific user
         });
         apiUrl = `/api/leaderboard/monthly?${params}`;
       } else {
-        // For alltime view, don't pass username if it's empty
-        const params = username ? `?username=${username}` : "";
-        apiUrl = `/api/leaderboard/alltime${params}`;
+        // For alltime view, don't pass username filter - show all users
+        apiUrl = `/api/leaderboard/alltime`;
       }
 
       response = await fetch(apiUrl);
