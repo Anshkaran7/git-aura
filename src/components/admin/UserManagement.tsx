@@ -216,10 +216,10 @@ export default function UserManagement() {
             <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-3">
           User Management
         </h1>
-        <p className="text-[#7d8590] text-sm sm:text-base">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Search and manage user accounts with advanced controls
         </p>
       </div> */}
@@ -228,7 +228,7 @@ export default function UserManagement() {
       <Card className="p-4 sm:p-6 bg-gray-900/50 border border-gray-800/50 backdrop-blur-sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-2 sm:mb-3">
+            <label className="block text-sm font-medium text-foreground mb-2 sm:mb-3">
               Search User
             </label>
             <div className="relative" ref={dropdownRef}>
@@ -240,7 +240,7 @@ export default function UserManagement() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Type to search users... (GitHub username, name, or email)"
-                    className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white placeholder-gray-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200 pr-10"
+                    className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200 pr-10"
                     onKeyPress={(e) => e.key === "Enter" && searchUser()}
                     onFocus={() => {
                       if (searchTerm.length >= 2 && !userInfo) {
@@ -260,7 +260,7 @@ export default function UserManagement() {
                 <Button
                   onClick={() => searchUser()}
                   disabled={loading || !searchTerm.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-foreground font-medium px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export default function UserManagement() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-white font-medium truncate">
+                          <span className="text-foreground font-medium truncate">
                             @
                             {user.githubUsername ||
                               user.displayName ||
@@ -365,7 +365,7 @@ export default function UserManagement() {
             </div>
             <div className="flex-1 space-y-3 sm:space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <h3 className="text-xl sm:text-2xl font-bold text-white">
+                <h3 className="text-xl sm:text-2xl font-bold text-foreground">
                   {userInfo.displayName ||
                     userInfo.githubUsername ||
                     "Unknown User"}
@@ -396,7 +396,7 @@ export default function UserManagement() {
                   <p className="text-gray-400 mb-1">
                     <strong>GitHub:</strong>
                   </p>
-                  <p className="text-white font-medium">
+                  <p className="text-foreground font-medium">
                     @{userInfo.githubUsername || "Not connected"}
                   </p>
                 </div>
@@ -404,13 +404,13 @@ export default function UserManagement() {
                   <p className="text-gray-400 mb-1">
                     <strong>Email:</strong>
                   </p>
-                  <p className="text-white font-medium">{userInfo.email}</p>
+                  <p className="text-foreground font-medium">{userInfo.email}</p>
                 </div>
                 <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
                   <p className="text-gray-400 mb-1">
                     <strong>User ID:</strong>
                   </p>
-                  <p className="text-white font-mono text-xs sm:text-sm break-all">
+                  <p className="text-foreground font-mono text-xs sm:text-sm break-all">
                     {userInfo.id}
                   </p>
                 </div>
@@ -418,7 +418,7 @@ export default function UserManagement() {
                   <p className="text-gray-400 mb-1">
                     <strong>Joined:</strong>
                   </p>
-                  <p className="text-white font-medium">
+                  <p className="text-foreground font-medium">
                     {formatDate(userInfo.createdAt)}
                   </p>
                 </div>
@@ -490,7 +490,7 @@ export default function UserManagement() {
                   <div className="p-2 bg-green-500/20 rounded-full">
                     <CheckCircle className="w-5 h-5 text-green-400" />
                   </div>
-                  <h4 className="font-semibold text-white text-lg">
+                  <h4 className="font-semibold text-foreground text-lg">
                     Unban User
                   </h4>
                 </div>
@@ -500,7 +500,7 @@ export default function UserManagement() {
                 <Button
                   onClick={() => handleBanAction({ action: "unban" })}
                   disabled={actionLoading}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? (
                     <div className="flex items-center gap-2">
@@ -518,7 +518,7 @@ export default function UserManagement() {
                   <div className="p-2 bg-red-500/20 rounded-full">
                     <Ban className="w-5 h-5 text-red-400" />
                   </div>
-                  <h4 className="font-semibold text-white text-lg">Ban User</h4>
+                  <h4 className="font-semibold text-foreground text-lg">Ban User</h4>
                 </div>
                 <p className="text-gray-400 text-sm">
                   Restrict user access to the platform. You can set a temporary
@@ -526,7 +526,7 @@ export default function UserManagement() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Ban Reason
                     </label>
                     <input
@@ -534,11 +534,11 @@ export default function UserManagement() {
                       value={banReason}
                       onChange={(e) => setBanReason(e.target.value)}
                       placeholder="Enter ban reason"
-                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
+                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-white mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Duration (hours, leave empty for permanent)
                     </label>
                     <input
@@ -550,7 +550,7 @@ export default function UserManagement() {
                         )
                       }
                       placeholder="Optional: hours until unban"
-                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-white placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
+                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
                       min="1"
                     />
                   </div>
@@ -565,7 +565,7 @@ export default function UserManagement() {
                       })
                     }
                     disabled={actionLoading || !banReason.trim()}
-                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {actionLoading ? (
                       <div className="flex items-center gap-2">

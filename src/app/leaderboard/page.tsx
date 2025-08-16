@@ -17,12 +17,12 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // ... (no changes needed in this useEffect hook) ...
     const checkBanStatus = async () => {
       if (!userId) {
         setLoading(false);
         return;
       }
-
       try {
         const response = await fetch(`/api/check-ban-status?userId=${userId}`);
         if (response.ok) {
@@ -41,13 +41,13 @@ export default function LeaderboardPage() {
         setLoading(false);
       }
     };
-
     checkBanStatus();
   }, [userId]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      // CHANGED: bg-black -> bg-background
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={true} />
         <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
           <LoadingState />
@@ -58,14 +58,15 @@ export default function LeaderboardPage() {
 
   if (banStatus?.isBanned) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      // CHANGED: bg-black -> bg-background
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={true} />
         <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
           <div className="text-center max-w-2xl mx-auto">
             <div className="mb-8">
               <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
-                  className="w-10 h-10 text-red-400"
+                  className="w-10 h-10 text-red-400" // Specific error color is fine
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -78,14 +79,17 @@ export default function LeaderboardPage() {
                   />
                 </svg>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              {/* CHANGED: text-white -> text-foreground */}
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 Access Restricted
               </h1>
-              <p className="text-lg text-[#7d8590] mb-6">
+              {/* CHANGED: text-[#7d8590] -> text-muted-foreground */}
+              <p className="text-lg text-muted-foreground mb-6">
                 Your account has been suspended from accessing the leaderboard.
               </p>
             </div>
-
+            
+            {/* The rest of the ban-specific UI uses specific colors which is okay for an error state. */}
             <div className="bg-gradient-to-r from-red-950/40 to-orange-950/20 border border-red-500/30 rounded-lg p-6 sm:p-8 backdrop-blur-sm">
               <div className="space-y-4">
                 {banStatus.reason && (
@@ -124,14 +128,17 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black transition-colors duration-300">
+    // CHANGED: bg-black -> bg-background
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Header leaderboard={false} dashboard={true} />
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          {/* CHANGED: text-white -> text-foreground */}
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             🏆 Global Leaderboard
           </h1>
-          <p className="text-sm sm:text-base text-[#7d8590]">
+          {/* CHANGED: text-[#7d8590] -> text-muted-foreground */}
+          <p className="text-sm sm:text-base text-muted-foreground">
             Compete with developers worldwide and see your ranking
           </p>
         </div>
