@@ -55,30 +55,30 @@ const Toast: React.FC<ToastProps> = ({
   const getBorderColor = () => {
     switch (type) {
       case "success":
-        return "border-green-500/20";
+        return "border-green-500/30 dark:border-green-500/20";
       case "error":
-        return "border-red-500/20";
+        return "border-red-500/30 dark:border-red-500/20";
       case "warning":
-        return "border-yellow-500/20";
+        return "border-yellow-500/30 dark:border-yellow-500/20";
       case "info":
-        return "border-blue-500/20";
+        return "border-blue-500/30 dark:border-blue-500/20";
       default:
-        return "border-gray-500/20";
+        return "border-border dark:border-gray-500/20";
     }
   };
 
   const getBgColor = () => {
     switch (type) {
       case "success":
-        return "bg-green-500/10";
+        return "bg-green-500/10 dark:bg-green-500/10";
       case "error":
-        return "bg-red-500/10";
+        return "bg-red-500/10 dark:bg-red-500/10";
       case "warning":
-        return "bg-yellow-500/10";
+        return "bg-yellow-500/10 dark:bg-yellow-500/10";
       case "info":
-        return "bg-blue-500/10";
+        return "bg-blue-500/10 dark:bg-blue-500/10";
       default:
-        return "bg-gray-500/10";
+        return "bg-muted/50 dark:bg-gray-500/10";
     }
   };
 
@@ -94,15 +94,17 @@ const Toast: React.FC<ToastProps> = ({
         <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
 
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-white">{title}</h4>
-          {message && <p className="text-sm text-gray-300 mt-1">{message}</p>}
+          <h4 className="text-sm font-medium text-foreground">{title}</h4>
+          {message && (
+            <p className="text-sm text-muted-foreground mt-1">{message}</p>
+          )}
         </div>
 
         <button
           onClick={handleClose}
-          className="flex-shrink-0 p-1 hover:bg-white/10 rounded transition-colors"
+          className="flex-shrink-0 p-1 hover:bg-foreground/10 rounded transition-colors"
         >
-          <X className="w-4 h-4 text-gray-400" />
+          <X className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
     </div>
