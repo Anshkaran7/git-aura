@@ -167,7 +167,7 @@ export default function ContributePage() {
         <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden z-10 pointer-events-none" />
         {/* Animated Squares Background */}
         {resolvedTheme === "dark" && (
-          <div className="absolute w-full h-full z-30 pointer-events-auto">
+          <div className="absolute bg-black w-full h-full z-30 pointer-events-auto">
             <Squares
               speed={0.3}
               squareSize={20}

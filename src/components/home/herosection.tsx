@@ -95,7 +95,7 @@ export const HeroSection = () => {
     <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8">
       <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
       {resolvedTheme === "dark" && (
-        <div className="absolute w-full h-full z-30 pointer-events-auto">
+        <div className="absolute w-full bg-black h-full z-30 pointer-events-auto">
           <Squares
             speed={0.3}
             squareSize={20}
