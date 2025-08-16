@@ -60,7 +60,7 @@ export default async function AdminUsersPage() {
 
   if (!(await isAdmin())) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300 flex items-center justify-center">
+      <div className="min-h-screen bg-background transition-colors duration-300 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="mb-6">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -78,10 +78,10 @@ export default async function AdminUsersPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
               Access Denied
             </h1>
-            <p className="text-[#7d8590] text-sm sm:text-base">
+            <p className="text-muted-foreground text-sm sm:text-base">
               You don't have permission to access this page.
             </p>
           </div>
@@ -97,7 +97,7 @@ export default async function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
         <UserManagement />
       </div>

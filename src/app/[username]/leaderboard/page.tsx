@@ -60,7 +60,7 @@ export default function LeaderboardPage({ params }: PageProps) {
 
   if (loading || !username) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={true} />
         <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
           <LoadingState />
@@ -71,7 +71,7 @@ export default function LeaderboardPage({ params }: PageProps) {
 
   if (banStatus?.isBanned) {
     return (
-      <div className="min-h-screen bg-black transition-colors duration-300">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={true} />
         <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
           <div className="text-center max-w-2xl mx-auto">
@@ -91,10 +91,10 @@ export default function LeaderboardPage({ params }: PageProps) {
                   />
                 </svg>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
                 Access Restricted
               </h1>
-              <p className="text-lg text-[#7d8590] mb-6">
+              <p className="text-lg text-muted-foreground mb-6">
                 Your account has been suspended from accessing the leaderboard.
               </p>
             </div>
@@ -137,14 +137,14 @@ export default function LeaderboardPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-black transition-colors duration-300">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <Header leaderboard={false} dashboard={true} />
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Leaderboard
           </h1>
-          <p className="text-sm sm:text-base text-[#7d8590]">
+          <p className="text-sm sm:text-base text-muted-foreground">
             See where {username} ranks among all developers
           </p>
         </div>

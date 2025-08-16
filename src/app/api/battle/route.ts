@@ -186,13 +186,6 @@ export async function GET(req: NextRequest) {
         description: "Total pull requests merged by the user",
       },
       {
-        key: "public_repos",
-        label: "Public Repositories",
-        value1: profile1Res.data.public_repos,
-        value2: profile2Res.data.public_repos,
-        description: "Number of public repositories",
-      },
-      {
         key: "totalStars",
         label: "Total Stars",
         value1:
@@ -206,25 +199,11 @@ export async function GET(req: NextRequest) {
         description: "Stars from non-fork repositories",
       },
       {
-        key: "public_gists",
-        label: "Public Gists",
-        value1: profile1Res.data.public_gists,
-        value2: profile2Res.data.public_gists,
-        description: "Number of public gists",
-      },
-      {
         key: "followers",
         label: "Followers",
         value1: profile1Res.data.followers,
         value2: profile2Res.data.followers,
         description: "Number of followers",
-      },
-      {
-        key: "following",
-        label: "Following",
-        value1: profile1Res.data.following,
-        value2: profile2Res.data.following,
-        description: "Number of users being followed",
       },
       // {
       //   key: "created_at",
@@ -239,10 +218,7 @@ export async function GET(req: NextRequest) {
     const availableMetrics = metrics.filter(
       (m) =>
         m.key === "aura" ||
-        m.key === "public_repos" ||
-        m.key === "public_gists" ||
         m.key === "followers" ||
-        m.key === "following" ||
         m.key === "created_at" ||
         (contributions1Res.success && contributions2Res.success)
     ).length;

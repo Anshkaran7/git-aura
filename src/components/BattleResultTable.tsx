@@ -63,6 +63,7 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
   };
 
   return (
+
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-[#181c23] rounded-lg overflow-hidden text-white border border-gray-700">
         <div className="bg-[#23272f] px-6 py-4 border-b border-gray-700">
