@@ -1,32 +1,30 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Github, Menu, User, LogOut, RefreshCw, Shield } from "lucide-react";
+import { Github, Menu, User, LogOut, Shield } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { toast } from "sonner";
 import Image from "next/image";
 
 // Navigation items configuration - now unified for consistency across all pages
 
 export const Header = ({
-  leaderboard = false,
-  dashboard = false,
-  profile = false,
+  leaderboard,
+  dashboard,
+  profile,
 }: {
   leaderboard?: boolean;
   dashboard?: boolean;
   profile?: boolean;
-}) => {
+} = {}) => {
   const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   // Memoize GitHub account lookup
   const githubAccount = useMemo(() => {
@@ -45,15 +43,19 @@ export const Header = ({
 
   // Memoize all navigation items (always show all 6 items)
   const allNavItems = useMemo(
-    () => [
-      { href: "/#features", label: "Features" },
-      { href: "/#how-it-works", label: "How It Works" },
-      { href: leaderboardUrl, label: "Leaderboard" },
-      { href: "/monthly-winners", label: "Monthly Winners" },
-      { href: "/battle", label: "Profile Compare" },
-      { href: "/contribute", label: "Contribute" },
-    ],
-    [leaderboardUrl]
+    () => {
+      const items = [
+        { href: "/#features", label: "Features" },
+        { href: "/#how-it-works", label: "How It Works" },
+        { href: leaderboardUrl, label: "Leaderboard" },
+        { href: "/monthly-winners", label: "Monthly Winners" },
+        { href: "/battle", label: "Profile Compare" },
+        { href: "/contribute", label: "Contribute" },
+      ];
+      console.log(`Navigation items for ${pathname}:`, items);
+      return items;
+    },
+    [leaderboardUrl, pathname]
   );
 
   // Memoize user profile URL
@@ -135,41 +137,7 @@ export const Header = ({
   //   [isSignedIn, user?.username, pathname, router]
   // );
 
-  // Optimize sync function
-  const syncUserData = useCallback(async () => {
-    if (!isLoaded || !isSignedIn || !user || !githubAccount?.username) return;
 
-    try {
-      setIsSyncing(true);
-      const response = await fetch("/api/sync-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          githubUsername: githubAccount.username,
-          displayName: user.firstName || githubAccount.username,
-          avatarUrl:
-            user.imageUrl || `https://github.com/${githubAccount.username}.png`,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to sync data");
-      }
-
-      const data = await response.json();
-      // if (data.success) {
-      //   toast.success("Data synced successfully!");
-      // }
-    } catch (error) {
-      console.error("Error syncing user data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isLoaded, isSignedIn, user, githubAccount?.username]);
-
-  useEffect(() => {
-    syncUserData();
-  }, [syncUserData]);
 
   // Memoize header classes with scroll animation
   const headerClasses = useMemo(() => {
@@ -185,11 +153,34 @@ export const Header = ({
   const isActiveLink = useCallback((href: string) => {
     if (href.startsWith('/#')) {
       // For homepage sections, only active when on homepage
-      return pathname === "/" && window.location.hash === href.slice(1);
+      // Check if window is defined (client-side only) to avoid SSR errors
+      return pathname === "/" && typeof window !== 'undefined' && window.location.hash === href.slice(1);
     }
     // For other pages, exact match or starts with the path
     return pathname === href || (href !== "/" && pathname.startsWith(href));
   }, [pathname]);
+
+  // Handle navigation to homepage sections from other pages
+  const handleNavClick = useCallback((href: string, e: React.MouseEvent) => {
+    if (href.startsWith('/#') && typeof window !== 'undefined') {
+      e.preventDefault();
+      if (pathname === '/') {
+        // If already on homepage, scroll to section
+        const section = href.slice(2); // Remove /#
+        const element = document.getElementById(section);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          console.log(`Scrolling to section: ${section}`);
+        } else {
+          console.log(`Section not found: ${section}`);
+        }
+      } else {
+        // If on other page, navigate to homepage with hash
+        console.log(`Navigating from ${pathname} to homepage section: ${href}`);
+        router.push(href);
+      }
+    }
+  }, [pathname, router]);
 
   // Render navigation items with active state styling
   const renderNavItems = useCallback(
@@ -200,6 +191,7 @@ export const Header = ({
           <Link
             key={href}
             href={href}
+            onClick={(e) => handleNavClick(href, e)}
             className={`text-sm transition-colors ${
               isActive 
                 ? "text-primary font-semibold" 
@@ -213,7 +205,7 @@ export const Header = ({
         );
       });
     },
-    [isActiveLink]
+    [isActiveLink, handleNavClick]
   );
 
   return (
