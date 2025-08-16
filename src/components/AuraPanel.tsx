@@ -436,7 +436,9 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
           {isCalculatingAura && (
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-muted-foreground"></div>
-              <span className="text-sm text-muted-foreground">Calculating...</span>
+              <span className="text-sm text-muted-foreground">
+                Calculating...
+              </span>
             </div>
           )}
           {isSignedIn && user && (
