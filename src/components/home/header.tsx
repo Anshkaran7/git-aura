@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useNavigationUrls } from "@/lib/navigation";
 
 // Navigation items configuration
 const NAV_ITEMS = {
@@ -39,36 +40,13 @@ export const Header = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Memoize GitHub account lookup
-  const githubAccount = useMemo(() => {
-    return user?.externalAccounts?.find(
-      (account) => account.provider === "github"
-    );
-  }, [user?.externalAccounts]);
+  const { mainNavItems, userProfileUrl, leaderboardUrl, username } = useNavigationUrls();
 
-  // Memoize leaderboard URL
-  const leaderboardUrl = useMemo(() => {
-    if (isSignedIn && githubAccount?.username) {
-      return `/${githubAccount.username}/leaderboard`;
-    }
-    return "/leaderboard";
-  }, [isSignedIn, githubAccount?.username]);
 
-  // Memoize main navigation items
-  const mainNavItems = useMemo(
-    () => [
-      { href: leaderboardUrl, label: "Leaderboard" },
-      { href: "/monthly-winners", label: "Monthly Winners" },
-      { href: "/battle", label: "Profile Compare" },
-      { href: "/contribute", label: "Contribute" },
-    ],
-    [leaderboardUrl]
-  );
 
-  // Memoize user profile URL
-  const userProfileUrl = useMemo(() => {
-    return githubAccount?.username ? `/${githubAccount.username}` : "/profile";
-  }, [githubAccount?.username]);
+
+
+
 
   // Check if user is admin
   const [isAdmin, setIsAdmin] = useState(false);
@@ -87,7 +65,7 @@ export const Header = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: user.emailAddresses?.[0]?.emailAddress,
-            githubUsername: githubAccount?.username,
+            githubUsername: username,
           }),
         });
 
@@ -102,7 +80,7 @@ export const Header = ({
     };
 
     checkAdminStatus();
-  }, [isSignedIn, user, githubAccount?.username]);
+  }, [isSignedIn, user, username]);
 
   // Scroll handler for floating navbar effect
   const handleScroll = useCallback(() => {
@@ -146,7 +124,7 @@ export const Header = ({
 
   // Optimize sync function
   const syncUserData = useCallback(async () => {
-    if (!isLoaded || !isSignedIn || !user || !githubAccount?.username) return;
+    if (!isLoaded || !isSignedIn || !user || !username) return;
 
     try {
       setIsSyncing(true);
@@ -154,10 +132,10 @@ export const Header = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          githubUsername: githubAccount.username,
-          displayName: user.firstName || githubAccount.username,
+          githubUsername: username,
+          displayName: user.firstName || username,
           avatarUrl:
-            user.imageUrl || `https://github.com/${githubAccount.username}.png`,
+            user.imageUrl || `https://github.com/${username}.png`,
         }),
       });
 
@@ -174,7 +152,7 @@ export const Header = ({
     } finally {
       setIsSyncing(false);
     }
-  }, [isLoaded, isSignedIn, user, githubAccount?.username]);
+  }, [isLoaded, isSignedIn, user, username]);
 
   useEffect(() => {
     syncUserData();

@@ -1,10 +1,15 @@
+"use client";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Github, Zap, Trophy, ArrowRight } from "lucide-react";
+import { useNavigationUrls } from "@/lib/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export const HowItWorks = () => {
+  const router = useRouter();
+    const { leaderboardUrl, userProfileUrl } = useNavigationUrls();
   const steps = [
     {
       number: "01",
@@ -19,7 +24,7 @@ export const HowItWorks = () => {
       ],
       color: "text-primary",
       bgColor: "bg-primary/10",
-      href: "/connect-github", 
+      href: userProfileUrl, 
     },
     {
       number: "02",
@@ -34,7 +39,7 @@ export const HowItWorks = () => {
       ],
       color: "text-accent",
       bgColor: "bg-accent/10",
-      href: "/aura-score",
+      href: userProfileUrl,
     },
     {
       number: "03",
@@ -49,7 +54,7 @@ export const HowItWorks = () => {
       ],
       color: "text-secondary",
       bgColor: "bg-secondary/10",
-      href: "/leaderboard",
+      href: leaderboardUrl,
     },
   ];
 
@@ -84,8 +89,10 @@ export const HowItWorks = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8 sm:mb-16">
           {steps.map((step, index) => (
-            <Link key={index} href={step.href} className="block group">
-              <Card className="card-hover p-4 sm:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border group-hover:shadow-lg">
+            
+              <Card className="card-hover p-4 sm:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border group-hover:shadow-lg"
+                key={index}
+                onClick={() => step.href && router.push(step.href)} >
                 <div className="flex items-center justify-between mb-4 sm:mb-6">
                   <div className="text-4xl sm:text-6xl font-bold text-primary">
                     {step.number}
@@ -114,7 +121,6 @@ export const HowItWorks = () => {
                   </ul>
                 </div>
               </Card>
-            </Link>
           ))}
         </div>
       </div>

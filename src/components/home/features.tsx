@@ -1,9 +1,14 @@
+"use client";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Users, Download } from "lucide-react";
+import { useNavigationUrls } from "@/lib/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export const FeaturesSection = () => {
+  const router = useRouter();
+  const { leaderboardUrl, userProfileUrl } = useNavigationUrls();
   const features = [
     {
       icon: Trophy,
@@ -12,7 +17,7 @@ export const FeaturesSection = () => {
         'Finally beat that one colleague who commits "fix typo" 47 times a day',
       badge: "🏆 Competitive",
       gradient: "from-gray-900/5 to-slate-800/10",
-      link: "/leaderboard",
+      link: leaderboardUrl,
     },
     {
       icon: Zap,
@@ -21,7 +26,7 @@ export const FeaturesSection = () => {
         "Turns your GitHub into a dating profile rating (but for developers)",
       badge: "⚡ Fast",
       gradient: "from-slate-900/5 to-gray-800/10",
-      link: "/aura",
+      link: userProfileUrl,
     },
     {
       icon: Users,
@@ -29,7 +34,7 @@ export const FeaturesSection = () => {
       description: "Find out if you're actually good or just think you are",
       badge: "🌍 Global",
       gradient: "from-zinc-900/5 to-slate-700/10",
-      link: "/leaderboard",
+      link: leaderboardUrl,
     },
     {
       icon: Download,
@@ -38,7 +43,7 @@ export const FeaturesSection = () => {
         "Make your GitHub look so good, recruiters will slide into your DMs",
       badge: "📊 Professional",
       gradient: "from-slate-800/5 to-zinc-900/10",
-      link: "/export",
+      link: userProfileUrl,
     },
   ];
 
@@ -72,13 +77,15 @@ export const FeaturesSection = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
 {features.map((feature, index) => (
-  <Link key={index} href={feature.link} className="block group">
+
     <Card
       className={`relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
         border border-border bg-gradient-to-br ${feature.gradient}
         hover:shadow-lg hover:shadow-primary/5
         animate-in fade-in-50 slide-in-from-bottom-10`}
       style={{ animationDelay: `${index * 0.1}s` }}
+      key={index}
+      onClick={() => feature.link && router.push(feature.link)}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
@@ -101,7 +108,7 @@ export const FeaturesSection = () => {
         </p>
       </div>
     </Card>
-  </Link>
+
 ))}
 
         </div>
