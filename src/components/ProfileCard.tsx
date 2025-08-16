@@ -1,16 +1,11 @@
 "use client";
 import React from "react";
-import {
-  Users,
-  UserPlus,
-  Coffee,
-  Twitter,
-  Linkedin,
-  Download,
-} from "lucide-react";
+import { Users, UserPlus, Coffee, X, Linkedin, Download } from "lucide-react";
 import { Theme, GitHubProfile, GitHubContributions } from "./types";
 import ContributionGrid from "./ContributionGrid";
 import MontlyContribution from "./MontlyContribution";
+
+import Image from "next/image";
 
 interface ProfileCardProps {
   profile: GitHubProfile;
@@ -64,30 +59,63 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={handleShareTwitter}
-            className="p-1.5 sm:p-2 rounded-md bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] transition-colors text-foreground"
-            title="Share on Twitter"
+
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#000000] hover:bg-[#181818] active:bg-[#272727]"
+            }`}
+            title={isGenerating ? "Generating image..." : "Share on Twitter"}
           >
-            <Twitter className="w-4 h-4" />
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Image
+                alt="X logo"
+                width={0}
+                height={0}
+                src="/twitter.png"
+                className="w-4 h-4"
+              />
+            )}
           </button>
           <button
             onClick={handleShareLinkedin}
-            className="p-1.5 sm:p-2 rounded-md bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86] transition-colors text-foreground"
-            title="Share on LinkedIn"
+
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86]"
+            }`}
+            title={isGenerating ? "Generating image..." : "Share on LinkedIn"}
           >
-            <Linkedin className="w-4 h-4" />
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Linkedin className="w-4 h-4" />
+            )}
           </button>
-            <button
-              onClick={handleDownload}
-              className="p-1.5 sm:p-2 rounded-md bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors text-foreground"
-              title="Download as Image"
-            >
+
+          <button
+            onClick={handleDownload}
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+            }`}
+            title={isGenerating ? "Generating image..." : "Download as Image"}
+          >
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
               <Download className="w-4 h-4" />
-            </button>
-          </div>
-
+            )}
+          </button>
+        </div>
       </div>
-
-      
 
       {/* Profile Content */}
       <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-card to-background">

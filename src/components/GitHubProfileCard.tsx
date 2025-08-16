@@ -20,6 +20,7 @@ import {
   ContributionDay,
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
+import ShareModal from "./ShareModal";
 
 interface GitHubProfileCardProps {
   initialUsername?: string;
@@ -43,6 +44,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [contributions, setContributions] = useState<GitHubContributions>({
     totalContributions: 0,
     contributionDays: [],
+    totalIssues: 0,
+    totalPullRequests: 0,
+    totalRepositories: 0,
+    totalGists: 0,
+    totalFollowers: 0,
+    totalFollowing: 0,
+    accountAge: 0,
+    totalStars: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +61,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [userAura, setUserAura] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -191,7 +202,18 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           : errorMessage
       );
       setProfile(null);
-      setContributions({ totalContributions: 0, contributionDays: [] });
+      setContributions({
+        totalContributions: 0,
+        contributionDays: [],
+        totalIssues: 0,
+        totalPullRequests: 0,
+        totalRepositories: 0,
+        totalGists: 0,
+        totalFollowers: 0,
+        totalFollowing: 0,
+        accountAge: 0,
+        totalStars: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -261,7 +283,10 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  const handleShare = async (platform: "twitter" | "linkedin") => {
+  const handleShare = async (
+    platform: "twitter" | "linkedin",
+    customText?: string
+  ) => {
     try {
       // Construct the base share URL in the format /user/[username]
       let shareUrl = `${window.location.origin}/user/${searchedUsername}`;
@@ -293,6 +318,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           if (uploadResponse.ok) {
             const uploadData = await uploadResponse.json();
             const imageUrl = uploadData.url;
+            setShareImageUrl(imageUrl);
 
             // Add og_image parameter to the share URL
             shareUrl = `${shareUrl}?og_image=${encodeURIComponent(imageUrl)}`;
@@ -300,12 +326,13 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         } catch (uploadError) {
           console.error("Error uploading OG image:", uploadError);
           // Continue with sharing even if image upload fails
+        } finally {
+          setIsGenerating(false);
         }
-        setIsGenerating(false);
       }
 
-      // Generate share text and links after image upload is complete
-      const text = `Check out my GitHub contributions! 🚀`;
+      // Use custom text or default text
+      const text = customText || `Check Out my Aura on Git-Aura 🌟✨ \n`;
 
       let shareLink = "";
       if (platform === "twitter") {
@@ -324,6 +351,10 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       console.error("Error sharing profile:", err);
       setIsGenerating(false);
     }
+  };
+
+  const openShareModal = () => {
+    setIsShareModalOpen(true);
   };
 
   // If directProfile is provided (battle mode), render a simple card
@@ -424,8 +455,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
                   contributions={contributions}
                   selectedTheme={selectedTheme}
                   profileRef={profileRef}
-                  handleShareTwitter={() => handleShare("twitter")}
-                  handleShareLinkedin={() => handleShare("linkedin")}
+                  handleShareTwitter={openShareModal}
+                  handleShareLinkedin={openShareModal}
                   handleDownload={handleExportImage}
                   isGenerating={isGenerating}
                 />
@@ -492,6 +523,17 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           </p>
         </footer>
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        onShare={handleShare}
+        onExportImage={handleExportImage}
+        isGenerating={isGenerating}
+        username={searchedUsername}
+        defaultText={`Check Out my Aura on Git-Aura 🌟✨ \n`}
+      />
     </div>
   );
 };

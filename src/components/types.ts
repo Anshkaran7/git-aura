@@ -24,6 +24,21 @@ export interface GitHubRepo {
 export interface GitHubContributions {
   totalContributions: number;
   contributionDays: ContributionDay[];
+  totalIssues: number;
+  totalPullRequests: number;
+  pullRequestNodes?: Array<{
+    title: string;
+    number: number;
+    mergedAt: string;
+    url: string;
+    repository: { nameWithOwner: string };
+  }>;
+  totalRepositories: number;
+  totalGists: number;
+  totalFollowers: number;
+  totalFollowing: number;
+  accountAge: number;
+  totalStars: number;
 }
 
 export interface ContributionDay {
