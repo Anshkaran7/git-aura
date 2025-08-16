@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import GitHubProfileCard from "./GitHubProfileCard";
 import BattleResultTable from "./BattleResultTable";
@@ -42,9 +42,53 @@ export default function BattlePage() {
   const battleRef = useRef<HTMLDivElement>(null);
   const { toasts, addToast, removeToast } = useToast();
 
-  const handleBattle = async () => {
-    if (!user1.trim() || !user2.trim()) {
-      addToast("error", "Invalid Input", "Please enter both usernames");
+  // Memoized validation state
+  const validationState = useMemo(() => {
+    const trimmedUser1 = user1.trim();
+    const trimmedUser2 = user2.trim();
+    const usernameRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+
+    return {
+      bothFilled: trimmedUser1 && trimmedUser2,
+      sameUser: trimmedUser1.toLowerCase() === trimmedUser2.toLowerCase(),
+      validUser1: usernameRegex.test(trimmedUser1),
+      validUser2: usernameRegex.test(trimmedUser2),
+      canBattle:
+        trimmedUser1 &&
+        trimmedUser2 &&
+        trimmedUser1.toLowerCase() !== trimmedUser2.toLowerCase() &&
+        usernameRegex.test(trimmedUser1) &&
+        usernameRegex.test(trimmedUser2),
+    };
+  }, [user1, user2]);
+
+  const handleBattle = useCallback(async () => {
+    const trimmedUser1 = user1.trim();
+    const trimmedUser2 = user2.trim();
+
+    // Use pre-computed validation state
+    if (!validationState.canBattle) {
+      if (!validationState.bothFilled) {
+        addToast("error", "Invalid Input", "Please enter both usernames");
+      } else if (validationState.sameUser) {
+        addToast(
+          "error",
+          "Same User",
+          "Please enter different usernames for comparison"
+        );
+      } else if (!validationState.validUser1) {
+        addToast(
+          "error",
+          "Invalid Username",
+          `"${trimmedUser1}" is not a valid GitHub username`
+        );
+      } else if (!validationState.validUser2) {
+        addToast(
+          "error",
+          "Invalid Username",
+          `"${trimmedUser2}" is not a valid GitHub username`
+        );
+      }
       return;
     }
 
@@ -52,9 +96,17 @@ export default function BattlePage() {
     setResult(null);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const res = await fetch(
-        `/api/battle?user1=${user1.trim()}&user2=${user2.trim()}`
+        `/api/battle?user1=${encodeURIComponent(
+          trimmedUser1
+        )}&user2=${encodeURIComponent(trimmedUser2)}`,
+        { signal: controller.signal }
       );
+
+      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (!res.ok) {
@@ -64,6 +116,12 @@ export default function BattlePage() {
             "User Not Found",
             data.error || "One or both usernames do not exist on GitHub"
           );
+        } else if (res.status === 429) {
+          addToast(
+            "error",
+            "Rate Limited",
+            "GitHub API rate limit exceeded. Please try again in a few minutes."
+          );
         } else {
           addToast(
             "error",
@@ -71,7 +129,6 @@ export default function BattlePage() {
             data.error || "Failed to compare profiles. Please try again."
           );
         }
-        setLoading(false);
         return;
       }
 
@@ -79,21 +136,29 @@ export default function BattlePage() {
       addToast(
         "success",
         "Battle Complete!",
-        `Successfully compared ${user1} vs ${user2}`
+        `Successfully compared ${trimmedUser1} vs ${trimmedUser2}`
       );
     } catch (error) {
       console.error("Battle error:", error);
-      addToast(
-        "error",
-        "Battle Failed",
-        "An unexpected error occurred. Please try again."
-      );
+      if (error instanceof Error && error.name === "AbortError") {
+        addToast(
+          "error",
+          "Request Timeout",
+          "The battle took too long to complete. Please try again."
+        );
+      } else {
+        addToast(
+          "error",
+          "Battle Failed",
+          "An unexpected error occurred. Please check your internet connection and try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [user1, user2, addToast, validationState.canBattle]);
 
-  const handleShareResult = async () => {
+  const handleShareResult = useCallback(async () => {
     if (!battleRef.current || !result) return;
 
     try {
@@ -103,19 +168,61 @@ export default function BattlePage() {
         backgroundColor: "#000000",
         pixelRatio: 2,
         skipFonts: false,
+        width: battleRef.current.offsetWidth,
+        height: battleRef.current.offsetHeight,
       });
       const link = document.createElement("a");
-      link.download = `github-battle-result.png`;
+      link.download = `github-battle-${result.user1.login}-vs-${result.user2.login}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      addToast(
+        "success",
+        "Image Downloaded",
+        "Battle result image saved successfully!"
+      );
     } catch (err) {
       console.error("Failed to export battle image:", err);
+      addToast(
+        "error",
+        "Export Failed",
+        "Failed to generate image. Please try again."
+      );
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [result, addToast]);
+
+  const handleReset = useCallback(() => {
+    setUser1("");
+    setUser2("");
+    setResult(null);
+  }, []);
+
+  // Memoized info cards to prevent re-rendering
+  const infoCards = useMemo(
+    () => [
+      {
+        title: "🎯 5 Core Metrics",
+        body: "Aura • Contributions • Stars • Issues • PRs • Followers",
+      },
+      {
+        title: "⚡ Live Data",
+        body: "Real-time GitHub stats with smart quality analysis",
+      },
+      {
+        title: "🏆 Fair Battles",
+        body: "Quality over quantity - consistency beats raw numbers",
+      },
+      {
+        title: "🚀 Pro Tips",
+        body: "Active daily commits + quality repos = higher Aura score",
+      },
+    ],
+    []
+  );
 
   return (
     <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
@@ -147,7 +254,18 @@ export default function BattlePage() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser1(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
-          className="w-64 md:w-72 bg-gray-900/60 border-gray-700 text-white placeholder:text-gray-500"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && validationState.canBattle && !loading) {
+              handleBattle();
+            }
+          }}
+          className={`w-64 md:w-72 bg-gray-900/60 text-white placeholder:text-gray-500 transition-colors ${
+            user1.trim() && !validationState.validUser1
+              ? "border-red-500"
+              : validationState.sameUser && user1.trim() && user2.trim()
+              ? "border-yellow-500"
+              : "border-gray-700 focus:border-blue-500"
+          }`}
           disabled={loading}
         />
         <span className="font-bold text-xl md:text-2xl text-gray-400">VS</span>
@@ -157,64 +275,91 @@ export default function BattlePage() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser2(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
-          className="w-64 md:w-72 bg-gray-900/60 border-gray-700 text-white placeholder:text-gray-500"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && validationState.canBattle && !loading) {
+              handleBattle();
+            }
+          }}
+          className={`w-64 md:w-72 bg-gray-900/60 text-white placeholder:text-gray-500 transition-colors ${
+            user2.trim() && !validationState.validUser2
+              ? "border-red-500"
+              : validationState.sameUser && user1.trim() && user2.trim()
+              ? "border-yellow-500"
+              : "border-gray-700 focus:border-blue-500"
+          }`}
           disabled={loading}
         />
         <Button
           onClick={handleBattle}
-          disabled={!user1.trim() || !user2.trim() || loading}
-          className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white"
+          disabled={!validationState.canBattle || loading}
+          className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Comparing..." : "Compare"}
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Comparing...
+            </>
+          ) : (
+            "Compare"
+          )}
         </Button>
       </motion.div>
 
+      {/* Validation Feedback */}
+      {(user1.trim() || user2.trim()) && !validationState.canBattle && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-6"
+        >
+          {validationState.sameUser && user1.trim() && user2.trim() && (
+            <p className="text-yellow-400 text-sm">
+              ⚠️ Please enter different usernames for comparison
+            </p>
+          )}
+          {user1.trim() && !validationState.validUser1 && (
+            <p className="text-red-400 text-sm">
+              ❌ "{user1.trim()}" is not a valid GitHub username
+            </p>
+          )}
+          {user2.trim() && !validationState.validUser2 && (
+            <p className="text-red-400 text-sm">
+              ❌ "{user2.trim()}" is not a valid GitHub username
+            </p>
+          )}
+        </motion.div>
+      )}
+
       {/* Info Cards - Only show when no result */}
       {!result && (
-        <div className="mx-auto max-w-5xl mb-8 sm:mb-14">
-          <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Enhanced Metrics",
-                body: "8 metrics: Aura, Contributions, Repos, Stars, Gists, Followers & more!",
-              },
-              {
-                title: "Smart Comparison",
-                body: "We analyze contributions, repository quality, and community engagement for fair battles.",
-              },
-              {
-                title: "Real-time Data",
-                body: "Fresh data from GitHub API including recent contributions and repository statistics.",
-              },
-              {
-                title: "Rate Limits",
-                body: "Unauthenticated: 60/hour per IP. Add GITHUB_TOKEN for higher limits & detailed data.",
-              },
-              {
-                title: "Fair Play",
-                body: "We consider repository quality, contribution consistency, and community impact.",
-              },
-              {
-                title: "Pro Tip",
-                body: "Active contributions + quality repos often beats raw numbers. Consistency matters!",
-              },
-            ].map((f) => (
+        <div className="mx-auto max-w-4xl mb-8 sm:mb-12">
+          <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+            {infoCards.map((f) => (
               <div
                 key={f.title}
-                className="rounded-xl border border-gray-800 bg-gray-900/40 p-4 md:p-5 hover:border-gray-700 transition-colors"
+                className="rounded-lg border border-gray-800 bg-gray-900/30 p-3 hover:border-gray-700 hover:bg-gray-900/50 transition-all duration-200"
               >
-                <h3 className="text-sm font-semibold text-white mb-1.5 tracking-wide">
+                <h3 className="text-xs font-medium text-white mb-1 tracking-wide">
                   {f.title}
                 </h3>
-                <p className="text-xs md:text-sm leading-relaxed text-gray-400">
-                  {f.body}
-                </p>
+                <p className="text-xs leading-snug text-gray-400">{f.body}</p>
               </div>
             ))}
           </div>
-          <p className="mt-6 text-[11px] md:text-xs text-gray-500 text-center">
-            Data is fetched live from GitHub REST & GraphQL APIs. Enhanced
-            metrics require GitHub token.
+          <p className="mt-4 text-[10px] text-gray-500 text-center">
+            Star our repo on GitHub to support us!
+            <a
+              href="https://github.com/anshkaran7/git-aura"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button
+                variant="ghost"
+                className="text-gray-300 hover:text-white text-xs hover:bg-gray-800"
+              >
+                Star on GitHub
+              </Button>
+            </a>
           </p>
         </div>
       )}
@@ -267,13 +412,31 @@ export default function BattlePage() {
                   const winners = (result.results || []).filter(
                     (r) => r.winner
                   );
-                  if (!winners.length)
+
+                  // Handle tie case
+                  if (!winners.length) {
                     return (
-                      <p>
-                        No decisive metrics — it's a draw. Try users with more
-                        activity.
-                      </p>
+                      <div className="text-center space-y-4">
+                        <div className="text-6xl mb-4">🤝</div>
+                        <p className="text-xl font-semibold text-yellow-300">
+                          It's a Perfect Tie!
+                        </p>
+                        <p className="text-gray-400">
+                          Both developers are equally matched across all
+                          metrics. This is rare and shows both have similar
+                          skill levels and activity patterns.
+                        </p>
+                        <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+                          <p className="text-sm text-yellow-300">
+                            🏆 When there's a tie, both developers win! Great
+                            work to both {result.user1.login} and{" "}
+                            {result.user2.login}!
+                          </p>
+                        </div>
+                      </div>
                     );
+                  }
+
                   const user1Wins = winners.filter((r) => r.winner === "user1");
                   const user2Wins = winners.filter((r) => r.winner === "user2");
                   const overall = result.winner;
@@ -286,17 +449,30 @@ export default function BattlePage() {
                     arr.map((r) => explainMetric(r)).join(", ");
                   return (
                     <div className="space-y-3">
-                      {overall && (
-                        <p className="font-semibold text-white">
-                          Overall Winner:{" "}
-                          <span className="text-yellow-300">
+                      {overall ? (
+                        <p className="font-semibold text-white text-center">
+                          🏆 Overall Winner:{" "}
+                          <span className="text-yellow-300 text-lg">
                             {overall === "user1"
                               ? result.user1.login
                               : result.user2.login}
                           </span>{" "}
-                          ({result.metrics?.user1Wins || 0} -{" "}
-                          {result.metrics?.user2Wins || 0})
+                          <span className="text-gray-400">
+                            ({result.metrics?.user1Wins || 0} -{" "}
+                            {result.metrics?.user2Wins || 0})
+                          </span>
                         </p>
+                      ) : (
+                        <div className="text-center space-y-2">
+                          <p className="text-xl font-semibold text-yellow-300">
+                            🤝 It's a Tie!
+                          </p>
+                          <p className="text-gray-400">
+                            Both developers scored equally (
+                            {result.metrics?.user1Wins || 0} -{" "}
+                            {result.metrics?.user2Wins || 0})
+                          </p>
+                        </div>
                       )}
                       {user1Wins.length > 0 && (
                         <p>
@@ -355,16 +531,12 @@ export default function BattlePage() {
               </Button>
               <Button
                 variant="secondary"
-                onClick={() => {
-                  setUser1("");
-                  setUser2("");
-                  setResult(null);
-                }}
+                onClick={handleReset}
                 className="bg-gray-700 hover:bg-gray-600 text-white"
               >
                 Rematch
               </Button>
-              <Link href="/leaderboard">
+              <Link href={`${user1.trim()}/leaderboard`}>
                 <Button
                   variant="ghost"
                   className="text-gray-300 hover:text-white hover:bg-gray-800"

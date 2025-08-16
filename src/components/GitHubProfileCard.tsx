@@ -44,6 +44,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [contributions, setContributions] = useState<GitHubContributions>({
     totalContributions: 0,
     contributionDays: [],
+    totalIssues: 0,
+    totalPullRequests: 0,
+    totalRepositories: 0,
+    totalGists: 0,
+    totalFollowers: 0,
+    totalFollowing: 0,
+    accountAge: 0,
+    totalStars: 0,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +202,18 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           : errorMessage
       );
       setProfile(null);
-      setContributions({ totalContributions: 0, contributionDays: [] });
+      setContributions({
+        totalContributions: 0,
+        contributionDays: [],
+        totalIssues: 0,
+        totalPullRequests: 0,
+        totalRepositories: 0,
+        totalGists: 0,
+        totalFollowers: 0,
+        totalFollowing: 0,
+        accountAge: 0,
+        totalStars: 0,
+      });
     } finally {
       setLoading(false);
     }
