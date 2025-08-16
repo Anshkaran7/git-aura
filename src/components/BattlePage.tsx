@@ -235,7 +235,7 @@ export default function BattlePage() {
           GitHub 1v1 Battle
         </h1>
 
-        <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Enter two GitHub usernames and see a comprehensive head‑to‑head
           breakdown. We compare 8 metrics including contributions, stars,
           repositories, and more!
@@ -255,46 +255,45 @@ export default function BattlePage() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser1(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
-
           onKeyDown={(e) => {
             if (e.key === "Enter" && validationState.canBattle && !loading) {
               handleBattle();
             }
           }}
-          className={`w-64 md:w-72 bg-gray-900/60 text-white placeholder:text-gray-500 transition-colors ${
+          className={`w-64 md:w-72 bg-card/60 text-foreground placeholder:text-muted-foreground transition-colors ${
             user1.trim() && !validationState.validUser1
               ? "border-red-500"
               : validationState.sameUser && user1.trim() && user2.trim()
               ? "border-yellow-500"
-              : "border-gray-700 focus:border-blue-500"
+              : "border-border focus:border-blue-500"
           }`}
           disabled={loading}
         />
-        <span className="font-bold text-xl md:text-2xl text-muted-foreground">VS</span>
+        <span className="font-bold text-xl md:text-2xl text-muted-foreground">
+          VS
+        </span>
         <Input
           placeholder="GitHub Username 2"
           value={user2}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser2(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
-
           onKeyDown={(e) => {
             if (e.key === "Enter" && validationState.canBattle && !loading) {
               handleBattle();
             }
           }}
-          className={`w-64 md:w-72 bg-gray-900/60 text-white placeholder:text-gray-500 transition-colors ${
+          className={`w-64 md:w-72 bg-card/60 text-foreground placeholder:text-muted-foreground transition-colors ${
             user2.trim() && !validationState.validUser2
               ? "border-red-500"
               : validationState.sameUser && user1.trim() && user2.trim()
               ? "border-yellow-500"
-              : "border-gray-700 focus:border-blue-500"
+              : "border-border focus:border-blue-500"
           }`}
           disabled={loading}
         />
         <Button
           onClick={handleBattle}
-
           disabled={!validationState.canBattle || loading}
           className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -341,17 +340,18 @@ export default function BattlePage() {
             {infoCards.map((f) => (
               <div
                 key={f.title}
-
-                className="rounded-lg border border-gray-800 bg-gray-900/30 p-3 hover:border-gray-700 hover:bg-gray-900/50 transition-all duration-200"
+                className="rounded-lg border border-border bg-card/30 p-3 hover:border-border/80 hover:bg-card/50 transition-all duration-200"
               >
-                <h3 className="text-xs font-medium text-white mb-1 tracking-wide">
+                <h3 className="text-xs font-medium text-foreground mb-1 tracking-wide">
                   {f.title}
                 </h3>
-                <p className="text-xs leading-snug text-gray-400">{f.body}</p>
+                <p className="text-xs leading-snug text-muted-foreground">
+                  {f.body}
+                </p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-[10px] text-gray-500 text-center">
+          <p className="mt-4 text-[10px] text-muted-foreground text-center">
             Star our repo on GitHub to support us!
             <a
               href="https://github.com/anshkaran7/git-aura"
@@ -360,7 +360,7 @@ export default function BattlePage() {
             >
               <Button
                 variant="ghost"
-                className="text-gray-300 hover:text-white text-xs hover:bg-gray-800"
+                className="text-muted-foreground hover:text-foreground text-xs hover:bg-muted"
               >
                 Star on GitHub
               </Button>
@@ -391,7 +391,7 @@ export default function BattlePage() {
                   highlight={result.winner === "user1"}
                 />
               </motion.div>
-              <span className="font-bold text-3xl md:text-4xl text-gray-500">
+              <span className="font-bold text-3xl md:text-4xl text-muted-foreground">
                 VS
               </span>
               <motion.div
@@ -426,7 +426,7 @@ export default function BattlePage() {
                         <p className="text-xl font-semibold text-yellow-300">
                           It's a Perfect Tie!
                         </p>
-                        <p className="text-gray-400">
+                        <p className="text-muted-foreground">
                           Both developers are equally matched across all
                           metrics. This is rare and shows both have similar
                           skill levels and activity patterns.
@@ -454,7 +454,6 @@ export default function BattlePage() {
                     arr.map((r) => explainMetric(r)).join(", ");
                   return (
                     <div className="space-y-3">
-
                       {overall ? (
                         <p className="font-semibold text-white text-center">
                           🏆 Overall Winner:{" "}
@@ -463,7 +462,7 @@ export default function BattlePage() {
                               ? result.user1.login
                               : result.user2.login}
                           </span>{" "}
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             ({result.metrics?.user1Wins || 0} -{" "}
                             {result.metrics?.user2Wins || 0})
                           </span>
@@ -473,7 +472,7 @@ export default function BattlePage() {
                           <p className="text-xl font-semibold text-yellow-300">
                             🤝 It's a Tie!
                           </p>
-                          <p className="text-gray-400">
+                          <p className="text-muted-foreground">
                             Both developers scored equally (
                             {result.metrics?.user1Wins || 0} -{" "}
                             {result.metrics?.user2Wins || 0})
@@ -486,7 +485,7 @@ export default function BattlePage() {
                             {result.user1.login}
                           </span>{" "}
                           led in:
-                          <span className="text-gray-200">
+                          <span className="text-foreground">
                             {" "}
                             {list(user1Wins)}
                           </span>
@@ -499,14 +498,14 @@ export default function BattlePage() {
                             {result.user2.login}
                           </span>{" "}
                           led in:
-                          <span className="text-gray-200">
+                          <span className="text-muted-foreground">
                             {" "}
                             {list(user2Wins)}
                           </span>
                           .
                         </p>
                       )}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         We compare {result.metrics?.totalMetrics || 0} metrics
                         including contributions, repository quality, and
                         community engagement. Aura is a composite score based on
@@ -531,24 +530,18 @@ export default function BattlePage() {
                 variant="outline"
                 onClick={handleShareResult}
                 disabled={isGenerating}
-                
               >
                 {isGenerating ? "Generating..." : "Share Result"}
               </Button>
               <Button
                 variant="secondary"
-
                 onClick={handleReset}
-                className="bg-gray-700 hover:bg-gray-600 text-white"
+                className="bg-secondary hover:bg-secondary/80 text-secondary-foreground"
               >
                 Rematch
               </Button>
               <Link href={`${user1.trim()}/leaderboard`}>
-                <Button
-                  variant="ghost"
-                >
-                  Leaderboard
-                </Button>
+                <Button variant="ghost">Leaderboard</Button>
               </Link>
             </div>
           </motion.div>

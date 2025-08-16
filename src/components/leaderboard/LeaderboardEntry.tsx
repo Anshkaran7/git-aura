@@ -26,12 +26,12 @@ export function LeaderboardEntry({
       case 1:
         return <Crown className="w-4 h-4 text-yellow-500" />;
       case 2:
-        return <Medal className="w-4 h-4 text-gray-400" />;
+        return <Medal className="w-4 h-4 text-slate-400" />;
       case 3:
         return <Medal className="w-4 h-4 text-amber-600" />;
       default:
         return (
-          <span className="w-4 h-4 flex items-center justify-center text-xs font-bold text-gray-300">
+          <span className="w-4 h-4 flex items-center justify-center text-xs font-bold text-muted-foreground">
             {rank}
           </span>
         );
@@ -62,7 +62,7 @@ export function LeaderboardEntry({
       className={`relative overflow-hidden rounded-lg border ${
         isCurrentUser
           ? "border-yellow-500/50 ring-1 ring-yellow-500/50"
-          : "border-gray-700/50"
+          : "border-border"
       }`}
     >
       {/* Gradient Background for Top 3 */}
@@ -74,7 +74,7 @@ export function LeaderboardEntry({
         />
       )}
 
-      <div className="relative p-2 sm:p-3 bg-gray-900/40 backdrop-blur-xl">
+      <div className="relative p-2 sm:p-3 bg-card/50 backdrop-blur-xl">
         <div className="flex sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Rank */}
@@ -91,7 +91,7 @@ export function LeaderboardEntry({
                 <img
                   src={entry.user.avatar_url}
                   alt={entry.user.display_name}
-                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ring-1 ring-gray-600/50"
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ring-1 ring-border"
                 />
               </a>
               <div className="flex flex-col min-w-0 flex-1">
@@ -106,7 +106,7 @@ export function LeaderboardEntry({
                 </a>
                 <a
                   href={`/user/${entry.user.github_username}`}
-                  className="text-xs truncate text-gray-400 hover:text-gray-200"
+                  className="text-xs truncate text-muted-foreground hover:text-foreground"
                 >
                   @{entry.user.github_username}
                 </a>
@@ -121,11 +121,11 @@ export function LeaderboardEntry({
                 {formatNumber(entry.aura)} Aura
               </div>
               {entry.contributions !== undefined && (
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-muted-foreground">
                   {formatNumber(entry.contributions)} contributions
                 </div>
               )}
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 🔥 {entry.user.current_streak} streak
               </div>
             </div>
