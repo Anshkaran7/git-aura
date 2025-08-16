@@ -316,17 +316,17 @@ export default function BattlePage() {
           className="text-center mb-6"
         >
           {validationState.sameUser && user1.trim() && user2.trim() && (
-            <p className="text-yellow-400 text-sm">
+            <p className="text-yellow-600 dark:text-yellow-400 text-sm">
               ⚠️ Please enter different usernames for comparison
             </p>
           )}
           {user1.trim() && !validationState.validUser1 && (
-            <p className="text-red-400 text-sm">
+            <p className="text-red-600 dark:text-red-400 text-sm">
               ❌ "{user1.trim()}" is not a valid GitHub username
             </p>
           )}
           {user2.trim() && !validationState.validUser2 && (
-            <p className="text-red-400 text-sm">
+            <p className="text-red-600 dark:text-red-400 text-sm">
               ❌ "{user2.trim()}" is not a valid GitHub username
             </p>
           )}
@@ -423,7 +423,7 @@ export default function BattlePage() {
                     return (
                       <div className="text-center space-y-4">
                         <div className="text-6xl mb-4">🤝</div>
-                        <p className="text-xl font-semibold text-yellow-300">
+                        <p className="text-xl font-semibold text-yellow-600 dark:text-yellow-300">
                           It's a Perfect Tie!
                         </p>
                         <p className="text-muted-foreground">
@@ -431,8 +431,8 @@ export default function BattlePage() {
                           metrics. This is rare and shows both have similar
                           skill levels and activity patterns.
                         </p>
-                        <div className="mt-4 p-4 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
-                          <p className="text-sm text-yellow-300">
+                        <div className="mt-4 p-4 bg-yellow-500/10 dark:bg-yellow-900/20 border border-yellow-500/30 dark:border-yellow-700/30 rounded-lg">
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
                             🏆 When there's a tie, both developers win! Great
                             work to both {result.user1.login} and{" "}
                             {result.user2.login}!
@@ -455,9 +455,9 @@ export default function BattlePage() {
                   return (
                     <div className="space-y-3">
                       {overall ? (
-                        <p className="font-semibold text-white text-center">
+                        <p className="font-semibold text-foreground text-center">
                           🏆 Overall Winner:{" "}
-                          <span className="text-yellow-300 text-lg">
+                          <span className="text-yellow-600 dark:text-yellow-300 text-lg">
                             {overall === "user1"
                               ? result.user1.login
                               : result.user2.login}
@@ -469,7 +469,7 @@ export default function BattlePage() {
                         </p>
                       ) : (
                         <div className="text-center space-y-2">
-                          <p className="text-xl font-semibold text-yellow-300">
+                          <p className="text-xl font-semibold text-yellow-600 dark:text-yellow-300">
                             🤝 It's a Tie!
                           </p>
                           <p className="text-muted-foreground">
@@ -512,8 +512,8 @@ export default function BattlePage() {
                         activity patterns and consistency.
                       </p>
                       {result.metrics?.note && (
-                        <div className="mt-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
-                          <p className="text-xs text-blue-300">
+                        <div className="mt-3 p-3 bg-blue-500/10 dark:bg-blue-900/20 border border-blue-500/30 dark:border-blue-700/30 rounded-lg">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
                             ℹ️ {result.metrics.note}
                           </p>
                         </div>
