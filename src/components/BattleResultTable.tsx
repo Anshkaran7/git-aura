@@ -63,12 +63,13 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
   };
 
   return (
-
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-[#181c23] rounded-lg overflow-hidden text-white border border-gray-700">
-        <div className="bg-[#23272f] px-6 py-4 border-b border-gray-700">
-          <h3 className="text-lg font-semibold text-white">Battle Results</h3>
-          <p className="text-sm text-gray-400 mt-1">
+      <div className="bg-card rounded-lg overflow-hidden text-foreground border border-border">
+        <div className="bg-muted px-6 py-4 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">
+            Battle Results
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
             Comparing {safeResults.length} metrics - Winner highlighted in gold
           </p>
         </div>
@@ -76,17 +77,17 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-[#1e2329]">
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-300">
+              <tr className="bg-muted/50">
+                <th className="py-3 px-4 text-left text-sm font-medium text-muted-foreground">
                   Metric
                 </th>
-                <th className="py-3 px-4 text-center text-sm font-medium text-gray-300">
+                <th className="py-3 px-4 text-center text-sm font-medium text-muted-foreground">
                   User 1
                 </th>
-                <th className="py-3 px-4 text-center text-sm font-medium text-gray-300">
+                <th className="py-3 px-4 text-center text-sm font-medium text-muted-foreground">
                   User 2
                 </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-gray-300">
+                <th className="py-3 px-4 text-left text-sm font-medium text-muted-foreground">
                   Description
                 </th>
               </tr>
@@ -95,8 +96,8 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
               {safeResults.map((r, index) => (
                 <tr
                   key={r.key}
-                  className={`border-t border-gray-700 hover:bg-gray-800/30 transition-colors ${
-                    index % 2 === 0 ? "bg-[#181c23]" : "bg-[#1a1f26]"
+                  className={`border-t border-border hover:bg-muted/30 transition-colors ${
+                    index % 2 === 0 ? "bg-card" : "bg-muted/20"
                   }`}
                 >
                   <td className="py-3 px-4 font-medium">
@@ -108,8 +109,8 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
                   <td
                     className={`py-3 px-4 text-center font-mono text-sm ${
                       r.winner === "user1"
-                        ? "bg-yellow-900/40 font-bold text-yellow-200"
-                        : "text-gray-200"
+                        ? "bg-yellow-500/20 dark:bg-yellow-900/40 font-bold text-yellow-700 dark:text-yellow-200"
+                        : "text-foreground"
                     }`}
                   >
                     {formatValue(r.value1, r.key)}
@@ -117,13 +118,13 @@ const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
                   <td
                     className={`py-3 px-4 text-center font-mono text-sm ${
                       r.winner === "user2"
-                        ? "bg-yellow-900/40 font-bold text-yellow-200"
-                        : "text-gray-200"
+                        ? "bg-yellow-500/20 dark:bg-yellow-900/40 font-bold text-yellow-700 dark:text-yellow-200"
+                        : "text-foreground"
                     }`}
                   >
                     {formatValue(r.value2, r.key)}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-400 max-w-xs">
+                  <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs">
                     {r.description || "No description available"}
                   </td>
                 </tr>
