@@ -41,6 +41,7 @@
     "@types/node": "^24.0.14",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.11",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1.3.5",
