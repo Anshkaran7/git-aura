@@ -38,8 +38,7 @@ model User {
 model AuraCalculation {
   id                 String   @id @default(uuid())
   userId             String   @map("user_id")
-  /// For Postgres: add @db.Date
-  date               DateTime
+  date               DateTime @db.Date
   contributionsCount Int      @default(0) @map("contributions_count")
   baseAura           Int      @default(0) @map("base_aura")
   streakBonus        Int      @default(0) @map("streak_bonus")
@@ -47,8 +46,7 @@ model AuraCalculation {
   qualityBonus       Int      @default(0) @map("quality_bonus")
   totalAura          Int      @default(0) @map("total_aura")
   repositoriesData   Json?    @map("repositories_data")
-  /// For Postgres: add @db.Timestamptz(6)
-  createdAt          DateTime @default(now()) @map("created_at")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
@@ -121,7 +119,7 @@ model GlobalLeaderboard {
   userId      String   @unique @map("user_id")
   totalAura   Int      @default(0) @map("total_aura")
   rank        Int
-  lastUpdated DateTime @default(now()) @map("last_updated")
+  lastUpdated DateTime @default(now()) @map("last_updated") @db.Timestamptz(6)
   year        String?
   yearlyAura  Float    @default(0) @map("yearly_aura")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
