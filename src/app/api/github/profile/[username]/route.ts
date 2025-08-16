@@ -58,7 +58,11 @@ export async function GET(request: NextRequest) {
 
         const graphqlQuery = {
           query: `query($userName:String!) { 
-            user(login: $userName){
+            user(login: $userName) {
+              followers { totalCount }
+              following { totalCount }
+              issues(states: [OPEN, CLOSED]) { totalCount }
+              pullRequests(states: MERGED) { totalCount }
               contributionsCollection(from: "${lastYear.toISOString()}", to: "${today.toISOString()}") {
                 contributionCalendar {
                   totalContributions
@@ -70,6 +74,9 @@ export async function GET(request: NextRequest) {
                   }
                 }
               }
+              repositories(privacy: PUBLIC, isFork: false) { totalCount }
+              gists(privacy: PUBLIC) { totalCount }
+              createdAt
             }
           }`,
           variables: { userName: username },
@@ -147,22 +154,60 @@ export async function GET(request: NextRequest) {
     }
 
     // Process contributions data
-    const calendar =
-      contributionsData.data.user.contributionsCollection.contributionCalendar;
+    const userData = contributionsData.data.user;
+    const calendar = userData.contributionsCollection.contributionCalendar;
     const allContributions = calendar.weeks.flatMap(
       (week: { contributionDays: any[] }) => week.contributionDays
     );
 
+    // Parse additional stats from GraphQL response
+    const totalIssues = userData.issues?.totalCount ?? 0;
+    const totalPullRequests = userData.pullRequests?.totalCount ?? 0;
+    const totalRepositories = userData.repositories?.totalCount ?? 0;
+    const totalGists = userData.gists?.totalCount ?? 0;
+    const totalFollowers = userData.followers?.totalCount ?? 0;
+    const totalFollowing = userData.following?.totalCount ?? 0;
+    // Account age in years
+    const createdAt = userData.createdAt ? new Date(userData.createdAt) : null;
+    const now = new Date();
+    const accountAge = createdAt
+      ? Math.floor(
+          (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24 * 365)
+        )
+      : 0;
+    const totalStars = 0; // Not fetched in this query
+
+    // Calculate aura using allContributions
+    let aura = 0;
+    try {
+      // Dynamically import to avoid circular dependency
+      const { calculateTotalAura } = await import("@/lib/aura-calculations");
+      aura = calculateTotalAura(
+        Array.isArray(allContributions) ? allContributions : []
+      );
+    } catch (e) {
+      aura = 0;
+    }
+
     const contributionsResult = {
       totalContributions: calendar.totalContributions,
       contributionDays: allContributions,
+      totalIssues,
+      totalPullRequests,
+      totalRepositories,
+      totalGists,
+      totalFollowers,
+      totalFollowing,
+      accountAge,
+      totalStars,
     };
 
-    // Return combined data with no-cache headers
+    // Return combined data with aura and no-cache headers
     const response = NextResponse.json(
       {
         profile: profileData,
         contributions: contributionsResult,
+        aura,
       },
       {
         headers: {
