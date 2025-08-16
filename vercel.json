@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/refresh-all-users",
+      "path": "/api/cron/daily-tasks",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/update-ranks", 
-      "schedule": "0 1 * * *"
     },
     {
       "path": "/api/cron/save-monthly-winners",
