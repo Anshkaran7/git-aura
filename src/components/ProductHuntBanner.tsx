@@ -26,7 +26,7 @@ export function ProductHuntBanner() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
                 </span>
               </div>
-              <p className="font-medium text-white truncate">
+              <p className="font-medium text-foreground truncate">
                 <span className="md:hidden">🎉 Live on Product Hunt!</span>
                 <span className="hidden md:inline">
                   🎉 Exciting news! We're trending on Product Hunt!

@@ -231,9 +231,10 @@ export default function BattlePage() {
 
       {/* Page Header */}
       <div className="mb-8 sm:mb-12 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
           GitHub 1v1 Battle
         </h1>
+
         <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed">
           Enter two GitHub usernames and see a comprehensive head‑to‑head
           breakdown. We compare 8 metrics including contributions, stars,
@@ -254,6 +255,7 @@ export default function BattlePage() {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser1(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
+
           onKeyDown={(e) => {
             if (e.key === "Enter" && validationState.canBattle && !loading) {
               handleBattle();
@@ -268,13 +270,14 @@ export default function BattlePage() {
           }`}
           disabled={loading}
         />
-        <span className="font-bold text-xl md:text-2xl text-gray-400">VS</span>
+        <span className="font-bold text-xl md:text-2xl text-muted-foreground">VS</span>
         <Input
           placeholder="GitHub Username 2"
           value={user2}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setUser2(e.target.value.replace(/https?:\/\/github.com\//, ""))
           }
+
           onKeyDown={(e) => {
             if (e.key === "Enter" && validationState.canBattle && !loading) {
               handleBattle();
@@ -291,6 +294,7 @@ export default function BattlePage() {
         />
         <Button
           onClick={handleBattle}
+
           disabled={!validationState.canBattle || loading}
           className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -337,6 +341,7 @@ export default function BattlePage() {
             {infoCards.map((f) => (
               <div
                 key={f.title}
+
                 className="rounded-lg border border-gray-800 bg-gray-900/30 p-3 hover:border-gray-700 hover:bg-gray-900/50 transition-all duration-200"
               >
                 <h3 className="text-xs font-medium text-white mb-1 tracking-wide">
@@ -401,13 +406,13 @@ export default function BattlePage() {
             </div>
 
             {/* Battle Results Table */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 backdrop-blur-sm p-4 md:p-6 mb-6 sm:mb-8">
+            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-4 md:p-6 mb-6 sm:mb-8">
               <BattleResultTable results={result.results || []} />
             </div>
 
             {/* Winner Explanation */}
             {result && (
-              <div className="mt-6 max-w-3xl mx-auto text-sm md:text-base text-gray-300 leading-relaxed mb-8 sm:mb-10">
+              <div className="mt-6 max-w-3xl mx-auto text-sm md:text-base text-muted-foreground leading-relaxed mb-8 sm:mb-10">
                 {(() => {
                   const winners = (result.results || []).filter(
                     (r) => r.winner
@@ -449,6 +454,7 @@ export default function BattlePage() {
                     arr.map((r) => explainMetric(r)).join(", ");
                   return (
                     <div className="space-y-3">
+
                       {overall ? (
                         <p className="font-semibold text-white text-center">
                           🏆 Overall Winner:{" "}
@@ -476,7 +482,7 @@ export default function BattlePage() {
                       )}
                       {user1Wins.length > 0 && (
                         <p>
-                          <span className="text-white font-medium">
+                          <span className="text-foreground font-medium">
                             {result.user1.login}
                           </span>{" "}
                           led in:
@@ -489,7 +495,7 @@ export default function BattlePage() {
                       )}
                       {user2Wins.length > 0 && (
                         <p>
-                          <span className="text-white font-medium">
+                          <span className="text-foreground font-medium">
                             {result.user2.login}
                           </span>{" "}
                           led in:
@@ -525,12 +531,13 @@ export default function BattlePage() {
                 variant="outline"
                 onClick={handleShareResult}
                 disabled={isGenerating}
-                className="border-gray-600 text-gray-300 hover:text-white hover:border-gray-500"
+                
               >
                 {isGenerating ? "Generating..." : "Share Result"}
               </Button>
               <Button
                 variant="secondary"
+
                 onClick={handleReset}
                 className="bg-gray-700 hover:bg-gray-600 text-white"
               >
@@ -539,7 +546,6 @@ export default function BattlePage() {
               <Link href={`${user1.trim()}/leaderboard`}>
                 <Button
                   variant="ghost"
-                  className="text-gray-300 hover:text-white hover:bg-gray-800"
                 >
                   Leaderboard
                 </Button>

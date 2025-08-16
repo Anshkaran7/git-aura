@@ -48,7 +48,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           disabled={
             !username.trim() || username === searchedUsername || loading
           }
-          className="absolute right-2 top-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-mona-sans text-sm sm:text-base"
+          className="absolute right-2 top-2 bg-blue-600 text-foreground px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-sm font-mona-sans text-sm sm:text-base"
         >
           {loading ? "Searching..." : "Search"}
         </button>

@@ -329,13 +329,13 @@ const Leaderboard = ({
   }
 
   return (
-    <div className="bg-black/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-gray-800/50 shadow-2xl mx-1 sm:mx-0">
+    <div className="bg-background/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-gray-800/50 shadow-2xl mx-1 sm:mx-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">
               Leaderboard
             </h2>
           </div>
@@ -346,8 +346,8 @@ const Leaderboard = ({
               onClick={() => setView("monthly")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none touch-manipulation ${
                 view === "monthly"
-                  ? "bg-gray-700/80 text-white shadow-lg"
-                  : "text-gray-400 hover:text-gray-200 active:text-white hover:bg-gray-800/50"
+                  ? "bg-gray-700/80 text-foreground shadow-lg"
+                  : "text-gray-400 hover:text-gray-200 active:text-foreground hover:bg-gray-800/50"
               }`}
             >
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -357,8 +357,8 @@ const Leaderboard = ({
               onClick={() => setView("alltime")}
               className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none touch-manipulation ${
                 view === "alltime"
-                  ? "bg-gray-700/80 text-white shadow-lg"
-                  : "text-gray-400 hover:text-gray-200 active:text-white hover:bg-gray-800/50"
+                  ? "bg-gray-700/80 text-foreground shadow-lg"
+                  : "text-gray-400 hover:text-gray-200 active:text-foreground hover:bg-gray-800/50"
               }`}
             >
               <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -376,7 +376,7 @@ const Leaderboard = ({
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
             </button>
-            <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-white whitespace-nowrap bg-gray-900/40 backdrop-blur-sm rounded border border-gray-700/50">
+            <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap bg-gray-900/40 backdrop-blur-sm rounded border border-gray-700/50">
               {formatMonthYear(currentMonth)}
             </span>
             <button
@@ -401,12 +401,12 @@ const Leaderboard = ({
             placeholder="Search developers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-12 py-3 bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 hover:bg-gray-900/80"
+            className="w-full pl-11 pr-12 py-3 bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 hover:bg-gray-900/80"
           />
           {searchQuery && (
             <button
               onClick={clearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors z-10"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-foreground transition-colors z-10"
             >
               <X className="h-5 w-5" />
             </button>
@@ -427,7 +427,7 @@ const Leaderboard = ({
             <div className="p-2 sm:p-3 rounded-lg bg-gray-900/40 backdrop-blur-sm border border-gray-700/50 border-l-4 border-l-yellow-500">
               <div className="flex items-center gap-2">
                 <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
-                <span className="text-xs sm:text-sm font-medium text-white">
+                <span className="text-xs sm:text-sm font-medium text-foreground">
                   Your current rank: #{userRank}
                 </span>
               </div>
@@ -524,7 +524,7 @@ const Leaderboard = ({
                       <div className="flex flex-col min-w-0 flex-1">
                         <a
                           href={`/user/${entry.user.github_username}`}
-                          className="font-semibold text-sm sm:text-base text-white hover:underline truncate"
+                          className="font-semibold text-sm sm:text-base text-foreground hover:underline truncate"
                         >
                           {entry.user.display_name}
                         </a>
@@ -552,12 +552,12 @@ const Leaderboard = ({
                           <div
                             className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r ${getBadgeColor(
                               badge.rarity
-                            )} flex items-center justify-center text-white text-xs sm:text-sm font-bold shadow-lg backdrop-blur-sm`}
+                            )} flex items-center justify-center text-foreground text-xs sm:text-sm font-bold shadow-lg backdrop-blur-sm`}
                           >
                             {badge.icon}
                           </div>
                           {badge.rank && badge.rank <= 3 && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                            <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold text-foreground">
                               {badge.rank}
                             </div>
                           )}
@@ -567,7 +567,7 @@ const Leaderboard = ({
 
                     {/* Stats */}
                     <div className="text-right">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-white">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
                         {formatNumber(entry.aura)} Aura
                       </div>
                       {entry.contributions !== undefined && (
@@ -593,7 +593,7 @@ const Leaderboard = ({
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={!pagination.hasPrevPage}
-            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -620,7 +620,7 @@ const Leaderboard = ({
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
                       pageNum === currentPage
                         ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
-                        : "bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60"
+                        : "bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60"
                     }`}
                   >
                     {pageNum}
@@ -633,7 +633,7 @@ const Leaderboard = ({
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={!pagination.hasNextPage}
-            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

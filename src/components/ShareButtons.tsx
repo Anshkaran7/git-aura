@@ -2,6 +2,7 @@
 import React from "react";
 import { Download, Twitter, Linkedin } from "lucide-react";
 import { Theme } from "./types";
+import { Button } from "@/components/ui/button";
 
 interface ShareButtonsProps {
   isGenerating: boolean;
@@ -16,8 +17,8 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
 }) => {
   if (isGenerating) {
     return (
-      <div className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gray-500 rounded-lg text-white font-mona-sans w-full sm:w-auto">
-        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+      <div className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-muted rounded-lg text-muted-foreground font-mona-sans w-full sm:w-auto">
+        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-foreground"></div>
         <span className="text-sm sm:text-base">Generating...</span>
       </div>
     );
@@ -27,7 +28,7 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
       <button
         onClick={() => onShare("twitter")}
-        className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base touch-manipulation min-h-[44px] sm:min-h-0"
+        className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc] rounded-lg text-foreground transition-colors font-mona-sans text-sm sm:text-base touch-manipulation min-h-[44px] sm:min-h-0"
         title="Share on Twitter"
       >
         <Twitter className="w-4 h-4 shrink-0" />
@@ -35,20 +36,16 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
       </button>
       <button
         onClick={() => onShare("linkedin")}
-        className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86] rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base touch-manipulation min-h-[44px] sm:min-h-0"
+        className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86] rounded-lg text-foreground transition-colors font-mona-sans text-sm sm:text-base touch-manipulation min-h-[44px] sm:min-h-0"
         title="Share on LinkedIn"
       >
         <Linkedin className="w-4 h-4 shrink-0" />
         <span className="truncate">LinkedIn</span>
       </button>
-      <button
-        onClick={onExportImage}
-        className="flex items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg text-white transition-colors font-mona-sans text-sm sm:text-base touch-manipulation min-h-[44px] sm:min-h-0"
-        title="Download as Image"
-      >
+      <Button onClick={onExportImage} title="Download as Image">
         <Download className="w-4 h-4 shrink-0" />
         <span className="truncate">Export</span>
-      </button>
+      </Button>
     </div>
   );
 };

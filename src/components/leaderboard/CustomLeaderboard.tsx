@@ -169,7 +169,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
 
       {/* Leaderboard Entries */}
       <div className="space-y-1.5 sm:space-y-2">
-        <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3">
+        <h3 className="text-sm sm:text-base font-bold text-foreground mb-2 sm:mb-3">
           Top 100 Developers
         </h3>
         <AnimatePresence>
@@ -192,7 +192,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
               ref={observerTarget}
               className="h-8 flex items-center justify-center"
             >
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
             </div>
           )}
       </div>

@@ -32,8 +32,8 @@ export function UserCard({
       )}
       <div className="relative">
         <div className="flex items-center gap-1 mb-2">
-          <Star className="w-3 h-3 text-[#39d353]" />
-          <span className="text-xs font-medium text-[#39d353]">
+          <Star className="w-3 h-3 text-muted-foreground" />
+          <span className="text-xs font-medium text-muted-foreground">
             {username}'s Position
           </span>
         </div>
@@ -46,23 +46,23 @@ export function UserCard({
               className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ring-1 ring-[#39d353]"
             />
             <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white">
+              <h3 className="text-xs sm:text-sm font-bold text-foreground">
                 {currentUser.user.display_name}
               </h3>
-              <p className="text-xs text-[#7d8590]">
+              <p className="text-xs text-muted-foreground">
                 @{currentUser.user.github_username}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm sm:text-base font-bold text-white">
+            <div className="text-sm sm:text-base font-bold text-foreground">
               #{currentUser.rank}
             </div>
-            <div className="text-xs text-[#7d8590]">
+            <div className="text-xs text-muted-foreground">
               {formatNumber(currentUser.aura)} Aura
             </div>
             {currentUser.contributions !== undefined && (
-              <div className="text-[10px] text-[#7d8590]">
+              <div className="text-[10px] text-muted-foreground">
                 {formatNumber(currentUser.contributions)} contributions
               </div>
             )}

@@ -106,7 +106,7 @@ export const Footer = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-base sm:text-lg text-highlight">
+                <span className="font-bold text-base sm:text-lg text-primary">
                   Git Aura
                 </span>
               </div>
