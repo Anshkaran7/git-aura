@@ -21,7 +21,6 @@ import {
 
 function UserPage() {
   const params = useParams();
-  // Download format state
   const [downloadFormat, setDownloadFormat] = useState<string>('png');
   const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
@@ -201,12 +200,15 @@ function UserPage() {
     }
   };
 
+
   // Enhanced export: allow PNG/JPG, dynamic filename, and toast feedback
   const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
+
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
+
       let dataUrl;
       if (format === 'png') {
         dataUrl = await toPng(profileRef.current, {
@@ -229,10 +231,12 @@ function UserPage() {
       const filename = `${githubHandle}-profile-${date}.${format}`;
       const link = document.createElement('a');
       link.download = filename;
+
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
       if (typeof window !== 'undefined' && 'toast' in window) {
         // If using a global toast system
         (window as any).toast.success('Image downloaded!');
@@ -247,6 +251,7 @@ function UserPage() {
       } else {
         alert('Failed to download image. Check browser settings.');
       }
+
     } finally {
       setIsGenerating(false);
     }
@@ -416,10 +421,12 @@ function UserPage() {
                 profileRef={profileRef}
                 handleShareTwitter={() => handleShare("twitter")}
                 handleShareLinkedin={() => handleShare("linkedin")}
+
                 handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
                 isGenerating={isGenerating}
                 downloadFormat={downloadFormat}
                 setDownloadFormat={setDownloadFormat}
+
               />
               <MontlyContribution
                 selectedTheme={selectedTheme}

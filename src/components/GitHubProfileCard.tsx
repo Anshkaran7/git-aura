@@ -2,7 +2,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+
 import { toPng, toJpeg } from "html-to-image";
+
 import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
@@ -61,6 +63,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [userAura, setUserAura] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
+
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const [downloadFormat, setDownloadFormat] = useState<string>('png');
   const profileRef = useRef<HTMLDivElement>(null);
@@ -261,6 +264,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   };
 
   const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
+
     if (!profileRef.current) return;
 
     try {
@@ -289,6 +293,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       const filename = `${githubHandle}-profile-${date}.${format}`;
       const link = document.createElement("a");
       link.download = filename;
+
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -306,6 +311,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       } else {
         alert('Failed to download image. Check browser settings.');
       }
+
     } finally {
       setIsGenerating(false);
     }
@@ -483,12 +489,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
                   contributions={contributions}
                   selectedTheme={selectedTheme}
                   profileRef={profileRef}
+
                   handleShareTwitter={() => handleShare("twitter")}
                   handleShareLinkedin={() => handleShare("linkedin")}
                   handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
                   isGenerating={isGenerating}
                   downloadFormat={downloadFormat}
                   setDownloadFormat={setDownloadFormat}
+
                 />
                 <MontlyContribution
                   selectedTheme={selectedTheme}

@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { Users, UserPlus, Coffee, Twitter, Linkedin, Download } from "lucide-react";
+
 import { Theme, GitHubProfile, GitHubContributions } from "./types";
 import ContributionGrid from "./ContributionGrid";
 import MontlyContribution from "./MontlyContribution";
@@ -16,9 +17,10 @@ interface ProfileCardProps {
   handleShareLinkedin: () => void;
   handleDownload: () => void;
   isGenerating?: boolean;
+
   downloadFormat?: string;
   setDownloadFormat?: (format: string) => void;
-}
+
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
@@ -31,6 +33,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   isGenerating = false,
   downloadFormat,
   setDownloadFormat,
+
 }) => {
   return (
     <div
@@ -77,6 +80,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 <Twitter className="w-4 h-4" />
               )}
             </button>
+
           <button
             onClick={handleShareLinkedin}
 
@@ -117,6 +121,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             )}
 
             <button
+
             onClick={handleDownload}
             disabled={isGenerating}
             className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
@@ -125,6 +130,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
                 : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
             }`}
             title={isGenerating ? "Generating image..." : `Download as ${downloadFormat ? downloadFormat.toUpperCase() : 'Image'}`}
+
           >
             {isGenerating ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
