@@ -8,6 +8,9 @@ import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
 import BadgeDisplay from "./BadgeDisplay";
 import ProfileCard from "./ProfileCard";
+import ProfileCardSkeleton from "./ProfileCardSkeleton";
+import MontlyContributionSkeleton from "./MontlyContributionSkeleton";
+import AuraPanelSkeleton from "./AuraPanelSkeleton";
 import EmptyState from "./EmptyState";
 // import ShareButtons from "./ShareButtons";
 import AuraPanel from "./AuraPanel";
@@ -335,9 +338,11 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {/* Loading State */}
             {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
-              </div>
+              <>
+                <ProfileCardSkeleton />
+                <MontlyContributionSkeleton />
+                <AuraPanelSkeleton />
+              </>
             ) : profile ? (
               <>
                 <ProfileCard

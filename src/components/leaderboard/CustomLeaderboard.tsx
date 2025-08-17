@@ -5,6 +5,7 @@ import { ViewType, LeaderboardEntry } from "./types";
 import { ViewToggle } from "./ViewToggle";
 import { MonthNavigation } from "./MonthNavigation";
 import { UserCard } from "./UserCard";
+import { UserCardSkeleton } from "./UserCardSkeleton";
 import { LeaderboardEntry as LeaderboardEntryComponent } from "./LeaderboardEntry";
 import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
@@ -159,13 +160,15 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       </div>
 
       {/* Current User Card */}
-      {currentUser && (
+      {loading ? (
+        <UserCardSkeleton username={username} />
+      ) : currentUser ? (
         <UserCard
           currentUser={currentUser}
           userOutOfTop100={userOutOfTop100}
           username={username}
         />
-      )}
+      ) : null}
 
       {/* Leaderboard Entries */}
       <div className="space-y-1.5 sm:space-y-2">
