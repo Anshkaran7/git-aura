@@ -23,6 +23,9 @@ import {
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
 import ShareModal from "./ShareModal";
+import { ProfileCardSkeleton } from "./skeletons/ProfileCardSkeleton";
+import { MonthlyContributionSkeleton, AuraPanelSkeleton } from "./skeletons/ContributionSkeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface GitHubProfileCardProps {
   initialUsername?: string;
@@ -477,52 +480,73 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         {/* Content based on current view */}
         {currentView === "profile" && (
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
-              </div>
-            ) : profile ? (
-              <>
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
 
-                  handleShareTwitter={() => handleShare("twitter")}
-                  handleShareLinkedin={() => handleShare("linkedin")}
-                  handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
-                  isGenerating={isGenerating}
-                  downloadFormat={downloadFormat}
-                  setDownloadFormat={setDownloadFormat}
-
-                />
-                <MontlyContribution
-                  selectedTheme={selectedTheme}
-                  contributions={contributions}
-                />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </>
-            ) : (
-              !error && (
-                <EmptyState
-                  selectedTheme={selectedTheme}
-                  onLoadProfile={(username) => {
-                    if (username !== searchedUsername && !loading) {
-                      setUsername(username);
-                      fetchProfile(username);
-                    }
-                  }}
-                />
-              )
-            )}
+            <AnimatePresence mode="wait">
+              {/* Loading State */}
+              {loading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4 sm:space-y-6 md:space-y-8"
+                >
+                  <ProfileCardSkeleton />
+                  <MonthlyContributionSkeleton />
+                  <AuraPanelSkeleton />
+                </motion.div>
+              ) : profile ? (
+                <motion.div
+                  key="content"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="space-y-4 sm:space-y-6 md:space-y-8"
+                >
+                  <ProfileCard
+                    profile={profile}
+                    contributions={contributions}
+                    selectedTheme={selectedTheme}
+                    profileRef={profileRef}
+                    handleShareTwitter={openShareModal}
+                    handleShareLinkedin={openShareModal}
+                    handleDownload={handleExportImage}
+                    isGenerating={isGenerating}
+                  />
+                  <MontlyContribution
+                    selectedTheme={selectedTheme}
+                    contributions={contributions}
+                  />
+                  <AuraPanel
+                    selectedTheme={selectedTheme}
+                    userAura={userAura}
+                    currentStreak={currentStreak}
+                    contributions={contributions}
+                    isCalculatingAura={isCalculatingAura}
+                  />
+                </motion.div>
+              ) : (
+                !error && (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <EmptyState
+                      selectedTheme={selectedTheme}
+                      onLoadProfile={(username) => {
+                        if (username !== searchedUsername && !loading) {
+                          setUsername(username);
+                          fetchProfile(username);
+                        }
+                      }}
+                    />
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
           </div>
         )}
 
