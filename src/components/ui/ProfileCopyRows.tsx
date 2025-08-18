@@ -1,33 +1,30 @@
-// src/components/ui/ProfileCopyRows.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import CopyButton from "@/components/ui/CopyButton";  // ✅ default import
+import { useState, useEffect } from "react";
 
 export default function ProfileCopyRows({ username }: { username: string }) {
-  const pathname = usePathname();
   const [absoluteUrl, setAbsoluteUrl] = useState<string>("");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && username) {
       const origin = window.location.origin;
-      setAbsoluteUrl(origin + (pathname || `/`));
+      // Always build the profile URL from username, not from pathname
+      setAbsoluteUrl(
+        new URL(`/${encodeURIComponent(username)}`, origin).toString()
+      );
     }
-  }, [pathname]);
+  }, [username]);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center">
-        <h1 className="text-xl font-semibold">{username}</h1>
-        <CopyButton text={username} label="Copy username" />
-      </div>
-
-      <div className="flex items-center">
-        <span className="text-sm text-gray-600 break-all">{absoluteUrl}</span>
-        {absoluteUrl && (
-          <CopyButton text={absoluteUrl} label="Copy profile URL" />
-        )}
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center justify-between p-2 bg-gray-100 rounded">
+        <span className="truncate">{absoluteUrl}</span>
+        <button
+          onClick={() => navigator.clipboard.writeText(absoluteUrl)}
+          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Copy
+        </button>
       </div>
     </div>
   );

@@ -1,21 +1,32 @@
-// src/components/ui/CopyButton.tsx
 "use client";
 
 import { useState } from "react";
+import copyToClipboard from "@/lib/copyToClipboard";
 
 export default function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      const ok = await copyToClipboard(text);
+      if (ok) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      } else {
+        console.error("Clipboard copy failed");
+        // optionally show error toast/alert here
+      }
+    } catch (err) {
+      console.error("Clipboard copy error:", err);
+      // optionally show error toast/alert here
+    }
   };
 
   return (
     <button
       onClick={handleCopy}
-      className="ml-2 px-3 py-1 text-sm rounded bg-gray-200 hover:bg-gray-300"
+      className="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600"
+      aria-label={label}
     >
       {copied ? "Copied!" : label}
     </button>
