@@ -24,7 +24,10 @@ import {
 import MontlyContribution from "./MontlyContribution";
 import ShareModal from "./ShareModal";
 import { ProfileCardSkeleton } from "./skeletons/ProfileCardSkeleton";
-import { MonthlyContributionSkeleton, AuraPanelSkeleton } from "./skeletons/ContributionSkeleton";
+import {
+  MonthlyContributionSkeleton,
+  AuraPanelSkeleton,
+} from "./skeletons/ContributionSkeleton";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GitHubProfileCardProps {
@@ -68,7 +71,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
 
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
-  const [downloadFormat, setDownloadFormat] = useState<string>('png');
+  const [downloadFormat, setDownloadFormat] = useState<string>("png");
   const profileRef = useRef<HTMLDivElement>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -266,15 +269,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
-
+  const handleExportImage = async (format: "png" | "jpg" = "png") => {
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
       let dataUrl: string;
-      
-      if (format === 'jpg') {
+
+      if (format === "jpg") {
         dataUrl = await toJpeg(profileRef.current, {
           cacheBust: true,
           backgroundColor: undefined,
@@ -290,8 +292,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           skipFonts: false,
         });
       }
-      
-      const githubHandle = searchedUsername || 'profile';
+
+      const githubHandle = searchedUsername || "profile";
       const date = new Date().toISOString().slice(0, 10);
       const filename = `${githubHandle}-profile-${date}.${format}`;
       const link = document.createElement("a");
@@ -301,20 +303,21 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      if (typeof window !== 'undefined' && 'toast' in window) {
-        (window as any).toast.success('Image downloaded!');
+
+      if (typeof window !== "undefined" && "toast" in window) {
+        (window as any).toast.success("Image downloaded!");
       } else {
-        alert('Image downloaded!');
+        alert("Image downloaded!");
       }
     } catch (err) {
       console.error("Failed to export image:", err);
-      if (typeof window !== 'undefined' && 'toast' in window) {
-        (window as any).toast.error('Failed to download image. Check browser settings.');
+      if (typeof window !== "undefined" && "toast" in window) {
+        (window as any).toast.error(
+          "Failed to download image. Check browser settings."
+        );
       } else {
-        alert('Failed to download image. Check browser settings.');
+        alert("Failed to download image. Check browser settings.");
       }
-
     } finally {
       setIsGenerating(false);
     }
@@ -480,7 +483,6 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         {/* Content based on current view */}
         {currentView === "profile" && (
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
-
             <AnimatePresence mode="wait">
               {/* Loading State */}
               {loading ? (
@@ -511,8 +513,12 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
                     profileRef={profileRef}
                     handleShareTwitter={openShareModal}
                     handleShareLinkedin={openShareModal}
-                    handleDownload={handleExportImage}
+                    handleDownload={(format) =>
+                      handleExportImage(format as "png" | "jpg")
+                    }
                     isGenerating={isGenerating}
+                    downloadFormat={downloadFormat}
+                    setDownloadFormat={setDownloadFormat}
                   />
                   <MontlyContribution
                     selectedTheme={selectedTheme}

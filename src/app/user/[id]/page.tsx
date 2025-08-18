@@ -21,7 +21,7 @@ import {
 
 function UserPage() {
   const params = useParams();
-  const [downloadFormat, setDownloadFormat] = useState<string>('png');
+  const [downloadFormat, setDownloadFormat] = useState<string>("png");
   const searchParams = useSearchParams();
   const { isSignedIn, user, isLoaded } = useUser();
   const userId = params.id as string;
@@ -200,17 +200,15 @@ function UserPage() {
     }
   };
 
-
   // Enhanced export: allow PNG/JPG, dynamic filename, and toast feedback
-  const handleExportImage = async (format: 'png' | 'jpg' = 'png') => {
-
+  const handleExportImage = async (format: "png" | "jpg" = "png") => {
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
 
       let dataUrl;
-      if (format === 'png') {
+      if (format === "png") {
         dataUrl = await toPng(profileRef.current, {
           cacheBust: true,
           backgroundColor: undefined,
@@ -226,10 +224,10 @@ function UserPage() {
           quality: 0.95,
         });
       }
-      const githubHandle = profile?.login || 'profile';
+      const githubHandle = profile?.login || "profile";
       const date = new Date().toISOString().slice(0, 10);
       const filename = `${githubHandle}-profile-${date}.${format}`;
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.download = filename;
 
       link.href = dataUrl;
@@ -237,21 +235,22 @@ function UserPage() {
       link.click();
       document.body.removeChild(link);
 
-      if (typeof window !== 'undefined' && 'toast' in window) {
+      if (typeof window !== "undefined" && "toast" in window) {
         // If using a global toast system
-        (window as any).toast.success('Image downloaded!');
+        (window as any).toast.success("Image downloaded!");
       } else {
         // fallback
-        alert('Image downloaded!');
+        alert("Image downloaded!");
       }
     } catch (err) {
-      console.error('Failed to export image:', err);
-      if (typeof window !== 'undefined' && 'toast' in window) {
-        (window as any).toast.error('Failed to download image. Check browser settings.');
+      console.error("Failed to export image:", err);
+      if (typeof window !== "undefined" && "toast" in window) {
+        (window as any).toast.error(
+          "Failed to download image. Check browser settings."
+        );
       } else {
-        alert('Failed to download image. Check browser settings.');
+        alert("Failed to download image. Check browser settings.");
       }
-
     } finally {
       setIsGenerating(false);
     }
@@ -352,8 +351,8 @@ function UserPage() {
                 <h2 className="text-2xl font-bold mb-4">User Not Found</h2>
                 <p className="text-gray-400 mb-6">
                   The user{" "}
-                  <span className="text-foreground font-mono">@{userId}</span> is not
-                  registered on our platform.
+                  <span className="text-foreground font-mono">@{userId}</span>{" "}
+                  is not registered on our platform.
                   {!isSignedIn && " You need to sign in to view user profiles."}
                 </p>
               </div>
@@ -421,12 +420,14 @@ function UserPage() {
                 profileRef={profileRef}
                 handleShareTwitter={() => handleShare("twitter")}
                 handleShareLinkedin={() => handleShare("linkedin")}
-
-                handleDownload={() => handleExportImage(downloadFormat as 'png' | 'jpg')}
+                handleDownload={(format) =>
+                  handleExportImage(
+                    (format || downloadFormat || "png") as "png" | "jpg"
+                  )
+                }
                 isGenerating={isGenerating}
                 downloadFormat={downloadFormat}
                 setDownloadFormat={setDownloadFormat}
-
               />
               <MontlyContribution
                 selectedTheme={selectedTheme}

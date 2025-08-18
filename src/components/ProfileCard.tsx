@@ -1,6 +1,13 @@
 "use client";
 import React from "react";
-import { Users, UserPlus, Coffee, Twitter, Linkedin, Download } from "lucide-react";
+import {
+  Users,
+  UserPlus,
+  Coffee,
+  Twitter,
+  Linkedin,
+  Download,
+} from "lucide-react";
 
 import { Theme, GitHubProfile, GitHubContributions } from "./types";
 import ContributionGrid from "./ContributionGrid";
@@ -15,12 +22,11 @@ interface ProfileCardProps {
   profileRef?: React.RefObject<HTMLDivElement | null>;
   handleShareTwitter: () => void;
   handleShareLinkedin: () => void;
-  handleDownload: () => void;
+  handleDownload: (format?: string) => void;
   isGenerating?: boolean;
-
   downloadFormat?: string;
   setDownloadFormat?: (format: string) => void;
-
+}
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
@@ -31,15 +37,32 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   handleShareLinkedin,
   handleDownload,
   isGenerating = false,
-  downloadFormat,
+  downloadFormat = "png",
   setDownloadFormat,
-
 }) => {
+  const [showDownloadMenu, setShowDownloadMenu] = React.useState(false);
+
+  // Close download menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showDownloadMenu &&
+        !(event.target as Element).closest(".download-dropdown")
+      ) {
+        setShowDownloadMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDownloadMenu]);
+
   return (
     <div
       ref={profileRef}
       data-profile-card
-      className="bg-card backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border mx-1 sm:mx-0">
+      className="bg-card backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border mx-1 sm:mx-0"
+    >
       {/* Browser Window Controls */}
       <div className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 bg-background backdrop-blur-sm border-b border-border">
         <div className="flex gap-1 sm:gap-1.5">
@@ -64,26 +87,25 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-                      <button
-              onClick={handleShareTwitter}
-              disabled={isGenerating}
-              className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-                isGenerating
-                  ? "bg-gray-600 cursor-not-allowed opacity-50"
-                  : "bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc]"
-              }`}
-              title={isGenerating ? "Generating image..." : "Share on Twitter"}
-            >
-              {isGenerating ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Twitter className="w-4 h-4" />
-              )}
-            </button>
+          <button
+            onClick={handleShareTwitter}
+            disabled={isGenerating}
+            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+              isGenerating
+                ? "bg-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#1DA1F2] hover:bg-[#1a94e0] active:bg-[#1785cc]"
+            }`}
+            title={isGenerating ? "Generating image..." : "Share on Twitter"}
+          >
+            {isGenerating ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Twitter className="w-4 h-4" />
+            )}
+          </button>
 
           <button
             onClick={handleShareLinkedin}
-
             disabled={isGenerating}
             className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
               isGenerating
@@ -97,47 +119,71 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             ) : (
               <Linkedin className="w-4 h-4" />
             )}
-                      </button>
+          </button>
 
-            {/* Format selector */}
-            {setDownloadFormat && (
-              <div className="relative">
-                <select
-                  value={downloadFormat}
-                  onChange={e => setDownloadFormat(e.target.value)}
-                  className="bg-gray-800 text-white px-2 py-1.5 sm:px-2 sm:py-2 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500 text-xs sm:text-sm hover:bg-gray-700 transition-colors relative z-50 font-medium appearance-none pr-6"
-                  style={{ minWidth: 50, position: 'relative' }}
-                  title={`Current format: ${downloadFormat?.toUpperCase()}`}
+          {/* Download button with dropdown */}
+          <div className="relative download-dropdown">
+            <button
+              onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setShowDownloadMenu(!showDownloadMenu);
+                }
+              }}
+              disabled={isGenerating}
+              tabIndex={0}
+              className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
+                isGenerating
+                  ? "bg-gray-600 cursor-not-allowed opacity-50"
+                  : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+              }`}
+              title={isGenerating ? "Generating image..." : "Download image"}
+            >
+              {isGenerating ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+            </button>
+
+            {/* Download format dropdown */}
+            {showDownloadMenu && !isGenerating && (
+              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 min-w-[120px]">
+                <button
+                  onClick={() => {
+                    handleDownload("png");
+                    setShowDownloadMenu(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleDownload("png");
+                      setShowDownloadMenu(false);
+                    }
+                  }}
+                  tabIndex={0}
+                  className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 transition-colors text-sm border-b border-gray-700 last:border-b-0 rounded-t-lg first:rounded-t-lg last:rounded-b-lg focus:outline-none focus:bg-gray-700"
                 >
-                  <option value="png">PNG</option>
-                  <option value="jpg">JPG</option>
-                </select>
-                <div className="absolute right-1 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  Download as PNG
+                </button>
+                <button
+                  onClick={() => {
+                    handleDownload("jpg");
+                    setShowDownloadMenu(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleDownload("jpg");
+                      setShowDownloadMenu(false);
+                    }
+                  }}
+                  tabIndex={0}
+                  className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 transition-colors text-sm border-b border-gray-700 last:border-b-0 rounded-t-lg first:rounded-t-lg last:rounded-b-lg focus:outline-none focus:bg-gray-700"
+                >
+                  Download as JPG
+                </button>
               </div>
             )}
-
-            <button
-
-            onClick={handleDownload}
-            disabled={isGenerating}
-            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-              isGenerating
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
-            }`}
-            title={isGenerating ? "Generating image..." : `Download as ${downloadFormat ? downloadFormat.toUpperCase() : 'Image'}`}
-
-          >
-            {isGenerating ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
-          </button>
+          </div>
         </div>
       </div>
 
