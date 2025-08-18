@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import copyToClipboard from "@/lib/copyToClipboard";
+import { copyToClipboard } from "@/lib/copyToClipboard";
 
 export default function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);

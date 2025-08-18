@@ -1,29 +1,28 @@
 // src/lib/copyToClipboard.ts
-export async function copyToClipboard(text: string): Promise<boolean> {
-  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-    try {
+export async function copyToClipboard(text: string): Promise<boolean>  {
+  try {
+    // Preferred: modern async clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
       return true;
-    } catch {
-      // fall through to legacy method
     }
-  }
 
-  // Fallback (legacy browsers)
-  try {
+    // Fallback: create a temporary <textarea>, select + execCommand("copy")
     const textarea = document.createElement("textarea");
     textarea.value = text;
-    // Avoid scrolling to bottom
+    // avoid scrolling to bottom
     textarea.style.position = "fixed";
     textarea.style.opacity = "0";
-    textarea.style.pointerEvents = "none";
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
-    const ok = document.execCommand("copy");
+
+    const successful = document.execCommand("copy");
     document.body.removeChild(textarea);
-    return ok;
-  } catch {
+
+    return successful;
+  } catch (err) {
+    console.error("copyToClipboard failed:", err);
     return false;
   }
 }

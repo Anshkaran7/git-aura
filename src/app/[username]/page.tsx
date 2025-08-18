@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -8,17 +6,14 @@ import { Header } from "@/components/home/header";
 import ProfileCopyRows from "@/components/ui/ProfileCopyRows";
 
 interface PageProps {
-  params: Promise<{ username: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { username: string };
 }
 
 export default async function ProfilePage({ params }: PageProps) {
-  const { username } = await params;
-
-  // Get authentication state
-  const { userId } = await auth();
+  const { username } = params;
 
   // Require authentication
+  const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
   }
@@ -28,8 +23,11 @@ export default async function ProfilePage({ params }: PageProps) {
 
   // Only allow access to own profile
   if (user?.username !== username) {
-    if (user?.username) redirect(`/${user.username}`);
-    else redirect("/sign-in");
+    if (user?.username) {
+      redirect(`/${user.username}`);
+    } else {
+      redirect("/sign-in");
+    }
   }
 
   return (
