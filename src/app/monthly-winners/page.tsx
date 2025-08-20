@@ -195,18 +195,19 @@ const WinnerCard = ({
       ref={cardRef}
       className={`relative flex flex-col items-center bg-card/80 dark:bg-card/20 rounded-lg p-4 ${
         winner.rank === 1
-          ? "order-2 scale-105 md:scale-110 -translate-y-8 md:-translate-y-16"
+          ? "order-1 sm:order-2 scale-105 sm:-translate-y-16"
           : winner.rank === 2
-          ? "order-1"
+          ? "order-2 sm:order-1"
           : "order-3"
-      } transition-all w-full max-w-[280px]`}
+      } transition-all w-full max-w-[400px] md:max-w-[250px] lg:max-w-[350px]`}
       aria-label={`${winner.user.displayName} - Rank ${winner.rank}`}
     >
       {/* Share Button */}
-      <button
-        onClick={handleShare}
-        disabled={isGenerating}
-        className={`absolute top-4 left-4 p-2 rounded-full transition-all duration-300
+      <div className="absolute flex w-full justify-between px-1.5 items-center z-20">
+        <button
+          onClick={handleShare}
+          disabled={isGenerating}
+          className={`rounded-full p-2 transition-all duration-300
           ${
             winner.rank === 1
               ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
@@ -214,26 +215,26 @@ const WinnerCard = ({
               ? "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
               : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
           } ${isGenerating ? "opacity-50 cursor-not-allowed" : ""}`}
-        aria-label="Share achievement"
-      >
-        {isGenerating ? (
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <Share2 className="w-4 h-4" />
-        )}
-      </button>
+          aria-label="Share achievement"
+        >
+          {isGenerating ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Share2 className="w-4 h-4" />
+          )}
+        </button>
 
-      {/* Badge Image in Top Right */}
-      <div className="absolute top-4 right-4 w-16 h-16 z-20">
-        <Image
-          src={rankStyles.badgeImage}
-          alt={`${winner.rank} place badge`}
-          width={64}
-          height={64}
-          className="drop-shadow-xl"
-          priority
-          unoptimized
-        />
+        {/* Badge Image in Top Right */}
+        <div className="relative w-16 h-16 sm-only:w-10 sm-only:h-10 md:w-14 md:h-14">
+          <Image
+            src={rankStyles.badgeImage}
+            alt={`${winner.rank} place badge`}
+            fill
+            className="drop-shadow-xl object-contain"
+            priority
+            unoptimized
+          />
+        </div>
       </div>
 
       {/* Profile Image with Enhanced Ribbon */}
@@ -252,7 +253,7 @@ const WinnerCard = ({
         {/* Profile Image Container with Enhanced Border */}
         <div className="relative z-10 ">
           <div
-            className={`w-28 h-28 rounded-full border-4 overflow-hidden shadow-2xl
+            className={`w-24 h-24 sm-only:w-16 sm-only:h-16 rounded-full border-4 overflow-hidden shadow-2xl
             ${
               winner.rank === 1
                 ? "border-yellow-500 ring-4 ring-yellow-500/20"
@@ -290,25 +291,25 @@ const WinnerCard = ({
 
       {/* Name and Username with Enhanced Typography */}
       <div className="text-center space-y-1">
-        <h3 className="text-foreground text-xl font-bold tracking-wide">
+        <h3 className="text-foreground sm-only:text-lg text-xl font-bold tracking-wide">
           {winner.user.displayName}
         </h3>
-        <p className="text-muted-foreground text-sm font-medium">
+        <p className="text-muted-foreground sm-only:text-xs text-sm font-medium">
           @{winner.user.githubUsername}
         </p>
       </div>
 
       {/* Enhanced Stats Display */}
-      <div className="mt-4 flex gap-6 text-sm bg-foreground/5 px-6 py-3 backdrop-blur-sm">
+      <div className="mt-4 w-full items-center justify-around flex sm-only:flex-col gap-2 md:gap-3 text-xs bg-foreground/5 backdrop-blur-sm py-3 px-2 lg:text-sm">
         <div className="text-center flex items-center gap-2">
           <Zap className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
+          <p className="flex items-center gap-1 text-muted-foreground font-medium whitespace-nowrap">
             {winner.totalAura.toLocaleString()} Aura
           </p>
         </div>
         <div className="text-center flex items-center gap-2">
           <Users className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
+          <p className="flex items-center gap-1 text-muted-foreground font-medium whitespace-nowrap">
             {winner.contributionsCount} Contribs
           </p>
         </div>
@@ -323,7 +324,7 @@ const WinnerCard = ({
             "noopener"
           )
         }
-        className={`mt-4 px-6 py-2 rounded-full text-sm font-medium transition-all duration-300
+        className={`mt-4 sm-only:px-4 px-6 py-2 rounded-full sm:text-xs text-sm lg:text-sm font-medium transition-all duration-300
         ${
           winner.rank === 1
             ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
@@ -345,7 +346,7 @@ interface WinnersGridProps {
 const WinnersGrid = ({ monthData }: WinnersGridProps) => {
   return (
     <div className="relative">
-      <div className="flex justify-center items-end gap-4 md:gap-8 lg:gap-12 min-h-[400px]">
+      <div className="flex gap-4 justify-center flex-col items-center sm:flex-row sm:items-end md:gap-2 sm-only:gap-4 sm-only:min-h-[350px] min-h-[400px] lg:gap-14">
         {monthData.winners
           .sort((a, b) => a.rank - b.rank)
           .map((winner) => (
