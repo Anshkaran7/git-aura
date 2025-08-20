@@ -228,7 +228,7 @@ export const Header = ({
                 className="w-12 h-12 rounded-lg text-primary"
               />
             </div>
-            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-foreground">
+            <span className="hidden xl:block font-bold text-lg text-foreground">
               Git Aura
             </span>
           </Link>
