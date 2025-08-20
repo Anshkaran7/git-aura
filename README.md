@@ -1,4 +1,4 @@
-![git-aura UI Preview](public/layout.png)
+![git-aura UI Preview](public/gitaura.webp)
 
 _Preview of the git-aura user profile interface_
 
@@ -12,7 +12,7 @@ _Preview of the git-aura user profile interface_
 
 **Overview**
 
->Git-Aura is the ultimate developer platform that transforms your hard-earned commits and repositories into a social flex. Show off your coding achievements with beautiful visualizations and compete on leaderboards!
+> Git-Aura is the ultimate developer platform that transforms your hard-earned commits and repositories into a social flex. Show off your coding achievements with beautiful visualizations and compete on leaderboards!
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 <div align="center">
@@ -136,27 +136,7 @@ pnpm dev
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-<h2 align="center">🎯 Open Source Programmes ⭐</h2>
-<p align="center">
-  <b>This project is now OFFICIALLY accepted for:</b>
-</p>
-
-![GSSoC Logo](/git-aura/public/gssoc%20logo.png)
-
-🌟 **Exciting News...**
-
-🚀 This project is now an official part of GirlScript Summer of Code – GSSoC'25! 💃🎉💻 We're thrilled to welcome contributors from all over India and beyond to collaborate, build, and grow git-aura! Let’s make learning and career development smarter – together! 🌟👨‍💻👩‍💻
-
-👩‍💻 GSSoC is one of India’s **largest 3-month-long open-source programs** that encourages developers of all levels to contribute to real-world projects 🌍 while learning, collaborating, and growing together. 🌱
-
-🌈 With **mentorship, community support**, and **collaborative coding**, it's the perfect platform for developers to:
-
-- ✨ Improve their skills
-- 🤝 Contribute to impactful projects
-- 🏆 Get recognized for their work
-- 📜 Receive certificates and swag!
-
-🎉 **I can’t wait to welcome new contributors** from GSSoC 2025 to this git-aura project family! Let's build, learn, and grow together — one commit at a time. 🔥👨‍💻👩‍💻
+Let’s make learning and career development smarter – together! 🌟👨‍💻👩‍💻
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
@@ -290,40 +270,41 @@ Follow these steps to contribute your changes to **git-aura**:
    ```bash
    git clone https://github.com/Your-Username/git-aura.git
    ```
- 3. Create a Branch
-    Navigate to the project directory and create a new branch for your changes:
+3. Create a Branch
+   Navigate to the project directory and create a new branch for your changes:
 
-    ```bash
-    cd git-aura
-    git checkout -b my-feature-branch
-    ```
+   ```bash
+   cd git-aura
+   git checkout -b my-feature-branch
+   ```
 
- 4. Make Changes
-    Add your new ML projects, games, websites, or enhancements. Fix bugs or improve UI/UX as needed.
+4. Make Changes
+   Add your new ML projects, games, websites, or enhancements. Fix bugs or improve UI/UX as needed.
 
- 5. Commit Your Changes
-    Use a meaningful commit message:
+5. Commit Your Changes
+   Use a meaningful commit message:
 
-    ```bash
-    git add .
-    git commit -m "📦 [Feature Add] Add XYZ website project"
-    ```
+   ```bash
+   git add .
+   git commit -m "📦 [Feature Add] Add XYZ website project"
+   ```
 
- 6. Push Your Changes
-    Push your branch to your GitHub fork:
+6. Push Your Changes
+   Push your branch to your GitHub fork:
 
-    ```bash
-    git push origin my-feature-branch
-    ```
- 7. Submit a Pull Request
+   ```bash
+   git push origin my-feature-branch
+   ```
 
-    Go to your fork on GitHub.
+7. Submit a Pull Request
 
-    Click "Compare & pull request".
+   Go to your fork on GitHub.
 
-    Add a descriptive title using one of the prefixes: [UI], [UX], [Feature Add].
+   Click "Compare & pull request".
 
-    Link the related issue (if any) and clearly describe your changes.
+   Add a descriptive title using one of the prefixes: [UI], [UX], [Feature Add].
+
+   Link the related issue (if any) and clearly describe your changes.
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
@@ -380,7 +361,7 @@ Follow these steps to contribute your changes to **git-aura**:
 
 We love our contributors! If you'd like to help, please check out our [`CONTRIBUTE.md`](https://github.com/Anshkaran7/git-aura/blob/main/CONTRIBUTING.md) file for guidelines.
 
->Thank you once again to all our contributors who has contributed to **git-aura!** Your efforts are truly appreciated. 💖👏
+> Thank you once again to all our contributors who has contributed to **git-aura!** Your efforts are truly appreciated. 💖👏
 
 <!-- Contributors badge (auto-updating) -->
 
@@ -408,7 +389,7 @@ Feel free to open issues or discussions if you have any feedback, feature sugges
 
 **🙌 Support & Star**
 
-***If you find this project helpful, please give it a star! ⭐ to support more such educational initiatives!***
+**_If you find this project helpful, please give it a star! ⭐ to support more such educational initiatives!_**
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
@@ -457,7 +438,7 @@ This project is licensed under the MIT License - see the [`License`](https://git
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
 **👨‍💻 Developed By**
-**❤️ Karan Kumar and Contributors ❤️**  [open an issue](https://github.com/Anshkaran7/git-aura/issues) | [Watch Demo](https://git-aura.karandev.in/)
+**❤️ Karan Kumar and Contributors ❤️** [open an issue](https://github.com/Anshkaran7/git-aura/issues) | [Watch Demo](https://git-aura.karandev.in/)
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
