@@ -9,6 +9,7 @@ import { dark } from "@clerk/themes";
 import UserSync from "@/components/UserSync";
 import { Toaster } from "sonner";
 import { ProductHuntBanner } from "@/components/ProductHuntBanner";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const monaSans = Mona_Sans({
   subsets: ["latin"],
@@ -221,7 +222,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeAwareProviders>{children}</ThemeAwareProviders>
+          <ThemeAwareProviders>
+            {children}
+            <ScrollToTop />
+          </ThemeAwareProviders>
 
           <Analytics />
         </ThemeProvider>
