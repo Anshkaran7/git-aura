@@ -1,8 +1,8 @@
 ![git-aura UI Preview](public/gitaura.webp)
 
-_Preview of the git-aura user profile interface_
+_A Preview of the git-aura user profile interface_
 
-**Git Aura 🚀**
+<h4 **Git Aura**>
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
@@ -10,7 +10,7 @@ _Preview of the git-aura user profile interface_
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
-**Overview**
+*Git~Aura Overview**
 
 > Git-Aura is the ultimate developer platform that transforms your hard-earned commits and repositories into a social flex. Show off your coding achievements with beautiful visualizations and compete on leaderboards!
 
@@ -20,18 +20,18 @@ _Preview of the git-aura user profile interface_
 </div>
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-**📊 Project Insights**
+**Project ~ Insights**
 
 <table align="center">
     <thead align="center">
         <tr>
-            <td><b>🌟 Stars</b></td>
-            <td><b>🍴 Forks</b></td>
-            <td><b>🐛 Issues</b></td>
-            <td><b>🔔 Open PRs</b></td>
-            <td><b>🔕 Closed PRs</b></td>
-            <td><b>🛠️ Languages</b></td>
-            <td><b>👥 Contributors</b></td>
+            <td><b> Stars</b></td>
+            <td><b> Forks</b></td>
+            <td><b> Issues</b></td>
+            <td><b> Open PRs</b></td>
+            <td><b> Closed PRs</b></td>
+            <td><b> Languages</b></td>
+            <td><b> Contributors</b></td>
         </tr>
      </thead>
     <tbody>
@@ -49,21 +49,21 @@ _Preview of the git-aura user profile interface_
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-## ✨ Features
+## Git~Aura Features
 
-- **GitHub Integration**: Seamlessly sync your GitHub contributions and repositories
-- **Aura System**: Advanced scoring algorithm based on contributions, streaks, and consistency
-- **Leaderboards**: Compete on monthly and all-time leaderboards
-- **Badge System**: Earn badges for various achievements and milestones
-- **Profile Cards**: Beautiful, shareable profile cards with your stats
-- **Real-time Updates**: Automatic syncing of your GitHub data
-- **Admin Panel**: User management and moderation tools
-- **Modern UI**: Built with Next.js 14, TypeScript, and Tailwind CSS
-- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
+- **GitHub Integration**: Seamlessly sync your GitHub contributions and repositories.
+- **Aura System**: Advanced scoring algorithm based on contributions, streaks, and consistency.
+- **Leaderboards**: Compete on monthly and all-time leaderboards.
+- **Badge System**: Earn badges for various achievements and milestones.
+- **Profile Cards**: Beautiful, shareable profile cards with your stats.
+- **Real-time Updates**: Automatic syncing of your GitHub data.
+- **Admin Panel**: User management and moderation tools.
+- **Modern UI**: Built with Next.js 14, TypeScript, and Tailwind CSS.
+- **Responsive Design**: Works perfectly on mobile, tablet, and desktop platforms.
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🛠️ Tech Stack**
+**🛠Mordern~Day Tech Stack**
 
 - **Framework**: Next.js 14+ with App Router
 - **Language**: TypeScript for type safety
@@ -77,7 +77,7 @@ _Preview of the git-aura user profile interface_
 
 **🚀 Quick Start**
 
-### Prerequisites
+### Prerequisites For Use.
 
 - Node.js 18+
 - NeonDB PostgreSQL database
@@ -136,7 +136,7 @@ pnpm dev
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-Let’s make learning and career development smarter – together! 🌟👨‍💻👩‍💻
+Let’s make learning and career development smarter – together!
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
@@ -144,11 +144,11 @@ Open [http://localhost:3000](http://localhost:3000) to view your app.
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-## 🔧 Environment Variables
+## Environment Variables Components
 
 Create a `.env.local` file in the root directory with the following variables:
 
-### Required Variables
+### Required Variables For Enviromental Variables
 
 ```env
 # Database (NeonDB)
@@ -169,7 +169,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 CRON_SECRET=your-secure-cron-secret
 ```
 
-### Optional Variables
+### Additional Optional Variables
 
 ```env
 # Clerk URLs (defaults provided)
@@ -181,7 +181,7 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-## 📋 Setup Guides
+## Application Setup Guides
 
 ### NeonDB Database Setup
 
@@ -213,7 +213,7 @@ NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🏗️ Project Structure**
+**Git~Aura Official Project Structure**
 
 ```bash
 git-aura/
@@ -235,7 +235,7 @@ git-aura/
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🚀 Deployment**
+**Deployment**
 
 ### Vercel (Recommended)
 
@@ -255,17 +255,17 @@ The app is compatible with any platform that supports Next.js:
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-## 🤝 Contributing
+## Contributions
 
-We welcome contributions! Here's how you can help:
+We always welcome contributions! Here's how you can help u:
 
-Follow these steps to contribute your changes to **git-aura**:
+Follow these steps to contribute your changes to **git~aura**:
 
-1. **🌟 Star & Fork the Repository**  
-   Click the **“Star”** button to support the project, then **“Fork”** the repo to create your own copy:  
+1. **Star & Fork the Repository**  
+   Click the **“Star”** button to support the project, then **“Fork”** the repo to create your own copy of the repo:  
    👉 [https://github.com/Anshkaran7/git-aura](https://github.com/Anshkaran7/git-aura)
 
-2. **📥 Clone Your Fork**  
+2. **Clone Your Fork**  
    Use the following command to clone your forked repository to your local machine:
    ```bash
    git clone https://github.com/Your-Username/git-aura.git
@@ -286,7 +286,7 @@ Follow these steps to contribute your changes to **git-aura**:
 
    ```bash
    git add .
-   git commit -m "📦 [Feature Add] Add XYZ website project"
+   git commit -m "[Feature Add] Add XYZ website project"
    ```
 
 6. Push Your Changes
@@ -318,7 +318,7 @@ Follow these steps to contribute your changes to **git-aura**:
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**📚 Documentation**
+**Global Documentation**
 
 - [Environment Setup](./ENVIRONMENT_SETUP.md) - Detailed environment configuration
 - [GitHub API Setup](./GITHUB_API_SETUP.md) - GitHub integration guide
@@ -328,7 +328,7 @@ Follow these steps to contribute your changes to **git-aura**:
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🐛 Troubleshooting**
+**Troubleshooting**
 
 ### Common Issues
 
@@ -357,7 +357,7 @@ Follow these steps to contribute your changes to **git-aura**:
 
 ![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
 
-**🤝👤 Contribution Guidelines**
+**Contribution Guidelines**
 
 We love our contributors! If you'd like to help, please check out our [`CONTRIBUTE.md`](https://github.com/Anshkaran7/git-aura/blob/main/CONTRIBUTING.md) file for guidelines.
 
@@ -381,19 +381,19 @@ See the full list of contributors and their contributions on the [`GitHub Contri
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-**💡 Suggestions & Feedback**
+**Suggestions & Feedback**
 
 Feel free to open issues or discussions if you have any feedback, feature suggestions, or want to collaborate!
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-**🙌 Support & Star**
+**Support & Star**
 
 **_If you find this project helpful, please give it a star! ⭐ to support more such educational initiatives!_**
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%">
 
-**📄 License**
+**License**
 
 This project is licensed under the MIT License - see the [`License`](https://github.com/Anshkaran7/git-aura/blob/main/License) file for details.
 
@@ -409,7 +409,7 @@ This project is licensed under the MIT License - see the [`License`](https://git
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-**🍴 Forkers**
+**Forkers**
 
 <div align="center">
   <a href="https://github.com/Anshkaran7/git-aura/network/members">
@@ -418,7 +418,7 @@ This project is licensed under the MIT License - see the [`License`](https://git
 
 <img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="150%">
 
-<h2>🧑‍💻Project Admin:</h2>
+<h2>Project Admin:</h2>
 <table>
 <tr>
 <td align="center">
@@ -450,4 +450,4 @@ This project is licensed under the MIT License - see the [`License`](https://git
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=65&section=footer"/>
 
-**Ready to show off your coding achievements?** Get started with Git Aura today! 🚀
+**Ready to show off your coding achievements?** Get started with Git~Aura today! 🚀
