@@ -3,19 +3,17 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import GitHubProfileCard from "@/components/GitHubProfileCard";
 import { Header } from "@/components/home/header";
+import ProfileCopyRows from "@/components/ui/ProfileCopyRows";
 
 interface PageProps {
-  params: Promise<{ username: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { username: string };
 }
 
-export default async function ProfilePage({ params, searchParams }: PageProps) {
-  const { username } = await params;
-
-  // Get authentication state
-  const { userId } = await auth();
+export default async function ProfilePage({ params }: PageProps) {
+  const { username } = params;
 
   // Require authentication
+  const { userId } = await auth();
   if (!userId) {
     redirect("/sign-in");
   }
@@ -24,13 +22,10 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   const user = await currentUser();
 
   // Only allow access to own profile
-  // Users can only view their own profile page
   if (user?.username !== username) {
-    // If user has a username, redirect to their own profile
     if (user?.username) {
       redirect(`/${user.username}`);
     } else {
-      // If no username set, redirect to sign-in to complete setup
       redirect("/sign-in");
     }
   }
@@ -48,7 +43,15 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
             </div>
           }
         >
+          {/* Header */}
           <Header leaderboard={false} profile={true} />
+
+          {/* Copy buttons UI */}
+          <main className="p-6 space-y-6">
+            <ProfileCopyRows username={username} />
+          </main>
+
+          {/* GitHub profile card */}
           <GitHubProfileCard initialUsername={username} />
         </Suspense>
       </div>
