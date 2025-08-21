@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { copyToClipboard } from "../../lib/copyToClipboard";
 
-export default function CopyButton({
+export function CopyIconButton({
   text,
   label = "Copy",
 }: {
@@ -10,13 +11,20 @@ export default function CopyButton({
   label?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      const ok = await copyToClipboard(text);
+      if (!ok) {
+        console.error("Clipboard copy failed");
+        setCopied(false);
+        return;
+      }
       setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
+      timeoutRef.current = window.setTimeout(() => setCopied(false), 1200);
     } catch (err) {
+      console.error("Clipboard copy error:", err);
       setCopied(false);
     }
   };
