@@ -1,5 +1,5 @@
 "use client";
-import { X, Github, Zap, Copy, Share2 } from "lucide-react";
+import { X, Github, Zap, Copy, Share2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface RoastModalProps {
@@ -80,7 +80,6 @@ export function RoastModal({ open, onOpenChange }: RoastModalProps) {
           url: window.location.href,
         });
       } catch (err) {
-        // Fallback to copy
         handleCopy();
       }
     } else {
@@ -88,81 +87,93 @@ export function RoastModal({ open, onOpenChange }: RoastModalProps) {
     }
   };
 
+  // Format roast text into paragraphs
+  const formatRoast = (text: string) => {
+    return text
+      .split(/\n\s*\n|\. {2,}/) // Split on double newlines or multiple spaces after period
+      .filter(paragraph => paragraph.trim().length > 0)
+      .map(paragraph => paragraph.trim())
+      .join('\n\n'); // Join with double newlines for proper spacing
+  };
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-card rounded-xl border border-border shadow-lg m-4 overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-[85vh] bg-card rounded-2xl border border-border shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-muted border border-border">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20">
               <Zap className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">GitHub Roast Generator</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                GitHub Roast Generator
+              </h2>
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
                 Prepare to be roasted 🔥
               </p>
             </div>
           </div>
           <button
             onClick={() => onOpenChange(false)}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            className="p-2 hover:bg-muted rounded-xl transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
           {/* Input Section */}
           {!roast && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Github className="w-4 h-4" />
                   GitHub Username
                 </label>
                 <div className="relative">
-                  <Github className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="octocat"
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="Enter username (e.g., octocat)"
+                    className="w-full px-4 py-3.5 rounded-xl border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:text-muted-foreground/60"
                     onKeyPress={(e) => e.key === 'Enter' && handleRoast()}
                   />
                 </div>
               </div>
 
               {error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                  <p className="text-sm text-destructive">{error}</p>
+                <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20">
+                  <p className="text-sm text-destructive font-medium">{error}</p>
                 </div>
               )}
 
               <button
                 onClick={handleRoast}
                 disabled={loading}
-                className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl font-semibold hover:from-primary/90 hover:to-primary/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" />
-                    Generating roast...
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <span>Cooking up your roast...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <Zap className="w-4 h-4" />
-                    Get Roasted!
+                    <Zap className="w-5 h-5" />
+                    Get Roasted! 🔥
                   </div>
                 )}
               </button>
@@ -171,34 +182,57 @@ export function RoastModal({ open, onOpenChange }: RoastModalProps) {
 
           {/* Roast Result */}
           {roast && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center gap-2 mb-3">
+            <div className="space-y-6">
+              {/* Roast Header */}
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2">
                   <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-primary">
-                    Your Roast is Ready 🔥
+                  <span className="text-lg font-bold text-primary">
+                    Your Roast is Ready! 🔥
                   </span>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
                 </div>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {roast}
+                <p className="text-sm text-muted-foreground">
+                  Served fresh from our AI comedy kitchen
                 </p>
               </div>
 
+              {/* Roast Content */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-muted/40 to-muted/20 rounded-2xl" />
+                <div className="relative p-6 rounded-2xl border border-border/50 backdrop-blur-sm">
+                  <div className="prose prose-sm max-w-none">
+                    {formatRoast(roast).split('\n\n').map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        className="text-foreground/90 leading-relaxed mb-4 last:mb-0"
+                        style={{ 
+                          fontSize: '15px',
+                          lineHeight: '1.6'
+                        }}
+                      >
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleCopy}
-                  className="flex-1 py-2 px-4 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 bg-muted/60 hover:bg-muted/80 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                 >
-                  <Copy className="w-3 h-3" />
-                  {copied ? 'Copied!' : 'Copy'}
+                  <Copy className="w-4 h-4" />
+                  {copied ? '✅ Copied!' : 'Copy Roast'}
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex-1 py-2 px-4 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-4 bg-muted/60 hover:bg-muted/80 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                 >
-                  <Share2 className="w-3 h-3" />
-                  Share
+                  <Share2 className="w-4 h-4" />
+                  Share the Burn
                 </button>
                 <button
                   onClick={() => {
@@ -206,10 +240,17 @@ export function RoastModal({ open, onOpenChange }: RoastModalProps) {
                     setUsername("");
                     setError("");
                   }}
-                  className="py-2 px-4 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-sm font-medium transition-colors"
+                  className="py-3 px-6 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70 rounded-xl text-sm font-semibold transition-all hover:scale-[1.02]"
                 >
-                  Roast Another
+                  🔥 Roast Another
                 </button>
+              </div>
+
+              {/* Fun Stats */}
+              <div className="text-center pt-4 border-t border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  🎯 Roast delivered in under 30 seconds • Powered by AI comedy
+                </p>
               </div>
             </div>
           )}
