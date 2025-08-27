@@ -1,6 +1,6 @@
 import { GitHubSignIn } from "@/components/GitHubSignIn";
 import { Zap } from "lucide-react";
-
+import { PolicyModal } from "@/components/ui/policy-modal"
 export default function SignInPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -23,7 +23,22 @@ export default function SignInPage() {
           <GitHubSignIn />
 
           <p className="text-xs text-center text-muted-foreground">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            By continuing, you agree to our {""}
+            <button
+                type="button"
+                onClick={() => setShowTermsModal(true)}
+                className="text-primary hover:underline"
+              >
+                terms of service
+              </button>
+              {" "}and{" "}
+            <button
+                type="button"
+                onClick={() => setShowPrivacyModal(true)}
+                className="text-primary hover:underline"
+              >
+                privacy policy
+              </button>
           </p>
         </div>
       </div>
