@@ -2,7 +2,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { toPng } from "html-to-image";
+
+import { toPng, toJpeg } from "html-to-image";
+
 import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import Leaderboard from "./Leaderboard";
@@ -21,6 +23,12 @@ import {
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
 import ShareModal from "./ShareModal";
+import { ProfileCardSkeleton } from "./skeletons/ProfileCardSkeleton";
+import {
+  MonthlyContributionSkeleton,
+  AuraPanelSkeleton,
+} from "./skeletons/ContributionSkeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface GitHubProfileCardProps {
   initialUsername?: string;
@@ -61,9 +69,11 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
   const [userAura, setUserAura] = useState<number>(0);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [isCalculatingAura, setIsCalculatingAura] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<string>("png");
   const profileRef = useRef<HTMLDivElement>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     if (directProfile) {
@@ -259,25 +269,55 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   };
 
-  const handleExportImage = async () => {
+  const handleExportImage = async (format: "png" | "jpg" = "png") => {
     if (!profileRef.current) return;
 
     try {
       setIsGenerating(true);
-      const dataUrl = await toPng(profileRef.current, {
-        cacheBust: true,
-        backgroundColor: undefined,
-        pixelRatio: 2,
-        skipFonts: false,
-      });
+      let dataUrl: string;
+
+      if (format === "jpg") {
+        dataUrl = await toJpeg(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+          quality: 0.95,
+        });
+      } else {
+        dataUrl = await toPng(profileRef.current, {
+          cacheBust: true,
+          backgroundColor: undefined,
+          pixelRatio: 2,
+          skipFonts: false,
+        });
+      }
+
+      const githubHandle = searchedUsername || "profile";
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `${githubHandle}-profile-${date}.${format}`;
       const link = document.createElement("a");
-      link.download = `${searchedUsername}-github-profile.png`;
+      link.download = filename;
+
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      if (typeof window !== "undefined" && "toast" in window) {
+        (window as any).toast.success("Image downloaded!");
+      } else {
+        alert("Image downloaded!");
+      }
     } catch (err) {
       console.error("Failed to export image:", err);
+      if (typeof window !== "undefined" && "toast" in window) {
+        (window as any).toast.error(
+          "Failed to download image. Check browser settings."
+        );
+      } else {
+        alert("Failed to download image. Check browser settings.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -443,48 +483,76 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         {/* Content based on current view */}
         {currentView === "profile" && (
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
-              </div>
-            ) : profile ? (
-              <>
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
-                  handleShareTwitter={openShareModal}
-                  handleShareLinkedin={openShareModal}
-                  handleDownload={handleExportImage}
-                  isGenerating={isGenerating}
-                />
-                <MontlyContribution
-                  selectedTheme={selectedTheme}
-                  contributions={contributions}
-                />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </>
-            ) : (
-              !error && (
-                <EmptyState
-                  selectedTheme={selectedTheme}
-                  onLoadProfile={(username) => {
-                    if (username !== searchedUsername && !loading) {
-                      setUsername(username);
-                      fetchProfile(username);
+            <AnimatePresence mode="wait">
+              {/* Loading State */}
+              {loading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4 sm:space-y-6 md:space-y-8"
+                >
+                  <ProfileCardSkeleton />
+                  <MonthlyContributionSkeleton />
+                  <AuraPanelSkeleton />
+                </motion.div>
+              ) : profile ? (
+                <motion.div
+                  key="content"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="space-y-4 sm:space-y-6 md:space-y-8"
+                >
+                  <ProfileCard
+                    profile={profile}
+                    contributions={contributions}
+                    selectedTheme={selectedTheme}
+                    profileRef={profileRef}
+                    handleShareTwitter={openShareModal}
+                    handleShareLinkedin={openShareModal}
+                    handleDownload={(format) =>
+                      handleExportImage(format as "png" | "jpg")
                     }
-                  }}
-                />
-              )
-            )}
+                    isGenerating={isGenerating}
+                    downloadFormat={downloadFormat}
+                    setDownloadFormat={setDownloadFormat}
+                  />
+                  <MontlyContribution
+                    selectedTheme={selectedTheme}
+                    contributions={contributions}
+                  />
+                  <AuraPanel
+                    selectedTheme={selectedTheme}
+                    userAura={userAura}
+                    currentStreak={currentStreak}
+                    contributions={contributions}
+                    isCalculatingAura={isCalculatingAura}
+                  />
+                </motion.div>
+              ) : (
+                !error && (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <EmptyState
+                      selectedTheme={selectedTheme}
+                      onLoadProfile={(username) => {
+                        if (username !== searchedUsername && !loading) {
+                          setUsername(username);
+                          fetchProfile(username);
+                        }
+                      }}
+                    />
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
           </div>
         )}
 

@@ -3,11 +3,12 @@ import { GitHubSignIn } from "@/components/GitHubSignIn";
 import { PrivacyPolicyModal } from "./PrivacyPolicyModal";
 import { TermsOfServiceModal } from "./TermsOfServiceModal";
 import { Zap } from "lucide-react";
+import { PolicyModal } from "@/components/ui/policy-modal";
 import { useState } from "react";
 
 export default function SignInPage() {
-  const [showTerms, setShowTerms] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -45,12 +46,21 @@ export default function SignInPage() {
               Privacy Policy
             </button>
             .
+
           </p>
         </div>
       </div>
+      <PolicyModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        type="terms"
+      />
 
-      <TermsOfServiceModal open={showTerms} onOpenChange={setShowTerms} />
-      <PrivacyPolicyModal open={showPrivacy} onOpenChange={setShowPrivacy} />
+      <PolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        type="privacy"
+      />
     </div>
   );
 }
