@@ -255,10 +255,11 @@ export default function TopAuraUsers() {
         <div className="flex flex-row items-center justify-center mb-8 sm:mb-12 w-full min-h-[60px] sm:min-h-[80px]">
           {loading ? (
             <div className="flex items-center gap-3 sm:gap-4">
-              <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin text-primary" />
-              <span className="text-sm sm:text-base text-muted-foreground">
-                Loading top performers...
-              </span>
+              <div className="flex gap-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-muted/60 animate-pulse" />
+                ))}
+              </div>
             </div>
           ) : error ? (
             <div className="text-center">

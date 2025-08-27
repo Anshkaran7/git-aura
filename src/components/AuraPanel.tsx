@@ -435,8 +435,8 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
           {isCalculatingAura && (
             <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-muted-foreground"></div>
-              <span className="text-sm text-muted-foreground">Calculating...</span>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted/60 rounded animate-pulse"></div>
+              <div className="w-16 h-3 bg-muted/60 rounded animate-pulse"></div>
             </div>
           )}
           {isSignedIn && user && (
@@ -446,11 +446,11 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
               className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed text-muted-foreground rounded-md transition-all border border-border bg-secondary hover:bg-muted"
               title="Sync aura data with backend"
             >
-              <RefreshCw
-                className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                  isSyncingManually ? "animate-spin" : ""
-                }`}
-              />
+              {isSyncingManually ? (
+                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-muted/60 rounded animate-pulse"></div>
+              ) : (
+                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+              )}
               <span className="hidden sm:inline">
                 {isSyncingManually ? "Syncing..." : "Sync"}
               </span>

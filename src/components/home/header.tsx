@@ -1,44 +1,31 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Github, Menu, User, LogOut, RefreshCw, Shield } from "lucide-react";
+import { Github, Menu, User, LogOut, Shield } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { toast } from "sonner";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-// Navigation items configuration
-const NAV_ITEMS = {
-  home: [
-    { href: "#features", label: "Features" },
-    { href: "#how-it-works", label: "How It Works" },
-  ],
-  main: [
-    { href: "/leaderboard", label: "Leaderboard" },
-    { href: "/monthly-winners", label: "Monthly Winners" },
-    { href: "/contribute", label: "Contribute" },
-  ],
-};
+// Navigation items configuration - now unified for consistency across all pages
 
 export const Header = ({
-  leaderboard = false,
-  dashboard = false,
-  profile = false,
+  leaderboard,
+  dashboard,
+  profile,
 }: {
   leaderboard?: boolean;
   dashboard?: boolean;
   profile?: boolean;
-}) => {
+} = {}) => {
   const { isSignedIn, user, isLoaded } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
 
   // Memoize GitHub account lookup
   const githubAccount = useMemo(() => {
@@ -55,15 +42,21 @@ export const Header = ({
     return "/leaderboard";
   }, [isSignedIn, githubAccount?.username]);
 
-  // Memoize main navigation items
-  const mainNavItems = useMemo(
-    () => [
-      { href: leaderboardUrl, label: "Leaderboard" },
-      { href: "/monthly-winners", label: "Monthly Winners" },
-      { href: "/battle", label: "Profile Compare" },
-      { href: "/contribute", label: "Contribute" },
-    ],
-    [leaderboardUrl]
+  // Memoize all navigation items (always show all 6 items)
+  const allNavItems = useMemo(
+    () => {
+      const items = [
+        { href: "/#features", label: "Features" },
+        { href: "/#how-it-works", label: "How It Works" },
+        { href: leaderboardUrl, label: "Leaderboard" },
+        { href: "/monthly-winners", label: "Monthly Winners" },
+        { href: "/battle", label: "Profile Compare" },
+        { href: "/contribute", label: "Contribute" },
+      ];
+      console.log(`Navigation items for ${pathname}:`, items);
+      return items;
+    },
+    [leaderboardUrl, pathname]
   );
 
   // Memoize user profile URL
@@ -145,41 +138,7 @@ export const Header = ({
   //   [isSignedIn, user?.username, pathname, router]
   // );
 
-  // Optimize sync function
-  const syncUserData = useCallback(async () => {
-    if (!isLoaded || !isSignedIn || !user || !githubAccount?.username) return;
 
-    try {
-      setIsSyncing(true);
-      const response = await fetch("/api/sync-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          githubUsername: githubAccount.username,
-          displayName: user.firstName || githubAccount.username,
-          avatarUrl:
-            user.imageUrl || `https://github.com/${githubAccount.username}.png`,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to sync data");
-      }
-
-      const data = await response.json();
-      // if (data.success) {
-      //   toast.success("Data synced successfully!");
-      // }
-    } catch (error) {
-      console.error("Error syncing user data:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [isLoaded, isSignedIn, user, githubAccount?.username]);
-
-  useEffect(() => {
-    syncUserData();
-  }, [syncUserData]);
 
   // Memoize header classes with scroll animation
   const headerClasses = useMemo(() => {
@@ -191,22 +150,63 @@ export const Header = ({
     }`;
   }, [isScrolled]);
 
-  // Render navigation items
+  // Helper function to check if a link is active
+  const isActiveLink = useCallback((href: string) => {
+    if (href.startsWith('/#')) {
+      // For homepage sections, only active when on homepage
+      // Check if window is defined (client-side only) to avoid SSR errors
+      return pathname === "/" && typeof window !== 'undefined' && window.location.hash === href.slice(1);
+    }
+    // For other pages, exact match or starts with the path
+    return pathname === href || (href !== "/" && pathname.startsWith(href));
+  }, [pathname]);
+
+  // Handle navigation to homepage sections from other pages
+  const handleNavClick = useCallback((href: string, e: React.MouseEvent) => {
+    if (href.startsWith('/#') && typeof window !== 'undefined') {
+      e.preventDefault();
+      if (pathname === '/') {
+        // If already on homepage, scroll to section
+        const section = href.slice(2); // Remove /#
+        const element = document.getElementById(section);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          console.log(`Scrolling to section: ${section}`);
+        } else {
+          console.log(`Section not found: ${section}`);
+        }
+      } else {
+        // If on other page, navigate to homepage with hash
+        console.log(`Navigating from ${pathname} to homepage section: ${href}`);
+        router.push(href);
+      }
+    }
+  }, [pathname, router]);
+
+  // Render navigation items with active state styling
   const renderNavItems = useCallback(
     (items: Array<{ href: string; label: string }>, isMobile = false) => {
-      return items.map(({ href, label }) => (
-        <Link
-          key={href}
-          href={href}
-          className={`text-sm text-muted-foreground hover:text-primary transition-colors ${
-            isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
-          }`}
-        >
-          {label}
-        </Link>
-      ));
+      return items.map(({ href, label }) => {
+        const isActive = isActiveLink(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={(e) => handleNavClick(href, e)}
+            className={`text-sm transition-colors ${
+              isActive 
+                ? "text-primary font-semibold" 
+                : "text-muted-foreground hover:text-primary"
+            } ${
+              isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
+            }`}
+          >
+            {label}
+          </Link>
+        );
+      });
     },
-    []
+    [isActiveLink, handleNavClick]
   );
 
   return (
@@ -228,15 +228,14 @@ export const Header = ({
                 className="w-12 h-12 rounded-lg text-primary"
               />
             </div>
-            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-foreground">
+            <span className="hidden xl:block font-bold text-lg text-foreground">
               Git Aura
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden xl:flex items-center gap-6 lg:gap-8">
-            {pathname === "/" && renderNavItems(NAV_ITEMS.home)}
-            {renderNavItems(mainNavItems)}
+            {renderNavItems(allNavItems)}
           </nav>
 
           {/* CTA Buttons */}
@@ -330,8 +329,7 @@ export const Header = ({
         {isMobileMenuOpen && (
           <div className="xl:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-2">
-              {pathname === "/" && renderNavItems(NAV_ITEMS.home, true)}
-              {renderNavItems(mainNavItems, true)}
+              {renderNavItems(allNavItems, true)}
               {isSignedIn && (
                 <>
                   {/* Admin Button in mobile menu */}
