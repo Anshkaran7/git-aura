@@ -1,6 +1,7 @@
 "use client";
-
 import { GitHubSignIn } from "@/components/GitHubSignIn";
+import { PrivacyPolicyModal } from "./PrivacyPolicyModal";
+import { TermsOfServiceModal } from "./TermsOfServiceModal";
 import { Zap } from "lucide-react";
 import { PolicyModal } from "@/components/ui/policy-modal";
 import { useState } from "react";
@@ -30,26 +31,25 @@ export default function SignInPage() {
           <GitHubSignIn />
 
           <p className="text-xs text-center text-muted-foreground">
-            By continuing, you agree to our {""}
+            By continuing, you agree to our{" "}
             <button
-              type="button"
-              onClick={() => setShowTermsModal(true)}
+              onClick={() => setShowTerms(true)}
               className="text-primary hover:underline"
             >
-              terms of service
+              Terms of Service
             </button>{" "}
             and{" "}
             <button
-              type="button"
-              onClick={() => setShowPrivacyModal(true)}
+              onClick={() => setShowPrivacy(true)}
               className="text-primary hover:underline"
             >
-              privacy policy
+              Privacy Policy
             </button>
+            .
+
           </p>
         </div>
       </div>
-
       <PolicyModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
