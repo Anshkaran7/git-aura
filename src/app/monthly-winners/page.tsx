@@ -269,11 +269,11 @@ const WinnerCard = ({
             @{winner.user.githubUsername}
           </p>
           <div className="mt-1 flex gap-2 text-[10px] text-muted-foreground">
-            <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
+            <span className="px-1.5 py-0.5 whitespace-nowrap bg-muted/60 rounded border border-border">
               Rank #{winner.rank}
             </span>
             {winner.badgeAwarded && (
-              <span className="px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded border border-green-500/40">
+              <span className="px-1.5 py-0.5 whitespace-nowrap bg-green-500/20 text-green-400 rounded border border-green-500/40">
                 Badge Earned
               </span>
             )}
