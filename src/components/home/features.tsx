@@ -1,8 +1,13 @@
+"use client"
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Trophy, Target, Zap, Users, Download } from "lucide-react";
+import { RoastModal } from "./RoastModal";
+import { useState } from "react";
 
 export const FeaturesSection = () => {
+  const [showRoastModal, setShowRoastModal] = useState(false);
+
   const features = [
     {
       icon: Trophy,
@@ -39,7 +44,7 @@ export const FeaturesSection = () => {
       icon: Target,
       title: "Profile Compare (1v1 Battle)",
       description:
-  "Battle a friend: enter two GitHub usernames and see who wins each stat.",
+        "Battle a friend: enter two GitHub usernames and see who wins each stat.",
       badge: "⚔️ New",
       gradient: "from-gray-900/5 to-slate-800/10",
       link: "/battle",
@@ -76,7 +81,7 @@ export const FeaturesSection = () => {
           </p>
         </div>
 
-        {/* Features Grid - Optimized for 4 features */}
+        {/* Features Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
           {features.map((feature, index) => {
             const cardContent = (
@@ -92,7 +97,6 @@ export const FeaturesSection = () => {
                   animationDelay: `${index * 0.1}s`,
                 }}
               >
-                {/* Background gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 <div className="relative z-10">
@@ -115,7 +119,7 @@ export const FeaturesSection = () => {
                 </div>
               </Card>
             );
-            // If the feature has a link, wrap the card in an anchor
+            
             return feature.link ? (
               <a href={feature.link} key={index} className="block focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl">
                 {cardContent}
@@ -124,17 +128,22 @@ export const FeaturesSection = () => {
           })}
         </div>
 
-        {/* Bottom CTA */}
+        {/* Bottom CTA - Modified */}
         <div className="text-center mt-8 sm:mt-16">
           <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             Ready to discover if you're a coding legend or just another
             "console.log" warrior?
           </p>
-          <div className="inline-flex items-center gap-2 text-primary text-sm sm:text-base">
-            <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="font-medium">Get roasted in under 30 seconds</span>
-          </div>
+          <button
+            onClick={() => setShowRoastModal(true)}
+            className="inline-flex items-center gap-2 text-primary text-sm sm:text-base hover:text-primary/80 transition-colors cursor-pointer group"
+          >
+            <Zap className="w-3 h-3 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform" />
+            <span className="font-medium hover:underline">Get roasted in under 30 seconds</span>
+          </button>
         </div>
+
+        <RoastModal open={showRoastModal} onOpenChange={setShowRoastModal} />
       </div>
     </section>
   );

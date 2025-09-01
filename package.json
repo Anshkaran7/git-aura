@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.25.4",
     "@clerk/themes": "^2.3.3",
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.12.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",

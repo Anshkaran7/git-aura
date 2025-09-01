@@ -1,5 +1,7 @@
 "use client";
 import { GitHubSignIn } from "@/components/GitHubSignIn";
+import { PrivacyPolicyModal } from "./PrivacyPolicyModal";
+import { TermsOfServiceModal } from "./TermsOfServiceModal";
 import { Zap } from "lucide-react";
 import { PolicyModal } from "@/components/ui/policy-modal";
 import { useState } from "react";
@@ -7,7 +9,6 @@ import { useState } from "react";
 export default function SignInPage() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-xl border border-border">
