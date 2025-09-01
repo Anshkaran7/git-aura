@@ -479,7 +479,7 @@ export default function MonthlyWinnersPage() {
       <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={false} />
         <main
-          className="max-w-[95vw] xs:max-w-[92vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pt-16 xs:pt-18 sm:pt-20 md:pt-24 lg:pt-28 pb-6 xs:pb-8 sm:pb-10"
+          className="max-w-[95vw] xs:max-w-[92vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pt-16 xs:pt-18 sm:pt-20 md:pt-24 lg:pt-28 pb-6 xs:pb-8 sm:pb-10"
           role="main"
           aria-busy="true"
         >
