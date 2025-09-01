@@ -11,18 +11,24 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
 
-    // For month end capture, we want to capture the data for the month that's ending
-    // If it's the last day of the month, capture current month
-    const currentMonthYear = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}`;
+    // For month end capture, we want to capture the data for the month that just ended
+    // Since this runs on the 1st of each month, we need to capture the previous month
+    const previousMonth = now.getMonth() === 0 ? 12 : now.getMonth();
+    const previousYear =
+      now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    const previousMonthYear = `${previousYear}-${String(previousMonth).padStart(
+      2,
+      "0"
+    )}`;
 
-    console.log(`🏆 Capturing monthly winners for ${currentMonthYear}`);
+    console.log(
+      `🏆 Capturing monthly winners for ${previousMonthYear} (previous month)`
+    );
 
-    // Get top 3 users from monthly leaderboard for the current month
+    // Get top 3 users from monthly leaderboard for the previous month
     const topUsers = await prisma.monthlyLeaderboard.findMany({
       where: {
-        monthYear: currentMonthYear,
+        monthYear: previousMonthYear,
         user: {
           isBanned: false, // Exclude banned users
         },
@@ -46,11 +52,11 @@ export async function POST(request: NextRequest) {
 
     if (topUsers.length === 0) {
       console.log(
-        `❌ No users found in monthly leaderboard for ${currentMonthYear}`
+        `❌ No users found in monthly leaderboard for ${previousMonthYear}`
       );
       return NextResponse.json({
         success: false,
-        message: `No users found in monthly leaderboard for ${currentMonthYear}`,
+        message: `No users found in monthly leaderboard for ${previousMonthYear}`,
       });
     }
 
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
           where: {
             userId_monthYear: {
               userId: user.userId,
-              monthYear: currentMonthYear,
+              monthYear: previousMonthYear,
             },
           },
         });
@@ -77,7 +83,7 @@ export async function POST(request: NextRequest) {
           const winner = await prisma.monthlyWinners.create({
             data: {
               userId: user.userId,
-              monthYear: currentMonthYear,
+              monthYear: previousMonthYear,
               rank: rank,
               totalAura: user.totalAura,
               contributionsCount: user.contributionsCount,
@@ -107,11 +113,11 @@ export async function POST(request: NextRequest) {
           });
 
           console.log(
-            `✅ Saved ${winner.user.githubUsername} as #${rank} winner for ${currentMonthYear}`
+            `✅ Saved ${winner.user.githubUsername} as #${rank} winner for ${previousMonthYear}`
           );
         } else {
           console.log(
-            `ℹ️ ${user.user.githubUsername} already saved as winner for ${currentMonthYear}`
+            `ℹ️ ${user.user.githubUsername} already saved as winner for ${previousMonthYear}`
           );
         }
       } catch (error) {
@@ -139,14 +145,14 @@ export async function POST(request: NextRequest) {
           await prisma.monthlyWinners.updateMany({
             where: {
               userId: winner.user.id,
-              monthYear: currentMonthYear,
+              monthYear: previousMonthYear,
             },
             data: {
               badgeAwarded: true,
             },
           });
         }
-        console.log(`🏅 Badges awarded for ${currentMonthYear} winners`);
+        console.log(`🏅 Badges awarded for ${previousMonthYear} winners`);
       }
     } catch (error) {
       console.error("❌ Error awarding badges:", error);
@@ -154,8 +160,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully captured ${savedWinners.length} monthly winners for ${currentMonthYear}`,
-      monthYear: currentMonthYear,
+      message: `Successfully captured ${savedWinners.length} monthly winners for ${previousMonthYear}`,
+      monthYear: previousMonthYear,
       winners: savedWinners,
     });
   } catch (error) {
@@ -171,7 +177,8 @@ export async function GET() {
   return NextResponse.json({
     message: "Monthly Winners Capture Endpoint",
     description:
-      "POST to this endpoint to capture current month's top 3 users as winners",
-    usage: "This endpoint is automatically called by cron job at month end",
+      "POST to this endpoint to capture previous month's top 3 users as winners",
+    usage:
+      "This endpoint is automatically called by cron job on the 1st of each month to capture the previous month's winners",
   });
 }
