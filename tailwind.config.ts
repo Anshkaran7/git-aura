@@ -64,7 +64,7 @@ const config: Config = {
         xl: "var(--radius-xl)",
       },
       fontFamily: {
-        mona: ["var(--font-mona)", "sans-serif"],
+        inconsolata: ["var(--font-inconsolata)", "monospace"],
       },
     },
   },

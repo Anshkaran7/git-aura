@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mona_Sans } from "next/font/google";
+import { Inconsolata } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeAwareProviders } from "@/components/theme-aware-providers"; // Import the ThemeAwareProviders to wrap the app
@@ -11,12 +11,12 @@ import { Toaster } from "sonner";
 import { ProductHuntBanner } from "@/components/ProductHuntBanner";
 import ScrollToTop from "@/components/ScrollToTop";
 
-const monaSans = Mona_Sans({
+const inconsolata = Inconsolata({
   subsets: ["latin"],
   display: "swap",
   preload: true,
   adjustFontFallback: true,
-  weight: ["200", "300", "400", "500", "600", "700"],
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -168,7 +168,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`scroll-smooth ${monaSans.className}`}
+      className={`scroll-smooth ${inconsolata.className}`}
     >
       <head>
         {/* Preconnect to external domains for performance */}
