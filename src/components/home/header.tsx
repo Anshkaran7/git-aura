@@ -34,35 +34,64 @@ export const Header = ({
     );
   }, [user?.externalAccounts]);
 
-  // Memoize leaderboard URL
+  // Fetch stored githubUsername from our DB to avoid stale Clerk cache
+  const [storedGithubUsername, setStoredGithubUsername] = useState<
+    string | null
+  >(null);
+  const [storedAvatarUrl, setStoredAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (isSignedIn) {
+      fetch("/api/me", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (!cancelled && data?.user?.githubUsername) {
+            setStoredGithubUsername(data.user.githubUsername);
+          }
+          if (!cancelled && data?.user?.avatarUrl) {
+            setStoredAvatarUrl(data.user.avatarUrl);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setStoredGithubUsername(null);
+      setStoredAvatarUrl(null);
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn]);
+
+  const effectiveGithubUsername =
+    storedGithubUsername || githubAccount?.username || undefined;
+
+  // Memoize leaderboard URL using effective username
   const leaderboardUrl = useMemo(() => {
-    if (isSignedIn && githubAccount?.username) {
-      return `/${githubAccount.username}/leaderboard`;
+    if (isSignedIn && effectiveGithubUsername) {
+      return `/${effectiveGithubUsername}/leaderboard`;
     }
     return "/leaderboard";
-  }, [isSignedIn, githubAccount?.username]);
+  }, [isSignedIn, effectiveGithubUsername]);
 
   // Memoize all navigation items (always show all 6 items)
-  const allNavItems = useMemo(
-    () => {
-      const items = [
-        { href: "/#features", label: "Features" },
-        { href: "/#how-it-works", label: "How It Works" },
-        { href: leaderboardUrl, label: "Leaderboard" },
-        { href: "/monthly-winners", label: "Monthly Winners" },
-        { href: "/battle", label: "Profile Compare" },
-        { href: "/contribute", label: "Contribute" },
-      ];
-      console.log(`Navigation items for ${pathname}:`, items);
-      return items;
-    },
-    [leaderboardUrl, pathname]
-  );
+  const allNavItems = useMemo(() => {
+    const items = [
+      { href: "/#features", label: "Features" },
+      { href: "/#how-it-works", label: "How It Works" },
+      { href: leaderboardUrl, label: "Leaderboard" },
+      { href: "/monthly-winners", label: "Monthly Winners" },
+      { href: "/battle", label: "Profile Compare" },
+      { href: "/contribute", label: "Contribute" },
+    ];
+    console.log(`Navigation items for ${pathname}:`, items);
+    return items;
+  }, [leaderboardUrl, pathname]);
 
   // Memoize user profile URL
   const userProfileUrl = useMemo(() => {
-    return githubAccount?.username ? `/${githubAccount.username}` : "/profile";
-  }, [githubAccount?.username]);
+    return effectiveGithubUsername ? `/${effectiveGithubUsername}` : "/profile";
+  }, [effectiveGithubUsername]);
 
   // Check if user is admin
   const [isAdmin, setIsAdmin] = useState(false);
@@ -138,8 +167,6 @@ export const Header = ({
   //   [isSignedIn, user?.username, pathname, router]
   // );
 
-
-
   // Memoize header classes with scroll animation
   const headerClasses = useMemo(() => {
     return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 
@@ -151,37 +178,49 @@ export const Header = ({
   }, [isScrolled]);
 
   // Helper function to check if a link is active
-  const isActiveLink = useCallback((href: string) => {
-    if (href.startsWith('/#')) {
-      // For homepage sections, only active when on homepage
-      // Check if window is defined (client-side only) to avoid SSR errors
-      return pathname === "/" && typeof window !== 'undefined' && window.location.hash === href.slice(1);
-    }
-    // For other pages, exact match or starts with the path
-    return pathname === href || (href !== "/" && pathname.startsWith(href));
-  }, [pathname]);
+  const isActiveLink = useCallback(
+    (href: string) => {
+      if (href.startsWith("/#")) {
+        // For homepage sections, only active when on homepage
+        // Check if window is defined (client-side only) to avoid SSR errors
+        return (
+          pathname === "/" &&
+          typeof window !== "undefined" &&
+          window.location.hash === href.slice(1)
+        );
+      }
+      // For other pages, exact match or starts with the path
+      return pathname === href || (href !== "/" && pathname.startsWith(href));
+    },
+    [pathname]
+  );
 
   // Handle navigation to homepage sections from other pages
-  const handleNavClick = useCallback((href: string, e: React.MouseEvent) => {
-    if (href.startsWith('/#') && typeof window !== 'undefined') {
-      e.preventDefault();
-      if (pathname === '/') {
-        // If already on homepage, scroll to section
-        const section = href.slice(2); // Remove /#
-        const element = document.getElementById(section);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-          console.log(`Scrolling to section: ${section}`);
+  const handleNavClick = useCallback(
+    (href: string, e: React.MouseEvent) => {
+      if (href.startsWith("/#") && typeof window !== "undefined") {
+        e.preventDefault();
+        if (pathname === "/") {
+          // If already on homepage, scroll to section
+          const section = href.slice(2); // Remove /#
+          const element = document.getElementById(section);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+            console.log(`Scrolling to section: ${section}`);
+          } else {
+            console.log(`Section not found: ${section}`);
+          }
         } else {
-          console.log(`Section not found: ${section}`);
+          // If on other page, navigate to homepage with hash
+          console.log(
+            `Navigating from ${pathname} to homepage section: ${href}`
+          );
+          router.push(href);
         }
-      } else {
-        // If on other page, navigate to homepage with hash
-        console.log(`Navigating from ${pathname} to homepage section: ${href}`);
-        router.push(href);
       }
-    }
-  }, [pathname, router]);
+    },
+    [pathname, router]
+  );
 
   // Render navigation items with active state styling
   const renderNavItems = useCallback(
@@ -194,12 +233,10 @@ export const Header = ({
             href={href}
             onClick={(e) => handleNavClick(href, e)}
             className={`text-sm transition-colors ${
-              isActive 
-                ? "text-primary font-semibold" 
+              isActive
+                ? "text-primary font-semibold"
                 : "text-muted-foreground hover:text-primary"
-            } ${
-              isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
-            }`}
+            } ${isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""}`}
           >
             {label}
           </Link>
@@ -275,9 +312,9 @@ export const Header = ({
                   className="flex items-center gap-2 h-8 px-2"
                   onClick={handleGoToProfile}
                 >
-                  {user?.imageUrl ? (
+                  {storedAvatarUrl || user?.imageUrl ? (
                     <img
-                      src={user.imageUrl}
+                      src={storedAvatarUrl || user.imageUrl}
                       alt={user?.firstName || "Profile"}
                       className="w-5 h-5 rounded-full"
                     />

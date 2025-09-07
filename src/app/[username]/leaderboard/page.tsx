@@ -141,11 +141,11 @@ export default function LeaderboardPage({ params }: PageProps) {
       <Header leaderboard={false} dashboard={true} />
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
         <div className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Leaderboard
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
+            {username}'s Leaderboard Position
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            See where {username} ranks among all developers
+            Discover how {username} ranks and track progress over time
           </p>
         </div>
 
