@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { Crown, Medal } from "lucide-react";
 import { formatNumber, getBadgeColor } from "@/lib/utils2";
@@ -12,13 +13,13 @@ interface LeaderboardEntryProps {
   currentPage: number;
 }
 
-export function LeaderboardEntry({
+const LeaderboardEntryComponent = React.memo<LeaderboardEntryProps>(({
   entry,
   index,
   view,
   currentMonth,
   currentPage,
-}: LeaderboardEntryProps) {
+}) => {
   const { userId } = useAuth();
 
   const getRankIcon = (rank: number) => {
@@ -139,4 +140,8 @@ export function LeaderboardEntry({
       </div>
     </motion.div>
   );
-}
+});
+
+LeaderboardEntryComponent.displayName = 'LeaderboardEntry';
+
+export { LeaderboardEntryComponent as LeaderboardEntry };
