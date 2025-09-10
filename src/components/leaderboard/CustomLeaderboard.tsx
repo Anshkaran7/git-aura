@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { FixedSizeList as List } from "react-window";
+import { List } from "react-window";
 import { AnimatePresence } from "framer-motion";
 import { getCurrentMonthYear, createItemData, LEADERBOARD_ITEM_HEIGHT, saveScrollPosition, restoreScrollPosition } from "@/lib/utils2";
 import { ViewType, LeaderboardEntry } from "./types";
@@ -30,7 +30,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
   const [displayCount, setDisplayCount] = useState(1000); // Increase for virtual scrolling
 
   // Virtual scrolling refs
-  const listRef = useRef<List>(null);
+  const listRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Scroll position management
@@ -270,7 +270,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
             itemCount={leaderboardData.length}
             itemSize={LEADERBOARD_ITEM_HEIGHT}
             itemData={itemData}
-            onScroll={({ scrollTop }) => handleScroll(scrollTop)}
+            onScroll={(event: any) => handleScroll(event.scrollTop)}
             overscanCount={5}
             className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border/30 hover:scrollbar-thumb-border/50"
           >

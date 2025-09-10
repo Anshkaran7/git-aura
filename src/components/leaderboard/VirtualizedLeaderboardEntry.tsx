@@ -1,5 +1,4 @@
 import React from "react";
-import { ListChildComponentProps } from "react-window";
 import { LeaderboardEntry } from "./LeaderboardEntry";
 import { LeaderboardEntry as LeaderboardEntryType, ViewType } from "./types";
 
@@ -13,7 +12,9 @@ interface VirtualizedLeaderboardEntryData {
   };
 }
 
-interface VirtualizedLeaderboardEntryProps extends ListChildComponentProps {
+interface VirtualizedLeaderboardEntryProps {
+  index: number;
+  style: React.CSSProperties;
   data: VirtualizedLeaderboardEntryData;
 }
 
