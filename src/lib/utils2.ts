@@ -236,3 +236,57 @@ export function getStreakMessage(streak: number): {
     };
   }
 }
+
+// Virtual scrolling utilities
+export const LEADERBOARD_ITEM_HEIGHT = 80; // Height of each leaderboard entry in pixels
+export const LEADERBOARD_OVERSCAN = 5; // Number of extra items to render outside viewport
+
+// Calculate dynamic height for leaderboard items
+export function getLeaderboardItemHeight(index: number, data: any[]): number {
+  // Base height for all items
+  let height = LEADERBOARD_ITEM_HEIGHT;
+  
+  // Add extra height for top 3 items (they have gradient backgrounds)
+  if (data[index]?.rank <= 3) {
+    height += 4; // Extra padding for special styling
+  }
+  
+  return height;
+}
+
+// Memoization helper for virtual scrolling
+export function createItemData<T>(
+  items: T[],
+  additionalData?: Record<string, any>
+): {
+  items: T[];
+  itemCount: number;
+  additionalData?: Record<string, any>;
+} {
+  return {
+    items,
+    itemCount: items.length,
+    additionalData,
+  };
+}
+
+// Scroll restoration utility
+export function saveScrollPosition(key: string, scrollTop: number): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(`scroll-${key}`, scrollTop.toString());
+  }
+}
+
+export function restoreScrollPosition(key: string): number {
+  if (typeof window !== 'undefined') {
+    const saved = sessionStorage.getItem(`scroll-${key}`);
+    return saved ? parseInt(saved, 10) : 0;
+  }
+  return 0;
+}
+
+export function clearScrollPosition(key: string): void {
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem(`scroll-${key}`);
+  }
+}
