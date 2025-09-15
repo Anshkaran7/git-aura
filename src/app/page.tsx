@@ -11,6 +11,7 @@ import {
 import { Header } from "@/components/home/header";
 import TopAuraUsers from "@/components/animated-tooltip-demo";
 import { ProductHuntBanner } from "@/components/ProductHuntBanner";
+import Contacts from "@/components/home/contacts";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -72,6 +73,7 @@ export default async function Page({ searchParams }: PageProps) {
       <HowItWorks />
       <TopAuraUsers />
       {/* <SocialProof /> */}
+      <Contacts />
       <Footer />
     </>
   );
