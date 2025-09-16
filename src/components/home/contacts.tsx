@@ -79,17 +79,17 @@ const handleSubscribe = (e: any) => {
               <div className="flex items-center gap-3 font-mono">
                 <MdAlternateEmail className="text-2xl text-orange-400 flex-shrink-0" />
                 <label htmlFor="">Email-ID:</label>
-               <input type="email" name="email" id="" aria-label="email" className="px-1 bg-transparent border-b border-gray-500 focus:outline-none focus:border-orange-500 text-gray-400 w-32 " 
+               <input type="email" name="email" id="" aria-label="email" className="px-1 bg-transparent border-b border-slate-500 focus:outline-none focus:border-orange-500 text-gray-400 w-32 " 
                placeholder="email.@dev.com"/>
 
               </div>
               </div>
-              <button type="button" className="text-white bg-orange-600 hover:bg-orange-400 focus:ring-2 focus:outline-none dark:focus:ring-red-600 rounded-lg text-xl px-3 py-2 text-center corsur-pointer font-extrabold">Submit</button>
+              <button type="button" className="text-white bg-orange-600 hover:bg-orange-400 focus:ring-2 focus:outline-none dark:focus:ring-red-600 rounded-lg text-xl px-3 py-2 text-center cursor-pointer font-extrabold">Submit</button>
             </div>
 </div>
-            {/* Newsletter */}
-            <div className="w-full border-t border-gray-500">
-              <p className="text-xl pt-6 text-center text-gray-400 mb-3">
+            {/* Newsletter Subscription */}
+            <div className="w-full border-t border-gray-500 ">
+              <p className="text-xl pt-6 text-center text-orange-400 mb-3">
                 Subscribe to Our Community!
               </p>
               {subscribed ? (
@@ -103,12 +103,12 @@ const handleSubscribe = (e: any) => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter Your email address here"
-                    className="w-full bg-stone-800/50 backdrop-blur-sm border border-stone-700/50 rounded-lg py-3 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500/30 transition-all"
+                    className="w-full bg-stone-900/50 backdrop-blur-sm border border-stone-700/50 rounded-lg py-3 px-4 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400  focus:border-pink-600 transition-all"
                     required
                   />
                   <button
                     type="submit"
-                    className="absolute right-1 top-1 bg-gradient-to-r from-red-600 to-orange-400 hover:from-orange-700 hover:to-pink-700 corsur-pointer text-white py-2 px-4 rounded-lg text-sm transition-all duration-300 transform hover:scale-105 "
+                    className="absolute right-2 top-1 bg-gradient-to-r from-red-600 to-orange-400 hover:from-sky-600 hover:to-sky-300 corsur-pointer text-white py-2 px-4 rounded-lg text-sm transition-all duration-300 transform hover:scale-105 cursor-pointer font-semibold"
                   >
                    Touch Now
                   </button>
