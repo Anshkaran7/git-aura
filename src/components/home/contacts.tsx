@@ -90,7 +90,7 @@ const handleSubscribe = (e: any) => {
             {/* Newsletter */}
             <div className="w-full border-t border-gray-500">
               <p className="text-xl pt-6 text-center text-gray-400 mb-3">
-                Subscribe to our Community!
+                Subscribe to Our Community!
               </p>
               {subscribed ? (
                 <div className="p-3 bg-green-900/30 border border-green-700/30 rounded-lg text-center text-green-300 text-sm">

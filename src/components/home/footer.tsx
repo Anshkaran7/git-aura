@@ -230,7 +230,7 @@ export const Footer = () => {
                 <li key={idx} className="group">
                   <a
                     href={link.path}
-                    className="text-gray-400 hover:text-white transition-all duration-300 flex items-center group-hover:translate-x-1"
+                    className="text-gray-400 hover:text-orange-400 transition-all duration-300 flex items-center group-hover:translate-x-1"
                   >
                     <span className="absolute bottom-0 left-0 w-full inline-block h-0.5 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span> 
                     {link.name}
@@ -254,7 +254,7 @@ export const Footer = () => {
                 <li key={idx} className="group">
                   <a
                     href={link.path}
-                    className="text-gray-400 hover:text-white transition-all duration-300 flex items-center group-hover:translate-x-1"
+                    className="text-gray-400 hover:text-orange-400 transition-all duration-300 flex items-center group-hover:translate-x-1"
                   >
                     <span className="absolute bottom-0 left-0 w-full inline-block h-0.5 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span> 
                     {link.name}
@@ -282,7 +282,7 @@ export const Footer = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer transform hover:scale-[1.4] transition-transform duration-300 ease-in-out hover:text-slate-50"
+              className="cursor-pointer transform hover:scale-[1.4] transition-transform duration-300 ease-in-out "
               onClick={() => router.push("https://x.com/itsmeekaran")}
             >
               <FaSquareXTwitter className="w-4 h-4" />
@@ -322,7 +322,7 @@ export const Footer = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer  transform hover:scale-[1.5] transition-transform duration-300 ease-in-out hover:text-sky-200"
+              className="cursor-pointer  transform hover:scale-[1.5] transition-transform duration-300 ease-in-out hover:text-sky-400"
               onClick={() => router.push("https://x.com/itsmeekaran")}
             >
               <FaTelegram className="w-4 h-4" />
@@ -339,29 +339,30 @@ export const Footer = () => {
       </div>
 </div>
         {/* Copyright */}
-        <div className="pb-4 text-center text-xs text-muted-foreground mt-6">
-          Powered by GitHub | Open-Source
+        <div className="pb-4 mt-6 text-center text-xs text-muted-foreground ">
+          Powered by GitHub | Open-Source Project
         </div>
-        <div className="container mx-auto  border-t border-stone-700/50 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400 relative">
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2  -translate-y-1/2 p-0.5  bg-stone-900 px-4 rounded-lg">
+        <div className="  border-t border-stone-600/50 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400 relative ">
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2  -translate-y-1/2 p-1 opacity-100 px-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-2xl   text-accent-foreground">
                    &copy; {new Date().getFullYear()} <b className="font-extrabold font-serif">Git-Aura.</b> All rights reserved.
                    </div>
-                   <div className="container flex justify-between items-center mx-auto px-4 sm:px-6 relative z-10 ">
-                  <p className="text-gray-400 hover:text-white transition-colors transform hover:scale-[1.1]">Developer by <b className="font-extrabold font-serif hover:text-orange-400 transition-colors">Ansh Karan</b></p>
+                   <div className="container flex justify-between items-center-safe mx-auto px-4 ">
+                    
+                  <p className="text-gray-500 text-center">  Happy Coding!🥰 <br/> Developer by <b className="font-extrabold font-serif   hover:text-orange-400 transition-colors hover:scale-105">Ansh Karan</b></p>
         
                   
                    
-                    <div className="flex justify-end items-center gap-4 py-3">
-                    <span className="text-gray-400 hover:text-white transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                    <div className="flex justify-end items-center gap-4 py-3 font-bold">
+                    <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
                       Privacy
                     </span>
-                     <span className="text-gray-400 hover:text-white transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
                       Terms
                     </span>
-                     <span className="text-gray-400 hover:text-white transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
                       Policy
                     </span>
-                     <span className="text-gray-400 hover:text-white transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
                       Sitemap
                     </span>
                     
