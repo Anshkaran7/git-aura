@@ -339,7 +339,7 @@ export const Footer = () => {
       </div>
 </div>
         {/* Copyright */}
-        <div className="pb-4 mt-6 text-center text-xs text-muted-foreground ">
+        <div className="pb-8 mt-6 text-center text-xs text-muted-foreground ">
           Powered by GitHub | Open-Source Project
         </div>
         <div className="  border-t border-stone-600/50 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400 relative ">
@@ -348,7 +348,7 @@ export const Footer = () => {
                    </div>
                    <div className="container flex justify-between items-center-safe mx-auto px-4 ">
                     
-                  <p className="text-gray-500 text-center">  Happy Coding!🥰 <br/> Developer by <b className="font-extrabold font-serif   hover:text-orange-400 transition-colors hover:scale-105">Ansh Karan</b></p>
+                  <p className="text-gray-500 text-center"> <strong>Happy Coding!🥰</strong> <br/> Developer by <b className="font-extrabold font-serif   hover:text-orange-400 transition-colors hover:scale-105">Ansh Karan</b></p>
         
                   
                    
