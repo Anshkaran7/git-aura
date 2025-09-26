@@ -36,3 +36,15 @@ export interface PaginationInfo {
 }
 
 export type ViewType = "monthly" | "alltime";
+
+// Virtual scrolling types
+export interface VirtualScrollItemData<T = any> {
+  items: T[];
+  itemCount: number;
+  additionalData?: Record<string, any>;
+}
+
+export interface ScrollPosition {
+  scrollTop: number;
+  scrollLeft: number;
+}

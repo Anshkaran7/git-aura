@@ -88,7 +88,7 @@ export default function LeaderboardPage() {
                 Your account has been suspended from accessing the leaderboard.
               </p>
             </div>
-            
+
             {/* The rest of the ban-specific UI uses specific colors which is okay for an error state. */}
             <div className="bg-gradient-to-r from-red-950/40 to-orange-950/20 border border-red-500/30 rounded-lg p-6 sm:p-8 backdrop-blur-sm">
               <div className="space-y-4">
@@ -133,13 +133,11 @@ export default function LeaderboardPage() {
       <Header leaderboard={false} dashboard={true} />
       <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
         <div className="text-center mb-6 sm:mb-8">
-          {/* CHANGED: text-white -> text-foreground */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            🏆 Global Leaderboard
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
+            Global Leaderboard
           </h1>
-          {/* CHANGED: text-[#7d8590] -> text-muted-foreground */}
           <p className="text-sm sm:text-base text-muted-foreground">
-            Compete with developers worldwide and see your ranking
+            Compete with developers worldwide and track your progress
           </p>
         </div>
 

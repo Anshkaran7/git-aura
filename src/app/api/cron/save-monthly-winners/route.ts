@@ -61,9 +61,10 @@ export async function GET() {
   return NextResponse.json({
     message: "Monthly Winners Cron Job",
     description:
-      "This endpoint is called automatically at month end (30th/31st) at 11:50 PM",
-    schedule: "50 23 L * *", // Last day of month at 11:50 PM
-    action: "Captures top 3 users from monthly leaderboard and awards badges",
+      "This endpoint is called automatically on the 1st of each month at midnight UTC",
+    schedule: "0 0 1 * *", // 1st of month at midnight UTC
+    action:
+      "Captures top 3 users from previous month's leaderboard and awards badges",
     usage:
       "Should be configured in your cron service (Vercel Cron, GitHub Actions, etc.)",
   });

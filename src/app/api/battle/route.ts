@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchGitHubProfile } from "../../../lib/github-fetch";
 import { fetchGitHubContributions } from "../../../lib/github-contributions";
-import {
-  calculateTotalAura,
-  calculateStreak,
-} from "../../../lib/aura-calculations";
+import { calculateBattleAura } from "../../../lib/aura-calculations";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -81,42 +78,47 @@ export async function GET(req: NextRequest) {
       // });
     }
 
-    // Fetch aura score from internal API for both users
-    async function fetchAura(username: string) {
-      try {
-        const url = `${
-          process.env.INTERNAL_API_BASE_URL || "http://localhost:3000"
-        }/api/github/profile/${username}`;
-        const res = await fetch(url, {
-          headers: { "Cache-Control": "no-cache" },
-        });
-        if (!res.ok) return 0;
-        const data = await res.json();
-        return typeof data.aura === "number" ? data.aura : 0;
-      } catch {
-        return 0;
-      }
-    }
+    // Calculate aura directly using the battle calculation function
+    const user1Aura =
+      contributions1Res.success && contributions1Res.data
+        ? calculateBattleAura(
+            profile1Res.data,
+            contributions1Res.data.contributionDays
+          )
+        : 0;
 
-    const [user1Aura, user2Aura] = await Promise.all([
-      fetchAura(user1),
-      fetchAura(user2),
-    ]);
+    const user2Aura =
+      contributions2Res.success && contributions2Res.data
+        ? calculateBattleAura(
+            profile2Res.data,
+            contributions2Res.data.contributionDays
+          )
+        : 0;
 
     // Debug Aura calculation
-    // console.log(`Debug Aura calculation for ${user1}:`, {
-    //   contributionsSuccess: contributions1Res.success,
-    //   contributionDays: contributions1Res.data?.contributionDays?.length || 0,
-    //   totalContributions: contributions1Res.data?.totalContributions || 0,
-    //   calculatedAura: user1Aura,
-    // });
+    console.log(`Debug Aura calculation for ${user1}:`, {
+      contributionsSuccess: contributions1Res.success,
+      contributionDays: contributions1Res.data?.contributionDays?.length || 0,
+      totalContributions: contributions1Res.data?.totalContributions || 0,
+      calculatedAura: user1Aura,
+      profileData: {
+        public_repos: profile1Res.data.public_repos,
+        followers: profile1Res.data.followers,
+        bio: profile1Res.data.bio,
+      },
+    });
 
-    // console.log(`Debug Aura calculation for ${user2}:`, {
-    //   contributionsSuccess: contributions2Res.success,
-    //   contributionDays: contributions2Res.data?.contributionDays?.length || 0,
-    //   totalContributions: contributions2Res.data?.totalContributions || 0,
-    //   calculatedAura: user2Aura,
-    // });
+    console.log(`Debug Aura calculation for ${user2}:`, {
+      contributionsSuccess: contributions2Res.success,
+      contributionDays: contributions2Res.data?.contributionDays?.length || 0,
+      totalContributions: contributions2Res.data?.totalContributions || 0,
+      calculatedAura: user2Aura,
+      profileData: {
+        public_repos: profile2Res.data.public_repos,
+        followers: profile2Res.data.followers,
+        bio: profile2Res.data.bio,
+      },
+    });
 
     // Calculate account age in years (use contributions data if available, fallback to profile data)
     const user1Age =

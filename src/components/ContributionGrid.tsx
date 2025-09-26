@@ -103,20 +103,16 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   };
 
   const getMonthLabels = () => {
-    const months = [
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-    ];
+    // Generate month labels dynamically based on current date
+    const today = new Date();
+    const months = [];
+
+    // Start from 11 months ago to include current month
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(today);
+      date.setMonth(date.getMonth() - i);
+      months.push(date.toLocaleDateString("en-US", { month: "short" }));
+    }
 
     return (
       <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-muted-foreground ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">

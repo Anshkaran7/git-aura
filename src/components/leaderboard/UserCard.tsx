@@ -19,50 +19,51 @@ export function UserCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`relative overflow-hidden rounded-lg p-2 sm:p-3 ${
+      className={`relative overflow-hidden rounded-xl p-3 sm:p-4 border transition-colors duration-200 ${
         userOutOfTop100
-          ? "border border-orange-500 bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-900/20 dark:to-red-900/20"
-          : "border border-[#39d353] bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#161b21] dark:to-[#0d1117]"
+          ? "border-orange-500/50 bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-950/30 dark:to-red-950/20"
+          : "border-emerald-400/40 bg-gradient-to-r from-emerald-400/10 to-emerald-600/10 dark:from-emerald-900/20 dark:to-emerald-950/10"
       }`}
     >
       {!userOutOfTop100 && (
-        <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#39d353]/10 dark:to-[#26a641]/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/10 to-emerald-600/10 pointer-events-none" />
       )}
       <div className="relative">
-        <div className="flex items-center gap-1 mb-2">
-          <Star className="w-3 h-3 text-muted-foreground" />
+        <div className="flex items-center gap-1.5 mb-2">
+          <Star className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground">
-            {username}'s Position
+            {username}'s position
           </span>
         </div>
-        <div className="flex flex-row items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-row items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3">
             <RankIcon rank={currentUser.rank} />
             <img
               src={currentUser.user.avatar_url}
               alt={currentUser.user.display_name}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ring-1 ring-[#39d353]"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full ring-1 ring-emerald-500/40"
             />
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-foreground">
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground truncate">
                 {currentUser.user.display_name}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 @{currentUser.user.github_username}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm sm:text-base font-bold text-foreground">
+            <div className="text-base sm:text-lg font-extrabold text-foreground tracking-tight">
               #{currentUser.rank}
             </div>
-            <div className="text-xs text-muted-foreground">
-              {formatNumber(currentUser.aura)} Aura
+            <div className="text-xs sm:text-sm text-muted-foreground">
+              {formatNumber(currentUser.aura)}{" "}
+              <span className="font-medium">Aura</span>
             </div>
             {currentUser.contributions !== undefined && (
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[11px] sm:text-xs text-muted-foreground">
                 {formatNumber(currentUser.contributions)} contributions
               </div>
             )}
@@ -70,16 +71,15 @@ export function UserCard({
         </div>
 
         {userOutOfTop100 && (
-          <div className="flex items-start gap-2 pt-2 border-t border-orange-500/30 dark:border-orange-500/20">
+          <div className="flex items-start gap-2.5 pt-3 border-t border-orange-500/30 dark:border-orange-500/20">
             <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 shrink-0" />
             <div>
               <h3 className="text-xs sm:text-sm font-semibold text-orange-200 mb-1">
-                Time to Level Up! 💪
+                Time to level up
               </h3>
               <p className="text-xs text-orange-300/90 leading-relaxed">
-                You are not in the top 100. The top 100 developers are crushing
-                it! Start contributing more, maintain consistency, and climb
-                your way up. Every commit counts toward your coding journey! 🚀
+                You are outside the top 100. Contribute consistently to climb
+                the board. Every commit counts.
               </p>
             </div>
           </div>

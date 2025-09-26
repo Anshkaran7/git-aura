@@ -77,7 +77,8 @@ export async function syncCurrentUserToSupabase() {
           githubUsername: githubUsername,
           githubId: githubId,
           displayName: displayName,
-          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          avatarUrl:
+            (githubData?.avatar_url as string | undefined) || user.imageUrl,
           githubData: githubData ? (githubData as any) : undefined,
           createdAt: new Date(user.createdAt),
           updatedAt: new Date(user.updatedAt),
@@ -88,7 +89,8 @@ export async function syncCurrentUserToSupabase() {
           githubUsername: githubUsername,
           githubId: githubId,
           displayName: displayName,
-          avatarUrl: user.imageUrl || githubData?.avatar_url,
+          avatarUrl:
+            (githubData?.avatar_url as string | undefined) || user.imageUrl,
           githubData: githubData ? (githubData as any) : undefined,
           updatedAt: new Date(user.updatedAt),
         },

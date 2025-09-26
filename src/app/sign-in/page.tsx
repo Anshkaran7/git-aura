@@ -1,7 +1,14 @@
+"use client";
 import { GitHubSignIn } from "@/components/GitHubSignIn";
+import { PrivacyPolicyModal } from "./PrivacyPolicyModal";
+import { TermsOfServiceModal } from "./TermsOfServiceModal";
 import { Zap } from "lucide-react";
+import { PolicyModal } from "@/components/ui/policy-modal";
+import { useState } from "react";
 
 export default function SignInPage() {
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-xl border border-border">
@@ -23,10 +30,35 @@ export default function SignInPage() {
           <GitHubSignIn />
 
           <p className="text-xs text-center text-muted-foreground">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+            By continuing, you agree to our{" "}
+            <button
+              onClick={() => setShowTermsModal(true)}
+              className="text-primary hover:underline"
+            >
+              Terms of Service
+            </button>{" "}
+            and{" "}
+            <button
+              onClick={() => setShowPrivacyModal(true)}
+              className="text-primary hover:underline"
+            >
+              Privacy Policy
+            </button>
+            .
           </p>
         </div>
       </div>
+      <PolicyModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        type="terms"
+      />
+
+      <PolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        type="privacy"
+      />
     </div>
   );
 }

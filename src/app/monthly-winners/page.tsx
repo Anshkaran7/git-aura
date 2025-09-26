@@ -126,7 +126,6 @@ const WinnerCard = ({
   winner: MonthlyWinner;
   monthYear: string;
 }) => {
-  const rankStyles = RANK_STYLES[winner.rank] || RANK_STYLES[3];
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -190,131 +189,131 @@ const WinnerCard = ({
     }
   };
 
+  const getBorderColor = () => {
+    if (winner.rank === 1) return "border-yellow-400";
+    if (winner.rank === 2) return "border-gray-400";
+    return "border-amber-500";
+  };
+
+  const getHighlightColor = () => {
+    if (winner.rank === 1) return "shadow-[0_0_0_1px_rgba(250,204,21,0.4)]";
+    if (winner.rank === 2) return "shadow-[0_0_0_1px_rgba(156,163,175,0.4)]";
+    return "shadow-[0_0_0_1px_rgba(245,158,11,0.4)]";
+  };
+
+  const getRankBadgeColor = () => {
+    if (winner.rank === 1) return "bg-yellow-400 text-black";
+    if (winner.rank === 2) return "bg-gray-400 text-black";
+    return "bg-amber-500 text-black";
+  };
+
+  const getBadgeImage = () => {
+    if (winner.rank === 1) return "/badge/1st.png";
+    if (winner.rank === 2) return "/badge/2nd.png";
+    return "/badge/3rd.png";
+  };
+
   return (
     <div
       ref={cardRef}
-      className={`relative flex flex-col items-center bg-card/80 dark:bg-card/20 rounded-lg p-4 ${
-        winner.rank === 1
-          ? "order-2 scale-105 md:scale-110 -translate-y-8 md:-translate-y-16"
-          : winner.rank === 2
-          ? "order-1"
-          : "order-3"
-      } transition-all w-full max-w-[280px]`}
+      className={`relative w-full md:w-[320px] rounded-xl border ${getBorderColor()} ${getHighlightColor()} bg-gradient-to-b from-card to-card/80 p-5 flex flex-col gap-4  ${
+        winner.rank === 1 ? "md:scale-110" : ""
+      }`}
       aria-label={`${winner.user.displayName} - Rank ${winner.rank}`}
     >
+      {/* Winner badge */}
+      <span
+        className={`absolute -top-3 left-4 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide shadow ${getRankBadgeColor()}`}
+      >
+        {winner.rank === 1
+          ? "🥇 CHAMPION"
+          : winner.rank === 2
+          ? "🥈 RUNNER-UP"
+          : "🥉 THIRD PLACE"}
+      </span>
+
       {/* Share Button */}
       <button
         onClick={handleShare}
         disabled={isGenerating}
-        className={`absolute top-4 left-4 p-2 rounded-full transition-all duration-300
-          ${
-            winner.rank === 1
-              ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
-              : winner.rank === 2
-              ? "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
-              : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-          } ${isGenerating ? "opacity-50 cursor-not-allowed" : ""}`}
+        className="absolute -top-2 -right-2 p-2 bg-card border border-border rounded-full hover:scale-110 transition-all duration-200 shadow-lg"
         aria-label="Share achievement"
       >
         {isGenerating ? (
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
         ) : (
-          <Share2 className="w-4 h-4" />
+          <Share2 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
         )}
       </button>
 
-      {/* Badge Image in Top Right */}
-      <div className="absolute top-4 right-4 w-16 h-16 z-20">
-        <Image
-          src={rankStyles.badgeImage}
-          alt={`${winner.rank} place badge`}
-          width={64}
-          height={64}
-          className="drop-shadow-xl"
-          priority
-          unoptimized
-        />
-      </div>
-
-      {/* Profile Image with Enhanced Ribbon */}
-      <div className="relative mb-4">
-        {/* Glowing Effect */}
-        <div
-          className={`absolute -inset-4 ${
-            winner.rank === 1
-              ? "bg-yellow-500/20"
-              : winner.rank === 2
-              ? "bg-gray-500/20"
-              : "bg-amber-500/20"
-          } blur-xl opacity-50 z-0`}
-        />
-
-        {/* Profile Image Container with Enhanced Border */}
-        <div className="relative z-10 ">
+      {/* Header */}
+      <div className="flex items-start gap-3 mt-2">
+        <div className="relative">
+          <img
+            src={winner.user.avatarUrl}
+            alt={winner.user.displayName}
+            className="w-16 h-16 rounded-full border border-border object-cover"
+          />
+          {/* Rank overlay */}
           <div
-            className={`w-28 h-28 rounded-full border-4 overflow-hidden shadow-2xl
-            ${
-              winner.rank === 1
-                ? "border-yellow-500 ring-4 ring-yellow-500/20"
-                : winner.rank === 2
-                ? "border-gray-400 ring-4 ring-gray-400/20"
-                : "border-amber-500 ring-4 ring-amber-500/20"
-            }`}
+            className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${getRankBadgeColor()}`}
           >
-            <Image
-              src={winner.user.avatarUrl}
-              alt={`${winner.user.displayName} avatar`}
-              fill
-              className="object-cover overflow-hidden rounded-full"
-              priority
-              sizes="112px"
-            />
+            {winner.rank}
           </div>
-
-          {/* Enhanced Score Badge */}
-          {/* <div
-            className={`absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-bold
-            shadow-lg backdrop-blur-md border border-white/10
-            ${
-              winner.rank === 1
-                ? "bg-yellow-500/90 text-black"
-                : winner.rank === 2
-                ? "bg-gray-400/90 text-black"
-                : "bg-amber-500/90 text-black"
-            }`}
-          >
-            {winner.totalAura}
-          </div> */}
         </div>
-      </div>
-
-      {/* Name and Username with Enhanced Typography */}
-      <div className="text-center space-y-1">
-        <h3 className="text-foreground text-xl font-bold tracking-wide">
-          {winner.user.displayName}
-        </h3>
-        <p className="text-muted-foreground text-sm font-medium">
-          @{winner.user.githubUsername}
-        </p>
-      </div>
-
-      {/* Enhanced Stats Display */}
-      <div className="mt-4 flex gap-6 text-sm bg-foreground/5 px-6 py-3 backdrop-blur-sm">
-        <div className="text-center flex items-center gap-2">
-          <Zap className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
-            {winner.totalAura.toLocaleString()} Aura
+        <div className="flex flex-col min-w-0">
+          <h2 className="text-base font-semibold text-foreground truncate">
+            {winner.user.displayName}
+          </h2>
+          <p className="text-xs text-muted-foreground truncate">
+            @{winner.user.githubUsername}
           </p>
+          <div className="mt-1 flex gap-2 text-[10px] text-muted-foreground">
+            <span className="px-1.5 py-0.5 whitespace-nowrap bg-muted/60 rounded border border-border">
+              Rank #{winner.rank}
+            </span>
+            {winner.badgeAwarded && (
+              <span className="px-1.5 py-0.5 whitespace-nowrap bg-green-500/20 text-green-400 rounded border border-green-500/40">
+                Badge Earned
+              </span>
+            )}
+          </div>
         </div>
-        <div className="text-center flex items-center gap-2">
-          <Users className={`${rankStyles.iconColor} w-4 h-4`} />
-          <p className="text-muted-foreground text-sm font-medium whitespace-nowrap">
-            {winner.contributionsCount} Contribs
-          </p>
+        <div className="">
+          <Image
+            src={getBadgeImage()}
+            alt={`${winner.rank} place badge`}
+            width={1000}
+            height={1000}
+            className="drop-shadow-lg w-14 h-14"
+            priority
+          />
         </div>
       </div>
 
-      {/* View Profile Button */}
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 text-[11px]">
+        <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
+          <div className="flex items-center gap-1">
+            <Zap className="w-3 h-3 text-muted-foreground" />
+            <span className="text-muted-foreground">Aura Points</span>
+          </div>
+          <span className="text-foreground font-medium text-sm">
+            {winner.totalAura.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
+          <div className="flex items-center gap-1">
+            <Users className="w-3 h-3 text-muted-foreground" />
+            <span className="text-muted-foreground">Contributions</span>
+          </div>
+          <span className="text-foreground font-medium text-sm">
+            {winner.contributionsCount}
+          </span>
+        </div>
+      </div>
+
+      {/* Action Button */}
       <button
         onClick={() =>
           window.open(
@@ -323,14 +322,7 @@ const WinnerCard = ({
             "noopener"
           )
         }
-        className={`mt-4 px-6 py-2 rounded-full text-sm font-medium transition-all duration-300
-        ${
-          winner.rank === 1
-            ? "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20"
-            : winner.rank === 2
-            ? "bg-gray-500/10 text-gray-400 hover:bg-gray-500/20"
-            : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-        }`}
+        className="w-full py-2 px-4 rounded-lg font-medium text-sm bg-muted/30 hover:bg-muted/50 text-foreground border border-border/60 hover:border-border cursor-pointer transition-all duration-200"
       >
         View Profile
       </button>
@@ -343,19 +335,34 @@ interface WinnersGridProps {
 }
 
 const WinnersGrid = ({ monthData }: WinnersGridProps) => {
+  // Sort winners for podium display: 2nd, 1st, 3rd (1st in center)
+  const sortedWinners = [...monthData.winners].sort((a, b) => {
+    // For desktop podium layout: 2nd (left), 1st (center), 3rd (right)
+    const order = { 2: 1, 1: 2, 3: 3 };
+    return (
+      order[a.rank as keyof typeof order] - order[b.rank as keyof typeof order]
+    );
+  });
+
   return (
-    <div className="relative">
-      <div className="flex justify-center items-end gap-4 md:gap-8 lg:gap-12 min-h-[400px]">
-        {monthData.winners
-          .sort((a, b) => a.rank - b.rank)
-          .map((winner) => (
-            <WinnerCard
-              key={winner.id}
-              winner={winner}
-              monthYear={monthData.monthYear}
-            />
-          ))}
-      </div>
+    <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8 py-8">
+      {sortedWinners.map((winner, index) => (
+        <div
+          key={winner.id}
+          className={`${
+            winner.rank === 1
+              ? "order-1 md:order-2"
+              : winner.rank === 2
+              ? "order-2 md:order-1"
+              : "order-3 md:order-3"
+          }`}
+          style={{
+            animationDelay: `${index * 200}ms`,
+          }}
+        >
+          <WinnerCard winner={winner} monthYear={monthData.monthYear} />
+        </div>
+      ))}
     </div>
   );
 };
@@ -371,7 +378,7 @@ const Pagination = ({
 
   return (
     <nav
-      className="flex justify-center items-center gap-4 mt-12"
+      className="flex justify-center items-center gap-2 xs:gap-3 sm:gap-4 mt-8 xs:mt-10 sm:mt-12 flex-wrap"
       role="navigation"
       aria-label="Pagination Navigation"
     >
@@ -380,12 +387,18 @@ const Pagination = ({
         onClick={() => onPageChange(pagination.currentPage - 1)}
         disabled={!pagination.hasPrevPage}
         aria-label="Previous page"
+        size="sm"
+        className="text-xs xs:text-sm"
       >
-        <ChevronLeft className="w-4 h-4 mr-2" />
-        Previous
+        <ChevronLeft className="w-3 h-3 xs:w-4 xs:h-4 mr-1 xs:mr-2" />
+        <span className="hidden xs:inline">Previous</span>
+        <span className="xs:hidden">Prev</span>
       </Button>
 
-      <div className="flex items-center gap-2" aria-label="Page numbers">
+      <div
+        className="flex items-center gap-1 xs:gap-2"
+        aria-label="Page numbers"
+      >
         {[...Array(pagination.totalPages)].map((_, i) => {
           const page = i + 1;
           const isActive = page === pagination.currentPage;
@@ -397,6 +410,7 @@ const Pagination = ({
               size="sm"
               aria-current={isActive ? "page" : undefined}
               aria-label={`Go to page ${page}`}
+              className="w-8 h-8 xs:w-9 xs:h-9 p-0 text-xs xs:text-sm"
             >
               {page}
             </Button>
@@ -409,9 +423,12 @@ const Pagination = ({
         onClick={() => onPageChange(pagination.currentPage + 1)}
         disabled={!pagination.hasNextPage}
         aria-label="Next page"
+        size="sm"
+        className="text-xs xs:text-sm"
       >
-        Next
-        <ChevronRight className="w-4 h-4 ml-2" />
+        <span className="hidden xs:inline">Next</span>
+        <span className="xs:hidden">Next</span>
+        <ChevronRight className="w-3 h-3 xs:w-4 xs:h-4 ml-1 xs:ml-2" />
       </Button>
     </nav>
   );
@@ -462,13 +479,13 @@ export default function MonthlyWinnersPage() {
       <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={false} />
         <main
-          className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10"
+          className="max-w-[95vw] xs:max-w-[92vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-7xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pt-16 xs:pt-18 sm:pt-20 md:pt-24 lg:pt-28 pb-6 xs:pb-8 sm:pb-10"
           role="main"
           aria-busy="true"
         >
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto" />
-            <p className="text-foreground mt-4 text-xl">
+          <div className="text-center py-12 xs:py-16 sm:py-20">
+            <div className="animate-spin rounded-full h-16 w-16 xs:h-24 xs:w-24 sm:h-32 sm:w-32 border-b-2 border-blue-500 mx-auto" />
+            <p className="text-foreground mt-3 xs:mt-4 text-base xs:text-lg sm:text-xl">
               Loading Monthly Winners...
             </p>
           </div>
@@ -482,17 +499,18 @@ export default function MonthlyWinnersPage() {
       <div className="min-h-screen bg-background transition-colors duration-300">
         <Header leaderboard={false} dashboard={false} />
         <main
-          className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10"
+          className="max-w-[95vw] xs:max-w-[92vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pt-16 xs:pt-18 sm:pt-20 md:pt-24 lg:pt-28 pb-6 xs:pb-8 sm:pb-10"
           role="main"
         >
-          <Card className="bg-destructive/10 border border-destructive p-6 text-center">
-            <h3 className="text-2xl font-bold text-red-400 mb-4 ">
+          <Card className="bg-destructive/10 border border-destructive p-4 xs:p-6 text-center">
+            <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-red-400 mb-3 xs:mb-4">
               Error Loading Data
             </h3>
-            <p className="text-red-300">{error}</p>
+            <p className="text-red-300 text-sm xs:text-base">{error}</p>
             <Button
               onClick={() => fetchWinnersData(pagination.currentPage)}
-              className="mt-6"
+              className="mt-4 xs:mt-6 text-sm xs:text-base"
+              size="sm"
             >
               Retry
             </Button>
@@ -507,84 +525,39 @@ export default function MonthlyWinnersPage() {
       <Header leaderboard={false} dashboard={false} />
 
       <main
-        className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10"
+        className="max-w-[95vw] xs:max-w-[92vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pt-16 xs:pt-18 sm:pt-20 md:pt-24 lg:pt-28 pb-6 xs:pb-8 sm:pb-10"
         role="main"
       >
         {/* Header */}
-        <section aria-label="Page Overview" className="text-center mb-12">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <Trophy className="w-12 h-12 text-yellow-400" />
-            <h1 className="text-4xl sm:text-5xl font-bold text-foreground">
+        <section
+          aria-label="Page Overview"
+          className="text-center mb-12 relative"
+        >
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Trophy className="w-8 h-8 text-yellow-400" />
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
               Monthly Winners
             </h1>
-            <Trophy className="w-12 h-12 text-yellow-400" />
+            <Trophy className="w-8 h-8 text-yellow-400" />
           </div>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Celebrating the top 3 developers who dominated the monthly
-            leaderboard with their exceptional contributions and aura scores.
+            leaderboard with exceptional contributions.
           </p>
-
-          {/* <div
-            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto"
-            aria-label="Statistics overview"
-          >
-            <div
-              className="bg-[#161b22] border border-[#30363d] rounded-lg p-4"
-              role="region"
-              aria-live="polite"
-            >
-              <Users
-                className="w-8 h-8 text-blue-400 mx-auto mb-2"
-                aria-hidden="true"
-              />
-              <div className="text-2xl font-bold text-foreground">
-                {pagination.totalMonths}
-              </div>
-              <div className="text-muted-foreground">Months Tracked</div>
-            </div>
-            <div
-              className="bg-[#161b22] border border-[#30363d] rounded-lg p-4"
-              role="region"
-              aria-live="polite"
-            >
-              <Crown
-                className="w-8 h-8 text-yellow-400 mx-auto mb-2"
-                aria-hidden="true"
-              />
-              <div className="text-2xl font-bold text-foreground">
-                {pagination.totalMonths}
-              </div>
-              <div className="text-muted-foreground">Champions Crowned</div>
-            </div>
-            <div
-              className="bg-[#161b22] border border-[#30363d] rounded-lg p-4"
-              role="region"
-              aria-live="polite"
-            >
-              <Medal
-                className="w-8 h-8 text-gray-300 mx-auto mb-2"
-                aria-hidden="true"
-              />
-              <div className="text-2xl font-bold text-foreground">
-                {pagination.totalMonths * 3}
-              </div>
-              <div className="text-muted-foreground">Total Winners</div>
-            </div>
-          </div> */}
         </section>
 
         {/* Winners Grid */}
         {winnersData.length === 0 ? (
           <Card className="bg-card border border-border">
-            <CardContent className="text-center py-20">
+            <CardContent className="text-center py-12 xs:py-16 sm:py-20">
               <Trophy
-                className="w-24 h-24 text-muted-foreground mx-auto mb-4"
+                className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 text-muted-foreground mx-auto mb-3 xs:mb-4"
                 aria-hidden="true"
               />
-              <h3 className="text-2xl font-bold text-foreground mb-4">
+              <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-foreground mb-3 xs:mb-4">
                 No Monthly Winners Yet
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm xs:text-base text-muted-foreground px-4">
                 Winners will be captured automatically at the end of each month.
                 Check back soon!
               </p>
@@ -595,20 +568,18 @@ export default function MonthlyWinnersPage() {
             <section
               key={monthData.monthYear}
               aria-labelledby={`month-${monthData.monthYear}`}
-              className="mb-20"
+              className="mb-16"
             >
-              <div className="text-center mb-12">
-                <div
-                  aria-level={2}
-                  role="heading"
-                  id={`month-${monthData.monthYear}`}
-                  className="inline-flex items-center gap-3 bg-card border border-border rounded-full px-6 py-3 justify-center"
-                >
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-3 bg-card border border-border rounded-lg px-6 py-3 shadow-sm">
                   <Calendar
-                    className="w-6 h-6 text-primary"
+                    className="w-5 h-5 text-muted-foreground"
                     aria-hidden="true"
                   />
-                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  <h2
+                    id={`month-${monthData.monthYear}`}
+                    className="text-xl md:text-2xl font-semibold text-foreground"
+                  >
                     {formatMonthYear(monthData.monthYear)}
                   </h2>
                 </div>
