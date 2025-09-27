@@ -8,6 +8,8 @@ import { UserCard } from "./UserCard";
 import { LeaderboardEntry as LeaderboardEntryComponent } from "./LeaderboardEntry";
 import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
+import { LeaderboardSkeleton } from "../skeletons/LeaderboardSkeleton";
+import { motion } from "framer-motion";
 
 interface CustomLeaderboardProps {
   username: string;
@@ -146,15 +148,33 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
   };
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+      >
+        <LeaderboardSkeleton count={20} />
+      </motion.div>
+    );
   }
 
   const displayedData = leaderboardData.slice(0, displayCount);
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="space-y-3 sm:space-y-4"
+    >
       {/* View Toggle and Month Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 sticky top-16 z-10 bg-background/70 backdrop-blur supports-backdrop-blur:backdrop-blur-md rounded-lg p-2 border border-border/50"
+      >
         <ViewToggle view={view} onViewChange={setView} />
         {view === "monthly" && username && (
           <MonthNavigation
@@ -162,22 +182,38 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
             onMonthChange={handleMonthChange}
           />
         )}
-      </div>
+      </motion.div>
 
       {/* Current User Card */}
       {currentUser && (
-        <UserCard
-          currentUser={currentUser}
-          userOutOfTop100={userOutOfTop100}
-          username={username}
-        />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <UserCard
+            currentUser={currentUser}
+            userOutOfTop100={userOutOfTop100}
+            username={username}
+          />
+        </motion.div>
       )}
 
       {/* Leaderboard Entries */}
-      <div className="space-y-1.5 sm:space-y-2">
-        <h3 className="text-sm sm:text-base font-bold text-foreground mb-2 sm:mb-3">
-          Top 100 Developers
-        </h3>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
+        className="space-y-1.5 sm:space-y-2"
+      >
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
+            Top 100 Developers
+          </h3>
+          <div className="text-[11px] sm:text-xs text-muted-foreground">
+            {leaderboardData.length} total • showing {displayedData.length}
+          </div>
+        </div>
         <AnimatePresence>
           {displayedData.map((entry, index) => (
             <LeaderboardEntryComponent
@@ -196,15 +232,26 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
           displayedData.length < 100 && (
             <div
               ref={observerTarget}
-              className="h-8 flex items-center justify-center"
+              className="h-10 flex items-center justify-center"
             >
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <span className="text-xs">Loading more…</span>
+              </div>
             </div>
           )}
-      </div>
+      </motion.div>
 
       {/* Empty State */}
-      {leaderboardData.length === 0 && <EmptyState view={view} />}
-    </div>
+      {leaderboardData.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <EmptyState view={view} />
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

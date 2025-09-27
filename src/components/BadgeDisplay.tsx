@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Star } from "lucide-react";
+import { BadgeDisplaySkeleton } from "./skeletons/BadgeSkeleton";
 
 interface PositionBadge {
   id: string;
@@ -166,11 +167,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12 sm:py-16 md:py-20">
-        <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <BadgeDisplaySkeleton />;
   }
 
   if (!badge) {

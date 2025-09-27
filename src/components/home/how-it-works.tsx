@@ -51,7 +51,7 @@ export const HowItWorks = () => {
 
   return (
     <section
-      className="py-12 sm:py-24 bg-card relative overflow-hidden"
+      className="py-12 z-0 sm:py-24 bg-card relative overflow-hidden"
       id="how-it-works"
     >
       {/* Background Grid */}

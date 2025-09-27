@@ -54,7 +54,13 @@ export async function GET(request: NextRequest) {
         const today = new Date();
         const lastYear = new Date(today);
         lastYear.setFullYear(today.getFullYear() - 1);
-        lastYear.setDate(lastYear.getDate() + 1);
+        // Remove the +1 day to get exactly 1 year of data including today
+        // lastYear.setDate(lastYear.getDate() + 1);
+
+        // Debug logging
+        console.log(
+          `[GitHub API] Fetching contributions for ${username} from ${lastYear.toISOString()} to ${today.toISOString()}`
+        );
 
         const graphqlQuery = {
           query: `query($userName:String!) { 

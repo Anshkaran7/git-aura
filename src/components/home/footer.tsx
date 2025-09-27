@@ -1,13 +1,15 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Github, Twitter, MessageCircle, Heart, Zap } from "lucide-react";
+import { Github, MessageCircle, Heart, Zap } from "lucide-react";
+import { FaLinkedin ,FaSquareXTwitter, FaSquareInstagram ,FaTelegram,FaSquareYoutube } from "react-icons/fa6";
+import { BsShieldCheck } from "react-icons/bs";
+import { MdVisibility } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
-
-interface HeroStats {
+ interface HeroStats {
   totalDevelopers: number;
   totalAuraPoints: number;
   totalBadges: number;
@@ -23,6 +25,7 @@ export const Footer = () => {
   const { isSignedIn } = useAuth();
   const [stats, setStats] = useState<HeroStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     fetchStats();
@@ -186,40 +189,187 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between pt-6 mt-6 border-t border-border">
-          <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-0 text-center sm:text-left">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-4 mt-6 border-t border-border">
+        <div>
+          <div className="flex items-center gap-1 text-xl sm:text-sm text-muted-foreground mb-4 sm:mb-0 text-center sm:text-left">
             <span>Made with</span>
-            <Heart className="w-3 sm:w-4 h-3 sm:h-4 text-red-500 fill-current" />
+            <Heart className="w-3 sm:w-4 h-3 sm:h-4 text-red-500 fill-current animate-pulse transition-transform duration-300 ease-in-out" />
             <span>by Karan, for developers who want to flex</span>
+            
           </div>
+          {/* Trust Badges */}
+            <div className="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
+              <div className="flex items-center bg-stone-800/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-stone-700/50 text-xs">
+                <BsShieldCheck className="text-amber-400 mr-1 text-2xl py-0.5" />
+                <span>Secure and Trustworthy</span>
+              </div>
+              <div className="flex items-center bg-stone-800/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-stone-700/50 text-xs">
+                <MdVisibility className="text-orange-400 mr-1 text-2xl py-0.5" />
+                <span>24/7 Availability</span>
+              </div>
+            </div>
+            </div>
+          
+          {/* Quick Links */}
+          <div className="mt-6 sm:mt-0 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+          <div className="flex flex-col items-center md:items-start">
+            <h2 className="text-lg font-semibold mb-4 relative inline-block pb-2">
+              Quick Links
+              
+            </h2>
 
-          <div className="flex items-center gap-4">
+            <ul className="space-y-3 text-center md:text-left">
+              {[
+                { name: "Home", path: "/" },
+                { name: "About", path: "/about" },
+                { name: "Contact", path: "/contact" },
+                { name: "Feature", path: "/feature" },
+              
+              ].map((link, idx) => (
+                <li key={idx} className="group">
+                  <a
+                    href={link.path}
+                    className="text-gray-400 hover:text-orange-400 transition-all duration-300 flex items-center group-hover:translate-x-1"
+                  >
+                    <span className="absolute bottom-0 left-0 w-full inline-block h-0.5 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span> 
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            </div>
+          <div className="flex flex-col items-center md:items-start">
+            <div className="text-lg font-semibold mb-4 relative inline-block pb-2">
+              </div>
+             <br />
+             <ul className="space-y-3 text-center md:text-left">
+              {[
+                { name: "Leaderboard", path: "/leaderboard" },
+                { name: "How It Works", path: "/how-it-works" },
+                { name: "Contributors", path: "/contribute" },
+                { name: "Monthly Winners", path: "/batle" },
+              
+              ].map((link, idx) => (
+                <li key={idx} className="group">
+                  <a
+                    href={link.path}
+                    className="text-gray-400 hover:text-orange-400 transition-all duration-300 flex items-center group-hover:translate-x-1"
+                  >
+                    <span className="absolute bottom-0 left-0 w-full inline-block h-0.5 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span> 
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          </div>
+          </div>
+</div>
+        {/* Social Media Icons */}
+    <div className="container mx-auto px-4  flex justify-start items-center ">
+          <div className="w-fill bg-slate-800/50 backdrop-blur-sm px-2 py-1 rounded-lg border border-slate-700/60 text-xs text-muted-foreground ">
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer"
+              className="cursor-pointer transform hover:scale-[1.3] transition-transform duration-300 ease-in-out "
               onClick={() =>
                 router.push("https://github.com/anshkaran7/git-aura")
               }
             >
-              <Github className="w-4 h-4" />
+              <Github className="w-8 h-8" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="cursor-pointer"
+              className="cursor-pointer transform hover:scale-[1.4] transition-transform duration-300 ease-in-out "
               onClick={() => router.push("https://x.com/itsmeekaran")}
             >
-              <Twitter className="w-4 h-4" />
+              <FaSquareXTwitter className="w-4 h-4" />
+            </Button>
+             <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer transform hover:scale-[1.4] transition-transform duration-300 ease-in-out hover:text-blue-400"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <FaLinkedin className="w-4 h-4" />
+            </Button>
+             <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer  transform hover:scale-[1.4] transition-transform duration-300 ease-in-out  hover:text-pink-500 hover:from-pink-500 hover:to-yellow-500"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <FaSquareInstagram className="w-4 h-4" />
+            </Button>
+             {/* <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer  transform hover:scale-[1.4] transition-transform duration-300 ease-in-out"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <MessageCircle className="w-4 h-4" />
+            </Button> */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer  transform hover:scale-[1.4] transition-transform duration-300 ease-in-out"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <Zap className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer  transform hover:scale-[1.5] transition-transform duration-300 ease-in-out hover:text-sky-400"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <FaTelegram className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="cursor-pointer  transform hover:scale-[1.4] transition-transform duration-300 ease-in-out hover:text-red-400"
+              onClick={() => router.push("https://x.com/itsmeekaran")}
+            >
+              <FaSquareYoutube className="w-4 h-4" />
             </Button>
           </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="text-center text-xs text-muted-foreground mt-6">
-          © 2025 Git Aura. All rights reserved.
-        </div>
       </div>
+</div>
+        {/* Copyright */}
+        <div className="pb-8 mt-6 text-center text-xs text-muted-foreground ">
+          Powered by GitHub | Open-Source Project
+        </div>
+        <div className="  border-t border-stone-600/50 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400 relative ">
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2  -translate-y-1/2 p-1 opacity-100 px-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700/60 rounded-2xl   text-accent-foreground">
+                   &copy; {new Date().getFullYear()} <b className="font-extrabold font-serif">Git-Aura.</b> All rights reserved.
+                   </div>
+                   <div className="container flex justify-between items-center-safe mx-auto px-4 ">
+                    
+                  <p className="text-gray-500 text-center"> <strong>Happy Coding!🥰</strong> <br/> Developer by <b className="font-extrabold font-serif   hover:text-orange-400 transition-colors hover:scale-105">Ansh Karan</b></p>
+        
+                  
+                   
+                    <div className="flex justify-end items-center gap-4 py-3 font-bold">
+                    <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                      Privacy
+                    </span>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                      Terms
+                    </span>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                      Policy
+                    </span>
+                     <span className="text-gray-400 hover:text-orange-400 transition-colors cursor-pointer"onClick={() => router.push("#")}>
+                      Sitemap
+                    </span>
+                    
+                  </div>
+                 </div>
+              </div>
+      
     </footer>
   );
 };
