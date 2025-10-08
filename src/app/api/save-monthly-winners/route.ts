@@ -9,13 +9,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Parse request body to get specific month if provided
+    let requestBody = {};
+    try {
+      requestBody = await request.json();
+    } catch (e) {
+      // If no body, use current month
+    }
+
     const now = new Date();
 
-    // For month end capture, we want to capture the data for the month that's ending
-    // If it's the last day of the month, capture current month
-    const currentMonthYear = `${now.getFullYear()}-${String(
-      now.getMonth() + 1
-    ).padStart(2, "0")}`;
+    // Use provided monthYear or default to current month
+    const currentMonthYear =
+      (requestBody as any).monthYear ||
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
     console.log(`🏆 Capturing monthly winners for ${currentMonthYear}`);
 
