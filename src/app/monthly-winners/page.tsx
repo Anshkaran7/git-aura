@@ -18,7 +18,7 @@ import {
 import Image from "next/image";
 import { Header } from "@/components/home";
 import { toPng } from "html-to-image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface BadgeType {
   id: string;
@@ -439,6 +439,15 @@ export default function MonthlyWinnersPage() {
     hasPrevPage: false,
   });
 
+  // Compute the current month-year string (e.g., "2025-10") and filter it out from display
+  const now = new Date();
+  const currentMonthYear = `${now.getFullYear()}-${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}`;
+  const visibleWinnersData = winnersData.filter(
+    (month) => month.monthYear !== currentMonthYear
+  );
+
   const fetchWinnersData = useCallback(async (page: number = 1) => {
     setLoading(true);
     setError(null);
@@ -539,7 +548,7 @@ export default function MonthlyWinnersPage() {
         </section>
 
         {/* Months */}
-        {winnersData.length === 0 ? (
+        {visibleWinnersData.length === 0 ? (
           <Card className="border border-border bg-card/40">
             <CardContent className="py-20 text-center">
               <Trophy
@@ -556,7 +565,7 @@ export default function MonthlyWinnersPage() {
             </CardContent>
           </Card>
         ) : (
-          winnersData.map((month) => (
+          visibleWinnersData.map((month) => (
             <section key={month.monthYear} className="mb-16">
               <div className="mb-10 text-center">
                 <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2.5">
