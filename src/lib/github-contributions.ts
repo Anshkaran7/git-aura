@@ -74,7 +74,17 @@ export async function fetchGitHubContributions(
               repository { nameWithOwner }
             }
           }
-          contributionsCollection { contributionCalendar { totalContributions } }
+          contributionsCollection { 
+            contributionCalendar { 
+              totalContributions
+              weeks {
+                contributionDays {
+                  date
+                  contributionCount
+                }
+              }
+            } 
+          }
           repositories(privacy: PUBLIC, isFork: false, first: 100) {
             totalCount
             nodes { stargazerCount }
