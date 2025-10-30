@@ -103,20 +103,14 @@ const ContributionGrid: React.FC<ContributionGridProps> = ({
   };
 
   const getMonthLabels = () => {
-    const months = [
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-    ];
+    // Generate rolling 12 months ending at the current month
+    const now = new Date();
+    const months: string[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const short = d.toLocaleString("en-US", { month: "short" });
+      months.push(short);
+    }
 
     return (
       <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-muted-foreground ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">
