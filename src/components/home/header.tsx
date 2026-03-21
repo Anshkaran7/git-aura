@@ -45,7 +45,7 @@ export const Header = ({
   // Memoize all navigation items (always show all 6 items)
   const allNavItems = useMemo(
     () => {
-      const items = [
+      return [
         { href: "/#features", label: "Features" },
         { href: "/#how-it-works", label: "How It Works" },
         { href: leaderboardUrl, label: "Leaderboard" },
@@ -53,10 +53,8 @@ export const Header = ({
         { href: "/battle", label: "Profile Compare" },
         { href: "/contribute", label: "Contribute" },
       ];
-      console.log(`Navigation items for ${pathname}:`, items);
-      return items;
     },
-    [leaderboardUrl, pathname]
+    [leaderboardUrl]
   );
 
   // Memoize user profile URL
@@ -142,11 +140,11 @@ export const Header = ({
 
   // Memoize header classes with scroll animation
   const headerClasses = useMemo(() => {
-    return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/90 
-    backdrop-blur-lg transition-all duration-500 ease-linear ${
+    return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/78 
+    backdrop-blur-xl transition-all duration-500 ease-linear ${
       isScrolled
-        ? "w-[90%] md:w-[90%] rounded-2xl mt-8 border border-border shadow-lg"
-        : "w-full border-b border-border"
+        ? "w-[92%] md:w-[90%] rounded-full mt-5 border border-border shadow-[0_18px_60px_-34px_rgba(0,0,0,0.42)]"
+        : "w-full border-b border-border/80"
     }`;
   }, [isScrolled]);
 
@@ -171,13 +169,9 @@ export const Header = ({
         const element = document.getElementById(section);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
-          console.log(`Scrolling to section: ${section}`);
-        } else {
-          console.log(`Section not found: ${section}`);
         }
       } else {
         // If on other page, navigate to homepage with hash
-        console.log(`Navigating from ${pathname} to homepage section: ${href}`);
         router.push(href);
       }
     }
@@ -193,7 +187,7 @@ export const Header = ({
             key={href}
             href={href}
             onClick={(e) => handleNavClick(href, e)}
-            className={`text-sm transition-colors ${
+            className={`text-[13px] transition-colors ${
               isActive 
                 ? "text-primary font-semibold" 
                 : "text-muted-foreground hover:text-primary"
@@ -211,30 +205,30 @@ export const Header = ({
 
   return (
     <header className={headerClasses}>
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="bg-muted border-[1px] border-border rounded-lg">
+            <div className="bg-card border border-border rounded-2xl p-1">
               <Image
                 src="/logo.png"
                 alt="Git Aura"
                 width={48}
                 height={48}
                 loading="lazy"
-                className="w-12 h-12 rounded-lg text-primary"
+                className="w-10 h-10 rounded-xl text-primary"
               />
             </div>
-            <span className="hidden xl:block font-bold text-sm sm:text-base md:text-lg text-foreground">
+            <span className="hidden xl:block text-sm font-semibold tracking-[-0.03em] text-foreground">
               Git Aura
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center gap-6 lg:gap-8">
+          <nav className="hidden xl:flex items-center gap-5">
             {renderNavItems(allNavItems)}
           </nav>
 
@@ -249,7 +243,7 @@ export const Header = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-8 px-3 text-sm items-center gap-2"
+                      className="h-8 rounded-full px-3 text-xs items-center gap-2"
                     >
                       <Shield className="w-4 h-4" />
                       <span className="hidden sm:inline">Admin</span>
@@ -272,7 +266,7 @@ export const Header = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex items-center gap-2 h-8 px-2"
+                  className="flex items-center gap-2 h-8 rounded-full px-2"
                   onClick={handleGoToProfile}
                 >
                   {user?.imageUrl ? (
@@ -284,7 +278,7 @@ export const Header = ({
                   ) : (
                     <User className="w-4 h-4" />
                   )}
-                  <span className="hidden md:inline text-sm">
+                  <span className="hidden md:inline text-xs">
                     {user?.firstName || "Profile"}
                   </span>
                 </Button>
@@ -293,7 +287,7 @@ export const Header = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="hidden sm:flex h-8 px-3 text-sm"
+                    className="hidden sm:flex h-8 rounded-full px-3 text-xs"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
@@ -305,7 +299,7 @@ export const Header = ({
                 <Button
                   variant="default"
                   size="sm"
-                  className="h-8 px-3 text-sm items-center whitespace-nowrap"
+                  className="h-8 rounded-full px-3 text-xs items-center whitespace-nowrap"
                 >
                   <Github className="w-4 h-4 mr-0 md:mr-2" />
                   <span className="hidden sm:inline">Connect GitHub</span>
@@ -317,7 +311,7 @@ export const Header = ({
             <Button
               variant="ghost"
               size="sm"
-              className="xl:hidden h-8 w-8 px-0"
+              className="xl:hidden h-8 w-8 rounded-full px-0"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <Menu className="w-4 h-4" />

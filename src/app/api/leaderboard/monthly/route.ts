@@ -1,183 +1,145 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-
-type MonthlyLeaderboardWithRelations = Prisma.MonthlyLeaderboardGetPayload<{
-  include: {
-    user: {
-      select: {
-        id: true;
-        displayName: true;
-        githubUsername: true;
-        avatarUrl: true;
-        currentStreak: true;
-        userBadges: {
-          include: {
-            badge: true;
-          };
-        };
-      };
-    };
-  };
-}>;
-
-type UserBadgeWithBadge = Prisma.UserBadgeGetPayload<{
-  include: {
-    badge: true;
-  };
-}>;
+import {
+  buildPagination,
+  paginateEntries,
+  parseLeaderboardPagination,
+  parseMonthWindow,
+} from "@/lib/leaderboard";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const monthYear = searchParams.get("monthYear");
-    const username = searchParams.get("username");
+    const monthWindow = parseMonthWindow(searchParams.get("monthYear"));
+    const { page, limit } = parseLeaderboardPagination(searchParams);
+    const userId = searchParams.get("userId");
+    const username = searchParams.get("username")?.trim().toLowerCase();
 
-    if (!monthYear) {
+    if (!monthWindow) {
       return NextResponse.json(
-        { error: "Month and year are required" },
+        { error: "A valid monthYear in YYYY-MM format is required." },
         { status: 400 }
       );
     }
 
-    // Parse the month and year
-    const [year, month] = monthYear.split("-").map(Number);
-
-    // Calculate the start and end of the requested month
-    const monthStart = new Date(year, month - 1, 1); // month is 0-based in Date constructor
-    const monthEnd = new Date(year, month, 0); // Last day of the month
-
-    // First, get all non-banned users who joined before or during this month
-    const allUsers = await prisma.user.findMany({
-      where: {
-        isBanned: false,
-        createdAt: {
-          lte: monthEnd, // User must have joined before or during this month
-        },
-        // If username is provided, filter by it
-        ...(username && {
-          githubUsername: {
-            equals: username,
-            mode: "insensitive",
-          },
-        }),
-      },
-      select: {
-        id: true,
-        displayName: true,
-        githubUsername: true,
-        avatarUrl: true,
-        currentStreak: true,
-        createdAt: true,
-        userBadges: {
-          where: {
-            monthYear: monthYear,
-          },
-          include: {
-            badge: true,
-          },
-        },
-      },
-    });
-
-    // Then, get monthly leaderboard data
-    const monthlyData = await prisma.monthlyLeaderboard.findMany({
-      where: {
-        monthYear: monthYear,
-        user: {
+    const [allUsers, monthlyData] = await Promise.all([
+      prisma.user.findMany({
+        where: {
           isBanned: false,
-          // If username is provided, filter by it
-          ...(username && {
-            githubUsername: {
-              equals: username,
-              mode: "insensitive",
-            },
-          }),
-        },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
+          createdAt: {
+            lte: monthWindow.monthEnd,
           },
         },
-      },
-    });
+        select: {
+          id: true,
+          displayName: true,
+          githubUsername: true,
+          avatarUrl: true,
+          currentStreak: true,
+          userBadges: {
+            where: {
+              monthYear: monthWindow.monthYear,
+            },
+            include: {
+              badge: true,
+            },
+          },
+        },
+      }),
+      prisma.monthlyLeaderboard.findMany({
+        where: {
+          monthYear: monthWindow.monthYear,
+          user: {
+            isBanned: false,
+          },
+        },
+        select: {
+          userId: true,
+          totalAura: true,
+          contributionsCount: true,
+        },
+      }),
+    ]);
 
-    // Create a map of user IDs to their monthly data
     const monthlyDataMap = new Map(
-      monthlyData.map((entry) => [entry.user.id, entry])
+      monthlyData.map((entry) => [entry.userId, entry])
     );
 
-    // Combine the data, using 0 for users without monthly activity
-    const transformedData = allUsers.map((user) => {
-      const monthlyEntry = monthlyDataMap.get(user.id);
+    const rankedEntries = allUsers
+      .map((user) => {
+        const leaderboardEntry = monthlyDataMap.get(user.id);
 
-      return {
-        rank: 0, // Will be calculated after sorting
-        user: {
-          id: user.id,
-          display_name: user.displayName || user.githubUsername || "",
-          github_username: user.githubUsername || "",
-          avatar_url:
-            user.avatarUrl || `https://github.com/${user.githubUsername}.png`,
-          total_aura: monthlyEntry?.totalAura || 0, // Add missing total_aura field
-          current_streak: user.currentStreak || 0,
-        },
-        aura: monthlyEntry?.totalAura || 0,
-        contributions: monthlyEntry?.contributionsCount || 0,
-        badges: user.userBadges
-          .filter(
-            (
-              ub
-            ): ub is UserBadgeWithBadge & {
-              badge: NonNullable<UserBadgeWithBadge["badge"]>;
-            } => ub.badge !== null
-          )
-          .map((ub) => ({
-            id: ub.badge.id,
-            name: ub.badge.name,
-            description: ub.badge.description || "",
-            icon: ub.badge.icon || "",
-            color: ub.badge.color || "",
-            rarity: (ub.badge.rarity || "COMMON").toLowerCase(),
-            month_year: ub.monthYear || null,
-            rank: ub.rank || null,
-          })),
-      };
-    });
+        return {
+          rank: 0,
+          user: {
+            id: user.id,
+            display_name: user.displayName || user.githubUsername || "",
+            github_username: user.githubUsername || "",
+            avatar_url:
+              user.avatarUrl || `https://github.com/${user.githubUsername}.png`,
+            total_aura: leaderboardEntry?.totalAura || 0,
+            current_streak: user.currentStreak || 0,
+          },
+          aura: leaderboardEntry?.totalAura || 0,
+          contributions: leaderboardEntry?.contributionsCount || 0,
+          badges: user.userBadges
+            .filter((userBadge) => userBadge.badge !== null)
+            .map((userBadge) => ({
+              id: userBadge.badge!.id,
+              name: userBadge.badge!.name,
+              description: userBadge.badge!.description || "",
+              icon: userBadge.badge!.icon || "",
+              color: userBadge.badge!.color || "",
+              rarity: (userBadge.badge!.rarity || "COMMON").toLowerCase(),
+              month_year: userBadge.monthYear || undefined,
+              rank: userBadge.rank || undefined,
+            })),
+        };
+      })
+      .sort((leftEntry, rightEntry) => {
+        if (rightEntry.aura !== leftEntry.aura) {
+          return rightEntry.aura - leftEntry.aura;
+        }
 
-    // Sort by aura points and assign ranks
-    const sortedData = transformedData
-      .sort((a, b) => b.aura - a.aura)
+        if ((rightEntry.contributions || 0) !== (leftEntry.contributions || 0)) {
+          return (rightEntry.contributions || 0) - (leftEntry.contributions || 0);
+        }
+
+        return leftEntry.user.github_username.localeCompare(
+          rightEntry.user.github_username
+        );
+      })
       .map((entry, index) => ({
         ...entry,
         rank: index + 1,
       }));
 
-    // Find user's rank if userId is provided
-    let userRank = null;
-    if (username) {
-      const userIndex = sortedData.findIndex(
-        (entry) => entry.user.github_username === username
-      );
-      userRank = userIndex !== -1 ? userIndex + 1 : null;
-    }
+    const userRankEntry = rankedEntries.find((entry) => {
+      if (userId && entry.user.id === userId) {
+        return true;
+      }
+
+      if (username && entry.user.github_username.toLowerCase() === username) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const pagination = buildPagination(rankedEntries.length, { page, limit });
+    const leaderboard = paginateEntries(rankedEntries, {
+      page: pagination.currentPage,
+      limit: pagination.limit,
+    });
 
     return NextResponse.json({
-      leaderboard: sortedData,
-      pagination: {
-        currentPage: 1,
-        totalPages: 1,
-        totalCount: sortedData.length,
-        hasNextPage: false,
-        hasPrevPage: false,
-        limit: sortedData.length,
-      },
-      userRank,
+      leaderboard,
+      pagination,
+      userRank: userRankEntry?.rank ?? null,
     });
   } catch (error) {
     console.error("Error in monthly leaderboard API:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

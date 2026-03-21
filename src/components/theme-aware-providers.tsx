@@ -19,13 +19,11 @@ export function ThemeAwareProviders({ children }: { children: React.ReactNode })
       appearance={{
         baseTheme: resolvedTheme === 'dark' ? dark : undefined,
         variables: {
-          colorBackground: resolvedTheme === 'dark' ? '#1f1f1f' : '#ffffff',
-          
-          // These other variables can remain as they are.
-          colorPrimary: `oklch(var(--primary))`,
-          colorText: `oklch(var(--foreground))`,
-          colorInputBackground: `oklch(var(--background))`,
-          colorInputText: `oklch(var(--foreground))`,
+          colorBackground: resolvedTheme === "dark" ? "#1f1f1f" : "#ffffff",
+          colorPrimary: "var(--primary)",
+          colorText: "var(--foreground)",
+          colorInputBackground: "var(--background)",
+          colorInputText: "var(--foreground)",
         },
         elements: {
           // We keep this clean and let the `variables` above do the work.

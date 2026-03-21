@@ -1,43 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
-
-type GlobalLeaderboardWithRelations = Prisma.GlobalLeaderboardGetPayload<{
-  include: {
-    user: {
-      select: {
-        id: true;
-        displayName: true;
-        githubUsername: true;
-        avatarUrl: true;
-        currentStreak: true;
-        userBadges: {
-          include: {
-            badge: true;
-          };
-        };
-      };
-    };
-  };
-}>;
-
-type UserBadgeWithBadge = Prisma.UserBadgeGetPayload<{
-  include: {
-    badge: true;
-  };
-}>;
+import {
+  buildPagination,
+  paginateEntries,
+  parseLeaderboardPagination,
+} from "@/lib/leaderboard";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const { page, limit } = parseLeaderboardPagination(searchParams);
     const userId = searchParams.get("userId");
+    const username = searchParams.get("username")?.trim().toLowerCase();
 
-    // Fetch all leaderboard data, ordered by totalAura descending, excluding banned users
-    // Get the most recent entry for each user (highest year or null year)
     const alltimeData = await prisma.globalLeaderboard.findMany({
       where: {
         user: {
-          isBanned: false, // Exclude banned users
+          isBanned: false,
         },
       },
       include: {
@@ -48,7 +27,6 @@ export async function GET(request: NextRequest) {
             githubUsername: true,
             avatarUrl: true,
             currentStreak: true,
-            isBanned: true,
             userBadges: {
               include: {
                 badge: true,
@@ -57,26 +35,31 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: [
-        { totalAura: "desc" },
-        { year: "desc" }, // Prefer records with year, then null year
-      ],
+      orderBy: [{ totalAura: "desc" }, { year: "desc" }],
     });
 
-    // Group by userId and take the best entry for each user
-    const userBestEntries = new Map();
+    const userBestEntries = new Map<string, (typeof alltimeData)[number]>();
+
     alltimeData.forEach((entry) => {
-      const existing = userBestEntries.get(entry.userId);
-      if (!existing || entry.totalAura > existing.totalAura) {
+      const existingEntry = userBestEntries.get(entry.userId);
+
+      if (!existingEntry || entry.totalAura > existingEntry.totalAura) {
         userBestEntries.set(entry.userId, entry);
       }
     });
 
-    // Transform the data and add calculated ranks
-    const transformedData = Array.from(userBestEntries.values())
-      .sort((a, b) => b.totalAura - a.totalAura)
+    const rankedEntries = Array.from(userBestEntries.values())
+      .sort((leftEntry, rightEntry) => {
+        if (rightEntry.totalAura !== leftEntry.totalAura) {
+          return rightEntry.totalAura - leftEntry.totalAura;
+        }
+
+        return (leftEntry.user.githubUsername || "").localeCompare(
+          rightEntry.user.githubUsername || ""
+        );
+      })
       .map((entry, index) => ({
-        rank: index + 1, // Calculate rank based on position
+        rank: index + 1,
         user: {
           id: entry.user.id,
           display_name:
@@ -85,59 +68,50 @@ export async function GET(request: NextRequest) {
           avatar_url:
             entry.user.avatarUrl ||
             `https://github.com/${entry.user.githubUsername}.png`,
-          total_aura: entry.totalAura, // Changed from current_streak to total_aura
+          total_aura: entry.totalAura,
           current_streak: entry.user.currentStreak || 0,
         },
         aura: entry.totalAura,
         badges: entry.user.userBadges
-          .filter(
-            (
-              ub: UserBadgeWithBadge
-            ): ub is UserBadgeWithBadge & {
-              badge: NonNullable<UserBadgeWithBadge["badge"]>;
-            } => ub.badge !== null
-          )
-          .map(
-            (
-              ub: UserBadgeWithBadge & {
-                badge: NonNullable<UserBadgeWithBadge["badge"]>;
-              }
-            ) => ({
-              id: ub.badge.id,
-              name: ub.badge.name,
-              description: ub.badge.description || "",
-              icon: ub.badge.icon || "",
-              color: ub.badge.color || "",
-              rarity: (ub.badge.rarity || "COMMON").toLowerCase(),
-              month_year: ub.monthYear || null,
-              rank: ub.rank || null,
-            })
-          ),
+          .filter((userBadge) => userBadge.badge !== null)
+          .map((userBadge) => ({
+            id: userBadge.badge!.id,
+            name: userBadge.badge!.name,
+            description: userBadge.badge!.description || "",
+            icon: userBadge.badge!.icon || "",
+            color: userBadge.badge!.color || "",
+            rarity: (userBadge.badge!.rarity || "COMMON").toLowerCase(),
+            month_year: userBadge.monthYear || undefined,
+            rank: userBadge.rank || undefined,
+          })),
       }));
 
-    // If userId is provided, find user's rank
-    let userRank = null;
-    if (userId) {
-      const userIndex = transformedData.findIndex(
-        (entry) => entry.user.id === userId
-      );
-      userRank = userIndex !== -1 ? userIndex + 1 : null;
-    }
+    const userRankEntry = rankedEntries.find((entry) => {
+      if (userId && entry.user.id === userId) {
+        return true;
+      }
+
+      if (username && entry.user.github_username.toLowerCase() === username) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const pagination = buildPagination(rankedEntries.length, { page, limit });
+    const leaderboard = paginateEntries(rankedEntries, {
+      page: pagination.currentPage,
+      limit: pagination.limit,
+    });
 
     return NextResponse.json({
-      leaderboard: transformedData,
-      pagination: {
-        currentPage: 1,
-        totalPages: 1,
-        totalCount: transformedData.length,
-        hasNextPage: false,
-        hasPrevPage: false,
-        limit: transformedData.length,
-      },
-      userRank,
+      leaderboard,
+      pagination,
+      userRank: userRankEntry?.rank ?? null,
     });
   } catch (error) {
     console.error("Error in all-time leaderboard API:", error);
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -35,4 +35,10 @@ export interface PaginationInfo {
   limit: number;
 }
 
+export interface LeaderboardResponse {
+  leaderboard: LeaderboardEntry[];
+  pagination: PaginationInfo;
+  userRank: number | null;
+}
+
 export type ViewType = "monthly" | "alltime";

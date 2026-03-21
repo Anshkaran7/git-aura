@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft01Icon, ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons";
+import { HugeIcon } from "@/components/ui/huge-icon";
 import { getCurrentMonthYear } from "@/lib/utils2";
 
 interface MonthNavigationProps {
@@ -17,22 +18,27 @@ export function MonthNavigation({
   };
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-center">
+    <div className="flex w-full items-center justify-center gap-2 sm:w-auto">
       <button
         onClick={() => onMonthChange("prev")}
-        className="p-1 rounded-md touch-manipulation hover:bg-muted active:bg-secondary transition-all backdrop-blur-sm"
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 transition-all hover:border-primary/30 hover:text-primary"
+        aria-label="Previous month"
       >
-        <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+        <HugeIcon icon={ArrowLeft01Icon} size={14} className="text-muted-foreground" />
       </button>
-      <span className="px-2 py-1 text-xs font-medium text-foreground whitespace-nowrap bg-card backdrop-blur-sm rounded border border-border">
-        {formatMonthYear(currentMonth)}
-      </span>
+      <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 shadow-sm">
+        <HugeIcon icon={Calendar03Icon} size={14} className="text-primary" />
+        <span className="whitespace-nowrap text-[11px] font-semibold text-foreground">
+          {formatMonthYear(currentMonth)}
+        </span>
+      </div>
       <button
         onClick={() => onMonthChange("next")}
-        className="p-1 rounded-md touch-manipulation hover:bg-muted active:bg-secondary transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 transition-all hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
         disabled={currentMonth >= getCurrentMonthYear()}
+        aria-label="Next month"
       >
-        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+        <HugeIcon icon={ArrowRight01Icon} size={14} className="text-muted-foreground" />
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
-import { Crown, Medal } from "lucide-react";
+import { MedalFirstPlaceIcon, MedalSecondPlaceIcon, MedalThirdPlaceIcon } from "@hugeicons/core-free-icons";
+import { HugeIcon } from "@/components/ui/huge-icon";
 
 interface RankIconProps {
   rank: number;
@@ -7,16 +8,16 @@ interface RankIconProps {
 export function RankIcon({ rank }: RankIconProps) {
   switch (rank) {
     case 1:
-      return <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />;
+      return <HugeIcon icon={MedalFirstPlaceIcon} size={16} className="text-amber-400" />;
     case 2:
-      return <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />;
+      return <HugeIcon icon={MedalSecondPlaceIcon} size={16} className="text-slate-300" />;
     case 3:
-      return <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600" />;
+      return <HugeIcon icon={MedalThirdPlaceIcon} size={16} className="text-orange-400" />;
     default:
       return (
-        <span className="text-xs sm:text-sm font-bold text-muted-foreground bg-muted rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center">
+        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/80 text-[10px] font-semibold text-muted-foreground shadow-sm">
           {rank}
-        </span>
+        </div>
       );
   }
 }

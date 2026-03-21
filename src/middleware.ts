@@ -1,34 +1,26 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Define routes that require authentication
-const isProtectedRoute = createRouteMatcher([
-  "/[username]/(.*)", // User profile pages and sub-pages
+const isCronRoute = createRouteMatcher(["/api/cron/(.*)"]);
+const isAuthRequiredRoute = createRouteMatcher([
+  "/admin(.*)",
+  "/api/admin(.*)",
+  "/banned(.*)",
+  "/api/check-ban-status",
 ]);
 
-// Define routes that should be excluded from Clerk middleware (CRON endpoints)
-const isPublicRoute = createRouteMatcher([
-  "/api/cron/(.*)", // All CRON endpoints should bypass Clerk auth
-]);
-
-export default clerkMiddleware((auth, req) => {
-  // Skip Clerk auth for CRON endpoints
-  if (isPublicRoute(req)) {
+export default clerkMiddleware(async (auth, req) => {
+  if (isCronRoute(req)) {
     return;
   }
 
-  // For protected routes, we'll handle authorization at the page level
-  // This middleware ensures the user is tracked by Clerk
-  if (isProtectedRoute(req)) {
-    // Let the page components handle the authorization logic
-    // Middleware just ensures Clerk auth context is available
+  if (isAuthRequiredRoute(req)) {
+    await auth.protect();
   }
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };

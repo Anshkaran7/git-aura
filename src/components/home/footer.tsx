@@ -1,223 +1,141 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Github, Twitter, MessageCircle, Heart, Zap } from "lucide-react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowRight01Icon,
+  GithubIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcon } from "@/components/ui/huge-icon";
 
 interface HeroStats {
   totalDevelopers: number;
   totalAuraPoints: number;
   totalBadges: number;
-  monthlyActive: number;
-  totalMonthlyContributions: number;
-  averageAuraPerUser: number;
-  averageBadgesPerUser: number;
-  fallback?: boolean;
 }
 
 export const Footer = () => {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const [stats, setStats] = useState<HeroStats | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStats();
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/stats/hero", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Failed to fetch stats");
+        }
+
+        const data = (await response.json()) as HeroStats;
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    void fetchStats();
   }, []);
 
-  const fetchStats = async () => {
-    try {
-      const response = await fetch("/api/stats/hero");
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      } else {
-        // Fallback stats if API fails
-        setStats({
-          totalDevelopers: 10000,
-          totalAuraPoints: 50000000,
-          totalBadges: 0,
-          monthlyActive: 0,
-          totalMonthlyContributions: 0,
-          averageAuraPerUser: 0,
-          averageBadgesPerUser: 0,
-          fallback: true,
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-      // Fallback stats
-      setStats({
-        totalDevelopers: 10000,
-        totalAuraPoints: 50000000,
-        totalBadges: 0,
-        monthlyActive: 0,
-        totalMonthlyContributions: 0,
-        averageAuraPerUser: 0,
-        averageBadgesPerUser: 0,
-        fallback: true,
-      });
-    } finally {
-      setLoading(false);
+  const formatNumber = (value: number) => {
+    if (value >= 1_000_000) {
+      return `${(value / 1_000_000).toFixed(1)}M`;
     }
-  };
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + "M";
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + "K";
+    if (value >= 1_000) {
+      return `${(value / 1_000).toFixed(1)}K`;
     }
-    return num.toString();
-  };
 
-  const handleStartJourney = () => {
-    if (isSignedIn) {
-      router.push("/dashboard");
-    } else {
-      router.push("/sign-in");
-    }
+    return `${value}`;
   };
 
   return (
-    <footer className="bg-card border-t border-border relative overflow-hidden py-8 sm:py-12">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute bottom-0 left-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-muted/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-0 right-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-accent/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Brand Section */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-          <div className="text-start w-full lg:w-auto">
-            <div className="flex items-center justify-start gap-2 mb-4">
-              <div className=" bg-muted border-[1px] border-border rounded-lg">
+    <footer className="px-4 pb-10 pt-6 sm:px-6 sm:pb-14">
+      <div className="mx-auto max-w-7xl rounded-[2rem] border border-border bg-card p-5 shadow-[0_22px_80px_-44px_rgba(0,0,0,0.42)] sm:p-8">
+        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl border border-border bg-background p-2">
                 <Image
                   src="/logo.png"
                   alt="Git Aura"
-                  width={1000}
-                  height={1000}
-                  loading="lazy"
-                  className="w-12 h-12 rounded-lg text-primary"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-xl"
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-base sm:text-lg text-primary">
-                  Git Aura
-                </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  GitAura
+                </p>
+                <h2 className="mt-1 text-lg font-semibold text-foreground">
+                  A quieter GitHub profile experience.
+                </h2>
               </div>
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground mb-4 max-w-md text-start">
-              Stop being a commit ghost and start building your developer street
-              cred. Turn your green squares into actual flexing rights.
+
+            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+              The interface is now built around a monochrome palette, smaller
+              type, and stronger spacing so stats, ranks, and badges feel more
+              premium.
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {loading ? (
-                <>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border animate-pulse whitespace-nowrap"
-                  >
-                    Loading...
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border animate-pulse whitespace-nowrap"
-                  >
-                    Loading...
-                  </Badge>
-                </>
-              ) : stats ? (
-                <>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border whitespace-nowrap"
-                  >
-                    {formatNumber(stats.totalDevelopers)}+ Developers
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border whitespace-nowrap"
-                  >
-                    {formatNumber(stats.totalAuraPoints)}+ Aura Points
-                  </Badge>
-                </>
-              ) : (
-                <>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border whitespace-nowrap"
-                  >
-                    10K+ Developers
-                  </Badge>
-                  <Badge
-                    variant="outline"
-                    className="text-xs border-border whitespace-nowrap"
-                  >
-                    50M+ Aura Points
-                  </Badge>
-                </>
-              )}
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Badge variant="outline" className="rounded-full border-border px-3 py-1 text-[11px]">
+                {stats ? `${formatNumber(stats.totalDevelopers)}+ developers` : "Live leaderboard"}
+              </Badge>
+              <Badge variant="outline" className="rounded-full border-border px-3 py-1 text-[11px]">
+                {stats ? `${formatNumber(stats.totalAuraPoints)}+ aura` : "Monthly badges"}
+              </Badge>
+              <Badge variant="outline" className="rounded-full border-border px-3 py-1 text-[11px]">
+                {stats ? `${formatNumber(stats.totalBadges)}+ badges` : "Profile exports"}
+              </Badge>
             </div>
           </div>
-          <div className="text-start lg:text-center w-full lg:w-auto p-4 sm:p-6 rounded-xl bg-card border border-border">
-            <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3">
-              Ready to Stop Being Mid?
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4 max-w-2xl mx-auto">
-              Join hundreds of developers who've already discovered their true
-              Git Aura. Warning: Results may cause excessive confidence in code
-              reviews.
+
+          <div className="rounded-[1.5rem] border border-border bg-background p-4 sm:p-5">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              <HugeIcon icon={SparklesIcon} size={14} />
+              Ready to use it?
+            </div>
+            <p className="mt-3 max-w-sm text-sm leading-6 text-foreground">
+              Open your profile, check your leaderboard card, and make sure your
+              badges now render properly.
             </p>
             <Button
-              variant="default"
-              size="default"
-              className="w-full sm:w-auto px-4 sm:px-8 py-2"
-              onClick={handleStartJourney}
+              onClick={() => router.push(isSignedIn ? "/leaderboard" : "/sign-in")}
+              className="mt-4 h-10 rounded-full px-4 text-sm font-semibold"
             >
-              <Github className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-              Start Your Git Aura Journey
+              <HugeIcon icon={GithubIcon} size={16} />
+              {isSignedIn ? "Open leaderboard" : "Sign in to GitAura"}
+              <HugeIcon icon={ArrowRight01Icon} size={16} />
             </Button>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between pt-6 mt-6 border-t border-border">
-          <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-0 text-center sm:text-left">
-            <span>Made with</span>
-            <Heart className="w-3 sm:w-4 h-3 sm:h-4 text-red-500 fill-current" />
-            <span>by Karan, for developers who want to flex</span>
-          </div>
-
+        <div className="mt-8 flex flex-col gap-3 border-t border-border pt-5 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>© 2025 GitAura. Designed with a lighter hand.</span>
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="cursor-pointer"
-              onClick={() =>
-                router.push("https://github.com/anshkaran7/git-aura")
-              }
+            <button
+              type="button"
+              onClick={() => router.push("https://github.com/anshkaran7/git-aura")}
+              className="transition-colors hover:text-foreground"
             >
-              <Github className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="cursor-pointer"
+              GitHub
+            </button>
+            <button
+              type="button"
               onClick={() => router.push("https://x.com/itsmeekaran")}
+              className="transition-colors hover:text-foreground"
             >
-              <Twitter className="w-4 h-4" />
-            </Button>
+              X
+            </button>
           </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="text-center text-xs text-muted-foreground mt-6">
-          © 2025 Git Aura. All rights reserved.
         </div>
       </div>
     </footer>

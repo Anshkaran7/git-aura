@@ -1,8 +1,14 @@
 import { motion } from "framer-motion";
-import { Star, HeartHandshake } from "lucide-react";
-import { formatNumber, getBadgeColor } from "@/lib/utils2";
+import {
+  AiUserIcon,
+  FireIcon,
+  GitCommitIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import { formatNumber } from "@/lib/utils2";
 import { LeaderboardEntry } from "./types";
 import { RankIcon } from "./RankIcon";
+import { HugeIcon } from "@/components/ui/huge-icon";
 
 interface UserCardProps {
   currentUser: LeaderboardEntry;
@@ -21,65 +27,74 @@ export function UserCard({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`relative overflow-hidden rounded-lg p-2 sm:p-3 ${
+      className={`relative overflow-hidden rounded-3xl border p-3 shadow-[0_18px_60px_-30px_rgba(15,23,42,0.45)] ${
         userOutOfTop100
-          ? "border border-orange-500 bg-gradient-to-r from-orange-500/10 to-red-500/10 dark:from-orange-900/20 dark:to-red-900/20"
-          : "border border-[#39d353] bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#161b21] dark:to-[#0d1117]"
+          ? "border-orange-500/30 bg-[radial-gradient(circle_at_top_left,rgba(251,146,60,0.22),transparent_35%),linear-gradient(135deg,rgba(251,146,60,0.12),rgba(15,23,42,0.78))]"
+          : "border-emerald-500/30 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_35%),linear-gradient(135deg,rgba(14,165,233,0.08),rgba(15,23,42,0.78))]"
       }`}
     >
-      {!userOutOfTop100 && (
-        <div className="absolute inset-0 bg-gradient-to-r from-[#39d353]/5 to-[#26a641]/5 dark:from-[#39d353]/10 dark:to-[#26a641]/10"></div>
-      )}
-      <div className="relative">
-        <div className="flex items-center gap-1 mb-2">
-          <Star className="w-3 h-3 text-muted-foreground" />
-          <span className="text-xs font-medium text-muted-foreground">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),transparent_45%)]" />
+      <div className="relative space-y-3">
+        <div className="flex items-center gap-1.5">
+          <HugeIcon icon={SparklesIcon} size={14} className="text-primary" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {username}'s Position
           </span>
         </div>
-        <div className="flex flex-row items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <RankIcon rank={currentUser.rank} />
             <img
               src={currentUser.user.avatar_url}
               alt={currentUser.user.display_name}
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full ring-1 ring-[#39d353]"
+              className="h-9 w-9 rounded-full border border-white/15 object-cover ring-2 ring-primary/20"
             />
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-foreground">
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-semibold text-foreground">
                 {currentUser.user.display_name}
               </h3>
-              <p className="text-xs text-muted-foreground">
+              <p className="truncate text-[11px] text-muted-foreground">
                 @{currentUser.user.github_username}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <div className="text-sm sm:text-base font-bold text-foreground">
+            <div className="text-base font-semibold text-foreground">
               #{currentUser.rank}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-[11px] text-muted-foreground">
               {formatNumber(currentUser.aura)} Aura
             </div>
-            {currentUser.contributions !== undefined && (
-              <div className="text-[10px] text-muted-foreground">
-                {formatNumber(currentUser.contributions)} contributions
-              </div>
-            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-muted-foreground">
+            <HugeIcon icon={AiUserIcon} size={13} className="text-primary" />
+            Top profile spotlight
+          </div>
+          {currentUser.contributions !== undefined ? (
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-muted-foreground">
+              <HugeIcon icon={GitCommitIcon} size={13} className="text-emerald-300" />
+              {formatNumber(currentUser.contributions)} contributions
+            </div>
+          ) : null}
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-muted-foreground">
+            <HugeIcon icon={FireIcon} size={13} className="text-orange-300" />
+            {currentUser.user.current_streak} day streak
           </div>
         </div>
 
         {userOutOfTop100 && (
-          <div className="flex items-start gap-2 pt-2 border-t border-orange-500/30 dark:border-orange-500/20">
-            <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400 mt-0.5 shrink-0" />
+          <div className="flex items-start gap-2 rounded-2xl border border-orange-400/20 bg-orange-500/8 p-3">
+            <HugeIcon icon={SparklesIcon} size={16} className="mt-0.5 text-orange-300" />
             <div>
-              <h3 className="text-xs sm:text-sm font-semibold text-orange-200 mb-1">
-                Time to Level Up! 💪
+              <h3 className="text-xs font-semibold text-orange-100">
+                Outside the top 100 for now
               </h3>
-              <p className="text-xs text-orange-300/90 leading-relaxed">
-                You are not in the top 100. The top 100 developers are crushing
-                it! Start contributing more, maintain consistency, and climb
-                your way up. Every commit counts toward your coding journey! 🚀
+              <p className="mt-1 text-[11px] leading-5 text-orange-200/80">
+                Keep stacking commits and consistency. Your full rank is still
+                tracked, and a few strong weeks can move this card fast.
               </p>
             </div>
           </div>

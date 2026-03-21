@@ -1,12 +1,12 @@
 export function LoadingState() {
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-card border border-border rounded-lg sm:rounded-xl p-6 sm:p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-primary mx-auto mb-3 sm:mb-4"></div>
-        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">
+    <div className="flex min-h-[240px] items-center justify-center">
+      <div className="rounded-3xl border border-border/70 bg-background/85 p-6 text-center shadow-[0_18px_60px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-8">
+        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary sm:h-12 sm:w-12"></div>
+        <h3 className="text-sm font-semibold text-foreground sm:text-base">
           Loading Leaderboard
         </h3>
-        <p className="text-xs sm:text-sm text-muted-foreground">
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
           Fetching latest rankings...
         </p>
       </div>

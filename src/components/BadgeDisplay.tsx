@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Award, Star } from "lucide-react";
+import { getCurrentMonthYear } from "@/lib/utils2";
+import { BadgeIcon as BadgeAsset } from "@/components/badges/BadgeIcon";
 
 interface PositionBadge {
   id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
+  asset?: string;
   color: string;
   rarity: string;
   position: number;
@@ -36,22 +39,19 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
 
   const fetchUserPosition = async () => {
     try {
-      console.log("Fetching user position for userId:", userId);
-
-      // Fetch current month's leaderboard to get user position
-      const response = await fetch(`/api/leaderboard/monthly?userId=${userId}`);
+      const monthYear = getCurrentMonthYear();
+      const response = await fetch(
+        `/api/leaderboard/monthly?userId=${userId}&monthYear=${monthYear}&limit=100`
+      );
 
       if (!response.ok) {
-        console.log("Failed to fetch leaderboard data");
         setBadge(null);
         return;
       }
 
       const data = await response.json();
-      console.log("Leaderboard response:", data);
 
       if (!data.leaderboard || data.leaderboard.length === 0) {
-        console.log("No leaderboard data found");
         setBadge(null);
         return;
       }
@@ -71,7 +71,6 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
             (entry: any) => entry.user.id === userId
           ) + 1;
 
-        console.log("User position:", position);
         setUserPosition(position);
 
         // Only show badges for top 3 positions
@@ -81,7 +80,6 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           setBadge(null);
         }
       } else {
-        console.log("User not found in leaderboard");
         setBadge(null);
       }
     } catch (error) {
@@ -99,6 +97,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
         name: "🏆 Champion",
         description: "You're the #1 developer this month! Absolute legend! 👑",
         icon: <Trophy className="w-8 h-8" />,
+        asset: "/badge/1st.png",
         color: "from-yellow-400 to-yellow-600",
         rarity: "legendary",
         position: 1,
@@ -110,6 +109,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
         description:
           "Amazing work! You're holding strong at #2! Keep pushing! 💪",
         icon: <Medal className="w-8 h-8" />,
+        asset: "/badge/2nd.png",
         color: "from-gray-300 to-gray-500",
         rarity: "epic",
         position: 2,
@@ -121,6 +121,7 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
         description:
           "Excellent! You've earned the #3 spot! You're in the top tier! 🌟",
         icon: <Award className="w-8 h-8" />,
+        asset: "/badge/3rd.png",
         color: "from-orange-400 to-orange-600",
         rarity: "rare",
         position: 3,
@@ -234,9 +235,18 @@ const BadgeDisplay = ({ userId, selectedTheme }: BadgeDisplayProps) => {
           <div
             className={`w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br ${badge.color} rounded-full flex items-center justify-center mb-4 sm:mb-6 mx-auto shadow-xl`}
           >
-            <div className="text-foreground scale-75 sm:scale-90 md:scale-100">
-              {badge.icon}
-            </div>
+            {badge.asset ? (
+              <BadgeAsset
+                icon={badge.asset}
+                name={badge.name}
+                className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20"
+                imageClassName="drop-shadow-xl"
+              />
+            ) : (
+              <div className="text-foreground scale-75 sm:scale-90 md:scale-100">
+                {badge.icon}
+              </div>
+            )}
           </div>
 
           {/* Badge Info */}

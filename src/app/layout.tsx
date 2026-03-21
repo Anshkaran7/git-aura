@@ -2,13 +2,8 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeAwareProviders } from "@/components/theme-aware-providers"; // Import the ThemeAwareProviders to wrap the app
+import { ThemeAwareProviders } from "@/components/theme-aware-providers";
 import { Analytics } from "@vercel/analytics/react";
-import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import UserSync from "@/components/UserSync";
-import { Toaster } from "sonner";
-import { ProductHuntBanner } from "@/components/ProductHuntBanner";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -16,6 +11,7 @@ const montserrat = Montserrat({
   preload: true,
   adjustFontFallback: true,
   weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-sans",
 });
 
 export const metadata: Metadata = {
@@ -167,7 +163,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`scroll-smooth ${montserrat.className}`}
+      className={`scroll-smooth ${montserrat.variable} ${montserrat.className}`}
     >
       <head>
         {/* Preconnect to external domains for performance */}

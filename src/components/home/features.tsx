@@ -1,139 +1,72 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Brain, Trophy, Target, Zap, Users, Download } from "lucide-react";
+import {
+  Award01Icon,
+  Chart01Icon,
+  GithubIcon,
+  RankingIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeIcon } from "@/components/ui/huge-icon";
+
+const features = [
+  {
+    title: "A refined public profile",
+    description:
+      "Turn commit history, streaks, and contribution density into a profile layout that looks intentional.",
+    icon: GithubIcon,
+  },
+  {
+    title: "Rank movement that reads fast",
+    description:
+      "Monthly and all-time leaderboards stay compact, scannable, and stable even when data is still loading.",
+    icon: RankingIcon,
+  },
+  {
+    title: "Badges that feel earned",
+    description:
+      "Placement rewards, profile highlights, and actual badge assets instead of broken placeholders or noisy tokens.",
+    icon: Award01Icon,
+  },
+  {
+    title: "Metrics with better hierarchy",
+    description:
+      "Clear visual rhythm, lower font sizes, and quieter contrast keep the interface sharp without feeling crowded.",
+    icon: Chart01Icon,
+  },
+];
 
 export const FeaturesSection = () => {
-  const features = [
-    {
-      icon: Trophy,
-      title: "Leaderboard Domination",
-      description:
-        'Finally beat that one colleague who commits "fix typo" 47 times a day',
-      badge: "🏆 Competitive",
-      gradient: "from-gray-900/5 to-slate-800/10",
-    },
-    {
-      icon: Zap,
-      title: "Instant Aura Score",
-      description:
-        "Turns your GitHub into a dating profile rating (but for developers)",
-      badge: "⚡ Fast",
-      gradient: "from-slate-900/5 to-gray-800/10",
-    },
-    {
-      icon: Users,
-      title: "Global Rankings",
-      description: "Find out if you're actually good or just think you are",
-      badge: "🌍 Global",
-      gradient: "from-zinc-900/5 to-slate-700/10",
-    },
-    {
-      icon: Download,
-      title: "Profile Export",
-      description:
-        "Make your GitHub look so good, recruiters will slide into your DMs",
-      badge: "📊 Professional",
-      gradient: "from-slate-800/5 to-zinc-900/10",
-    },
-    {
-      icon: Target,
-      title: "Profile Compare (1v1 Battle)",
-      description:
-  "Battle a friend: enter two GitHub usernames and see who wins each stat.",
-      badge: "⚔️ New",
-      gradient: "from-gray-900/5 to-slate-800/10",
-      link: "/battle",
-    },
-  ];
-
   return (
-    <section
-      className="py-12 sm:py-24 bg-background relative overflow-hidden"
-      id="features"
-    >
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        {/* Section Header */}
-        <div className="text-center mb-8 sm:mb-16">
-          <Badge
-            variant="outline"
-            className="mb-4 border-border text-primary text-xs sm:text-sm"
-          >
-            🔥 Core Features That Actually Matter
-          </Badge>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-            Features Overview{" "}
-            <span className="text-primary">(The Good Stuff)</span>
+    <section className="px-4 py-12 sm:px-6 sm:py-20" id="features">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-10 max-w-2xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            What Changed
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-4xl">
+            Cleaner surfaces, smaller typography, and stronger hierarchy.
           </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
-            Stop being a commit ghost and start building your developer street
-            cred with features that actually matter
+          <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+            The product now leans into a grayscale editorial feel instead of a
+            generic SaaS aesthetic, with better spacing and less visual noise.
           </p>
         </div>
 
-        {/* Features Grid - Optimized for 4 features */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
-          {features.map((feature, index) => {
-            const cardContent = (
-              <Card
-                key={index}
-                className={`
-                  group relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
-                  border border-border bg-gradient-to-br ${feature.gradient}
-                  hover:shadow-lg hover:shadow-primary/5
-                  animate-in fade-in-50 slide-in-from-bottom-10
-                `}
-                style={{
-                  animationDelay: `${index * 0.1}s`,
-                }}
-              >
-                {/* Background gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-muted/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
-                      <feature.icon className="w-4 h-4 sm:w-6 sm:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {feature.badge}
-                    </Badge>
-                  </div>
-
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
-                    {feature.title}
-                  </h3>
-
-                  <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm">
-                    {feature.description}
-                  </p>
-                </div>
-              </Card>
-            );
-            // If the feature has a link, wrap the card in an anchor
-            return feature.link ? (
-              <a href={feature.link} key={index} className="block focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl">
-                {cardContent}
-              </a>
-            ) : cardContent;
-          })}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center mt-8 sm:mt-16">
-          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
-            Ready to discover if you're a coding legend or just another
-            "console.log" warrior?
-          </p>
-          <div className="inline-flex items-center gap-2 text-primary text-sm sm:text-base">
-            <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="font-medium">Get roasted in under 30 seconds</span>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              className="rounded-[1.75rem] border border-border bg-card p-5 shadow-[0_18px_60px_-38px_rgba(0,0,0,0.35)] transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background text-foreground">
+                <HugeIcon icon={feature.icon} size={18} />
+              </div>
+              <h3 className="mt-5 text-sm font-semibold text-foreground">
+                {feature.title}
+              </h3>
+              <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                {feature.description}
+              </p>
+            </article>
+          ))}
         </div>
       </div>
     </section>

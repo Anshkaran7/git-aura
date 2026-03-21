@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy,
@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
 import { GitHubContributions } from "./types";
+import { ErrorState } from "./leaderboard/ErrorState";
+import { BadgeIcon } from "./badges/BadgeIcon";
 
 interface User {
   id: string;
@@ -96,13 +98,19 @@ const Leaderboard = ({
   }>({ contributions: 0, aura: 0, activeDays: 0 });
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [userRank, setUserRank] = useState<number | null>(null);
   const [userNotInLeaderboard, setUserNotInLeaderboard] = useState(false);
   const [userOutOfTop100, setUserOutOfTop100] = useState(false);
-  const requestInProgress = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    fetchLeaderboardData();
+    void fetchLeaderboardData();
+
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [view, currentMonth, currentUserId, currentPage]);
 
   useEffect(() => {
@@ -169,13 +177,15 @@ const Leaderboard = ({
   };
 
   const fetchLeaderboardData = async () => {
-    // Prevent duplicate calls
-    if (requestInProgress.current) {
-      return;
-    }
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    abortControllerRef.current?.abort();
 
-    requestInProgress.current = true;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
+    setError(null);
     setUserNotInLeaderboard(false);
     setUserOutOfTop100(false);
 
@@ -191,7 +201,10 @@ const Leaderboard = ({
           ...(currentUserId && { userId: currentUserId }),
         });
 
-        response = await fetch(`/api/leaderboard/monthly?${params}`);
+        response = await fetch(`/api/leaderboard/monthly?${params}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
       } else {
         // Fetch all-time leaderboard via API
         const params = new URLSearchParams({
@@ -200,17 +213,24 @@ const Leaderboard = ({
           ...(currentUserId && { userId: currentUserId }),
         });
 
-        response = await fetch(`/api/leaderboard/alltime?${params}`);
+        response = await fetch(`/api/leaderboard/alltime?${params}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch leaderboard: ${response.statusText}`);
+        throw new Error(`Failed to fetch leaderboard (${response.status})`);
       }
 
       const data = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
+      }
+
+      if (requestId !== requestIdRef.current) {
+        return;
       }
 
       setLeaderboardData(data.leaderboard || []);
@@ -248,13 +268,25 @@ const Leaderboard = ({
         setUserOutOfTop100(false);
       }
     } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
+
       console.error("❌ Error fetching leaderboard:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load leaderboard right now."
+      );
+      setLeaderboardData([]);
+      setFilteredData([]);
       setUserRank(null);
       setUserNotInLeaderboard(false);
       setUserOutOfTop100(false);
     } finally {
-      setLoading(false);
-      requestInProgress.current = false;
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -325,6 +357,17 @@ const Leaderboard = ({
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        message={error}
+        onRetry={() => {
+          void fetchLeaderboardData();
+        }}
+      />
     );
   }
 
@@ -554,7 +597,11 @@ const Leaderboard = ({
                               badge.rarity
                             )} flex items-center justify-center text-foreground text-xs sm:text-sm font-bold shadow-lg backdrop-blur-sm`}
                           >
-                            {badge.icon}
+                            <BadgeIcon
+                              icon={badge.icon}
+                              name={badge.name}
+                              className="h-4 w-4 sm:h-5 sm:w-5"
+                            />
                           </div>
                           {badge.rank && badge.rank <= 3 && (
                             <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold text-foreground">

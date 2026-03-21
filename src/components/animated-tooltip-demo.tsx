@@ -200,49 +200,34 @@ export default function TopAuraUsers() {
   };
 
   return (
-    <section className="py-12 sm:py-20 bg-background relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-10 left-1/4 w-36 sm:w-72 h-36 sm:h-72 bg-muted/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 right-1/4 w-48 sm:w-96 h-48 sm:h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
-        {/* Section Header */}
-        <div className="max-w-3xl mx-auto mb-8 sm:mb-16">
-          <div className="inline-flex items-center gap-2 bg-card backdrop-blur-sm border border-border rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 sm:mb-6">
+    <section className="px-4 py-12 sm:px-6 sm:py-20">
+      <div className="container relative z-10 mx-auto rounded-[2rem] border border-border bg-card px-4 py-8 text-center shadow-[0_24px_80px_-42px_rgba(0,0,0,0.38)] sm:px-6 sm:py-10">
+        <div className="mx-auto mb-8 max-w-3xl sm:mb-12">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
             <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+            <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
               Hall of Fame
             </span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
-            {getMonthName(monthYear)}'s{" "}
-            <span className="text-primary">Aura Legends</span> 👑
+          <h2 className="mb-4 text-2xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
+            {getMonthName(monthYear)}’s top contributors.
           </h2>
 
-          <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+          <p className="mx-auto mb-6 max-w-2xl px-4 text-sm leading-6 text-muted-foreground">
             {loading ? (
               "Loading the month's top performers..."
             ) : error ? (
               "Unable to load top performers. Please try again later."
             ) : topUsers.length === 0 ? (
               <>
-                Be the first to claim your spot this month!
-                <span className="text-primary font-semibold">
-                  {" "}
-                  Connect your GitHub and start farming aura!
-                </span>
+                No winners have landed yet this month. The first strong profile
+                can set the tone.
               </>
             ) : (
               <>
-                These developers didn't just commit code - they committed to
-                greatness.
-                <span className="text-primary font-semibold">
-                  {" "}
-                  Hover to see their legendary scores!
-                </span>
+                A compact snapshot of the strongest GitAura profiles right now.
+                Hover to inspect rank, aura, and current momentum.
               </>
             )}
           </p>
@@ -252,7 +237,7 @@ export default function TopAuraUsers() {
         </div>
 
         {/* Animated Tooltip Component */}
-        <div className="flex flex-row items-center justify-center mb-8 sm:mb-12 w-full min-h-[60px] sm:min-h-[80px]">
+        <div className="mb-8 flex min-h-[60px] w-full flex-row items-center justify-center sm:mb-10 sm:min-h-[80px]">
           {loading ? (
             <div className="flex items-center gap-3 sm:gap-4">
               <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin text-primary" />
@@ -262,19 +247,15 @@ export default function TopAuraUsers() {
             </div>
           ) : error ? (
             <div className="text-center">
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {error}
               </p>
             </div>
           ) : topUsers.length === 0 ? (
             <div className="text-center">
               <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🚀</div>
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 No champions yet this month.
-                <br />
-                <span className="text-primary font-semibold">
-                  Be the first to dominate!
-                </span>
               </p>
             </div>
           ) : (
@@ -286,10 +267,10 @@ export default function TopAuraUsers() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           {isSignedIn ? (
             <Badge
-              variant="outline"
-              className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors w-full sm:w-auto text-center"
-              onClick={handleGoToProfile}
-            >
+                variant="outline"
+                className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
+                onClick={handleGoToProfile}
+              >
               <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               View Your Aura Dashboard
             </Badge>
@@ -297,7 +278,7 @@ export default function TopAuraUsers() {
             <SignInButton mode="modal">
               <Badge
                 variant="outline"
-                className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 border-primary text-primary cursor-pointer hover:bg-primary/10 transition-colors w-full sm:w-auto text-center"
+                className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
               >
                 <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Connect GitHub & Start Competing

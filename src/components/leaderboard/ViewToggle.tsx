@@ -1,4 +1,5 @@
-import { Calendar, Globe } from "lucide-react";
+import { Calendar03Icon, GlobeIcon } from "@hugeicons/core-free-icons";
+import { HugeIcon } from "@/components/ui/huge-icon";
 import { ViewType } from "./types";
 
 interface ViewToggleProps {
@@ -8,27 +9,27 @@ interface ViewToggleProps {
 
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
-    <div className="flex bg-muted rounded-md p-1 border border-border w-full sm:w-auto">
+    <div className="grid w-full grid-cols-2 rounded-full border border-border/70 bg-background/70 p-1 shadow-sm sm:w-auto">
       <button
         onClick={() => onViewChange("monthly")}
-        className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 rounded text-xs font-medium transition-all ${
+        className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold transition-all ${
           view === "monthly"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm"
             : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        <Calendar className="w-3 h-3 inline mr-1" />
+        <HugeIcon icon={Calendar03Icon} size={14} />
         Monthly
       </button>
       <button
         onClick={() => onViewChange("alltime")}
-        className={`flex-1 sm:flex-none px-2 sm:px-3 py-1.5 rounded text-xs font-medium transition-all ${
+        className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold transition-all ${
           view === "alltime"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm"
             : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        <Globe className="w-3 h-3 inline mr-1" />
+        <HugeIcon icon={GlobeIcon} size={14} />
         All Time
       </button>
     </div>

@@ -44,47 +44,38 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);            /* --- Pure White Background --- */
-  --foreground: oklch(0.12 0.01 240);    /* --- Nearly Black Text --- */
-
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0.01 240);
-
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.01 240);
-
-  --primary: oklch(0.5 0.18 230);        /* --- A Clean, Strong Blue Accent --- */
-  --primary-foreground: oklch(1 0 0);    /* --- White text on blue buttons --- */
-
-  --secondary: oklch(0.96 0.01 240);      /* --- Light Gray for secondary elements --- */
-  --secondary-foreground: oklch(0.2 0 0);
-
-  --muted: oklch(0.96 0.01 240);
-  --muted-foreground: oklch(0.45 0 0);
-
-  --accent: oklch(0.96 0.01 240);
-  --accent-foreground: oklch(0.2 0 0);
-
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #fafafa;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #262626;
+  --muted: #f5f5f5;
+  --muted-foreground: #525252;
+  --accent: #e5e5e5;
+  --accent-foreground: #171717;
   --destructive: oklch(0.57 0.24 27);
-  --border: oklch(0.92 0.01 240);      /* --- A very light gray border --- */
-  --input: oklch(0.95 0.01 240);
-  --ring: oklch(0.55 0.18 230);          /* --- Blue focus ring --- */
- /* Ring color matches primary */
-  /* ... keep the rest of your variables (chart, sidebar, etc.) */
+  --border: #e5e5e5;
+  --input: #f5f5f5;
+  --ring: #737373;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --contribution-level-0: oklch(0.96 0.01 240); /* Light Gray (like GitHub light theme) */
+  --sidebar: #fafafa;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #262626;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #737373;
+  --contribution-level-0: #f5f5f5;
   --contribution-level-1: oklch(0.85 0.1 140);  /* Pale Green */
   --contribution-level-2: oklch(0.75 0.15 140);  /* Light Green */
   --contribution-level-3: oklch(0.65 0.2 140);  /* Medium Green */
@@ -92,38 +83,38 @@
 }
 
 .dark {
-  --background: oklch(0.08 0 0); /* Deep black */
-  --foreground: oklch(0.98 0 0); /* Pure white */
-  --card: oklch(0.12 0 0); /* Dark gray card background */
-  --card-foreground: oklch(0.95 0 0); /* Light text on cards */
-  --popover: oklch(0.1 0 0); /* Darker gray for popovers */
-  --popover-foreground: oklch(0.98 0 0); /* White text */
-  --primary: oklch(0.85 0 0); /* Light gray primary */
-  --primary-foreground: oklch(0.08 0 0); /* Black text on primary */
-  --secondary: oklch(0.15 0 0); /* Medium dark gray */
-  --secondary-foreground: oklch(0.9 0 0); /* Light gray text */
-  --muted: oklch(0.18 0 0); /* Muted dark gray */
-  --muted-foreground: oklch(0.65 0 0); /* Medium gray text */
-  --accent: oklch(0.2 0 0); /* Accent dark gray */
-  --accent-foreground: oklch(0.95 0 0); /* Light text on accent */
+  --background: #000000;
+  --foreground: #fafafa;
+  --card: #0a0a0a;
+  --card-foreground: #f5f5f5;
+  --popover: #0a0a0a;
+  --popover-foreground: #fafafa;
+  --primary: #f5f5f5;
+  --primary-foreground: #0a0a0a;
+  --secondary: #171717;
+  --secondary-foreground: #d4d4d4;
+  --muted: #171717;
+  --muted-foreground: #a3a3a3;
+  --accent: #262626;
+  --accent-foreground: #e5e5e5;
   --destructive: oklch(0.6 0.2 15); /* Red for destructive */
-  --border: oklch(0.25 0 0); /* Gray borders */
-  --input: oklch(0.15 0 0); /* Dark input backgrounds */
-  --ring: oklch(0.7 0 0); /* Focus ring gray */
+  --border: #262626;
+  --input: #171717;
+  --ring: #737373;
   --chart-1: oklch(0.7 0 0);
   --chart-2: oklch(0.6 0 0);
   --chart-3: oklch(0.5 0 0);
   --chart-4: oklch(0.8 0 0);
   --chart-5: oklch(0.75 0 0);
-  --sidebar: oklch(0.1 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.8 0 0);
-  --sidebar-primary-foreground: oklch(0.1 0 0);
-  --sidebar-accent: oklch(0.2 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.25 0 0);
-  --sidebar-ring: oklch(0.7 0 0);   /* The original subtle dark grid line */
-  --contribution-level-0: oklch(0.1 0 0);    /* Dark Gray (like GitHub dark theme) */
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #f5f5f5;
+  --sidebar-primary: #f5f5f5;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #171717;
+  --sidebar-accent-foreground: #e5e5e5;
+  --sidebar-border: #262626;
+  --sidebar-ring: #737373;
+  --contribution-level-0: #0a0a0a;
   --contribution-level-1: oklch(0.2 0.05 140); /* Darkest Green */
   --contribution-level-2: oklch(0.3 0.1 140);  /* Dark Green */
   --contribution-level-3: oklch(0.4 0.15 140);  /* Medium Green */
@@ -132,11 +123,14 @@
 
 @layer base {
   :root {
-    --font-mona: "Mona Sans";
+    --font-sans: "Montserrat";
   }
 
   html {
-    font-family: var(--font-mona), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 14%, transparent), transparent 34%),
+      var(--background);
   }
 
   * {
@@ -144,37 +138,36 @@
   }
   
   body {
-  /* This will force the clean white background and remove the ugly gradient */
-    background-color: oklch(var(--background)) !important;
-    background-image: none !important; 
-    
+    background:
+      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 10%, transparent), transparent 32%),
+      linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white 4%), var(--background)) !important;
     @apply text-foreground;
-    font-family: var(--font-mona), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height: 100vh;
   }
 
-.dark body {
-    /* This ensures the dark theme is also clean */
-    background-color: oklch(var(--background)) !important;
-    background-image: none !important;
+  .dark body {
+    background:
+      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 14%, transparent), transparent 28%),
+      linear-gradient(180deg, color-mix(in oklab, var(--background) 92%, black 8%), var(--background)) !important;
   }
+
   /* Style for Light Mode */
-.cl-formButtonPrimary {
-  background-color: oklch(var(--primary)) !important;
-  color: oklch(var(--primary-foreground)) !important;
-  opacity: 1 !important;
-  border: 1px solid oklch(var(--border)) !important; 
-}
+  .cl-formButtonPrimary {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    opacity: 1 !important;
+    border: 1px solid var(--border) !important; 
+  }
 
-/* Make it slightly dimmer on hover */
-.cl-formButtonPrimary:hover {
-  opacity: 0.9 !important;
-}
+  .cl-formButtonPrimary:hover {
+    opacity: 0.9 !important;
+  }
 
-/* Style for Dark Mode (uses the same variables, which are theme-aware) */
-.dark .cl-formButtonPrimary {
-  background-color: oklch(var(--primary)) !important;
-  color: oklch(var(--primary-foreground)) !important;
-}
+  .dark .cl-formButtonPrimary {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
   
   /* Custom dark theme utilities */
   .text-highlight {
@@ -236,4 +229,3 @@
     background: oklch(0.4 0 0);
   }
 }
-
