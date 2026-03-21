@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Github, Menu, User, LogOut, Shield } from "lucide-react";
+import { Github, Menu, User, LogOut, Shield, X } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -46,12 +46,12 @@ export const Header = ({
   const allNavItems = useMemo(
     () => {
       return [
-        { href: "/#features", label: "Features" },
+        { href: "/#features", label: "Why It Hits" },
         { href: "/#how-it-works", label: "How It Works" },
         { href: leaderboardUrl, label: "Leaderboard" },
-        { href: "/monthly-winners", label: "Monthly Winners" },
-        { href: "/battle", label: "Profile Compare" },
-        { href: "/contribute", label: "Contribute" },
+        { href: "/monthly-winners", label: "Hall of Fame" },
+        { href: "/battle", label: "Battle" },
+        { href: "/contribute", label: "Build With Us" },
       ];
     },
     [leaderboardUrl]
@@ -107,6 +107,23 @@ export const Header = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   // Memoize navigation handlers
   const handleGoToProfile = useCallback(() => {
     router.push(userProfileUrl);
@@ -161,6 +178,8 @@ export const Header = ({
 
   // Handle navigation to homepage sections from other pages
   const handleNavClick = useCallback((href: string, e: React.MouseEvent) => {
+    setIsMobileMenuOpen(false);
+
     if (href.startsWith('/#') && typeof window !== 'undefined') {
       e.preventDefault();
       if (pathname === '/') {
@@ -313,51 +332,87 @@ export const Header = ({
               size="sm"
               className="xl:hidden h-8 w-8 rounded-full px-0"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
             >
-              <Menu className="w-4 h-4" />
+              {isMobileMenuOpen ? (
+                <X className="w-4 h-4" />
+              ) : (
+                <Menu className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="xl:hidden py-4 border-t border-border">
-            <nav className="flex flex-col gap-2">
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="xl:hidden">
+          <button
+            className="fixed inset-0 top-16 z-40 bg-background/72 backdrop-blur-[2px]"
+            aria-label="Close mobile menu"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          <div className="fixed inset-x-4 top-[4.7rem] z-50 overflow-hidden rounded-[2rem] border border-border bg-background/96 shadow-[0_28px_90px_-44px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
+            <nav className="flex max-h-[calc(100vh-6rem)] flex-col overflow-y-auto px-3 py-3">
               {renderNavItems(allNavItems, true)}
-              {isSignedIn && (
-                <>
-                  {/* Admin Button in mobile menu */}
+
+              {isSignedIn ? (
+                <div className="mt-3 border-t border-border/70 pt-3">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleGoToProfile();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                  >
+                    {user?.imageUrl ? (
+                      <img
+                        src={user.imageUrl}
+                        alt={user?.firstName || "Profile"}
+                        className="h-8 w-8 rounded-full"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border">
+                        <User className="h-4 w-4" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-foreground">
+                        {user?.firstName || "Profile"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Open your profile
+                      </p>
+                    </div>
+                  </button>
+
                   {isAdmin && (
                     <Link
                       href="/admin/users"
-                      className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
+                      className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                     >
-                      <Shield className="w-4 h-4" />
+                      <Shield className="h-4 w-4" />
                       Admin Panel
                     </Link>
                   )}
-                  {/* <button
-                      onClick={syncUserData}
-                      disabled={isSyncing}
-                      className="w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <RefreshCw
-                        className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                      />
-                      Sync Data
-                    </button> */}
+
                   <SignOutButton>
-                    <button className="sm:hidden w-full text-left px-4 py-2 text-sm text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-lg transition-colors">
-                      <LogOut className="w-4 h-4 inline mr-2" />
+                    <button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                    >
+                      <LogOut className="h-4 w-4" />
                       Sign Out
                     </button>
                   </SignOutButton>
-                </>
-              )}
+                </div>
+              ) : null}
             </nav>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 };

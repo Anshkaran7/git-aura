@@ -1,15 +1,37 @@
 "use client";
-import React, { useState, useRef, useCallback, useMemo } from "react";
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
-import GitHubProfileCard from "./GitHubProfileCard";
-import BattleResultTable from "./BattleResultTable";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import type { GitHubProfile } from "./types";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { toPng } from "html-to-image";
-import { useToast } from "../hooks/useToast";
+import {
+  ArrowRight01Icon,
+  FireIcon,
+  GithubIcon,
+  RankingIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import BattleResultTable from "./BattleResultTable";
+import GitHubProfileCard from "./GitHubProfileCard";
 import { ToastContainer } from "./Toast";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { HugeIcon } from "./ui/huge-icon";
+import { Input } from "./ui/input";
+import { useToast } from "../hooks/useToast";
+import type { GitHubProfile } from "./types";
 
 type MetricResult = {
   key: string;
@@ -33,144 +55,297 @@ type BattleResult = {
   };
 };
 
+type SubmittedBattle = {
+  first: string;
+  second: string;
+};
+
+class BattleRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "BattleRequestError";
+    this.status = status;
+  }
+}
+
+const USERNAME_REGEX =
+  /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+
+const infoCards = [
+  {
+    title: "Balanced scoring",
+    body: "Aura, contributions, repos, stars, issues, PRs, followers, and account age.",
+    icon: RankingIcon,
+  },
+  {
+    title: "Live fetch",
+    body: "Pulls fresh GitHub data and gracefully handles timeouts or rate limits.",
+    icon: GithubIcon,
+  },
+  {
+    title: "Fairer battles",
+    body: "Highlights consistency and output instead of rewarding noise alone.",
+    icon: FireIcon,
+  },
+  {
+    title: "Share-ready",
+    body: "Export the result card once the comparison is complete.",
+    icon: SparklesIcon,
+  },
+];
+
+function sanitizeUsername(value: string) {
+  return value.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\/$/, "");
+}
+
+function formatMetricLabel(result: MetricResult) {
+  if (result.key === "created_at") {
+    return `${result.label} (older account)`;
+  }
+
+  return result.label;
+}
+
+async function fetchBattleResult({
+  first,
+  second,
+}: SubmittedBattle): Promise<BattleResult> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch(
+      `/api/battle?user1=${encodeURIComponent(first)}&user2=${encodeURIComponent(
+        second
+      )}`,
+      { signal: controller.signal }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new BattleRequestError(
+        data.error || "Unable to compare these profiles right now.",
+        response.status
+      );
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new BattleRequestError(
+        "The comparison took too long. Please try again.",
+        408
+      );
+    }
+
+    if (error instanceof BattleRequestError) {
+      throw error;
+    }
+
+    throw new BattleRequestError(
+      "Please check your connection and try again.",
+      500
+    );
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 export default function BattlePage() {
   const [user1, setUser1] = useState("");
   const [user2, setUser2] = useState("");
-  const [result, setResult] = useState<BattleResult | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [submittedBattle, setSubmittedBattle] = useState<SubmittedBattle | null>(
+    null
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const battleRef = useRef<HTMLDivElement>(null);
   const { toasts, addToast, removeToast } = useToast();
+  const queryClient = useQueryClient();
+  const handledSuccessKeyRef = useRef<string | null>(null);
+  const handledErrorKeyRef = useRef<string | null>(null);
 
-  // Memoized validation state
   const validationState = useMemo(() => {
-    const trimmedUser1 = user1.trim();
-    const trimmedUser2 = user2.trim();
-    const usernameRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+    const first = sanitizeUsername(user1);
+    const second = sanitizeUsername(user2);
+    const sameUser = first.toLowerCase() === second.toLowerCase();
+    const validUser1 = USERNAME_REGEX.test(first);
+    const validUser2 = USERNAME_REGEX.test(second);
 
     return {
-      bothFilled: trimmedUser1 && trimmedUser2,
-      sameUser: trimmedUser1.toLowerCase() === trimmedUser2.toLowerCase(),
-      validUser1: usernameRegex.test(trimmedUser1),
-      validUser2: usernameRegex.test(trimmedUser2),
+      first,
+      second,
+      sameUser,
+      validUser1,
+      validUser2,
+      bothFilled: Boolean(first && second),
       canBattle:
-        trimmedUser1 &&
-        trimmedUser2 &&
-        trimmedUser1.toLowerCase() !== trimmedUser2.toLowerCase() &&
-        usernameRegex.test(trimmedUser1) &&
-        usernameRegex.test(trimmedUser2),
+        Boolean(first && second) &&
+        !sameUser &&
+        validUser1 &&
+        validUser2,
     };
   }, [user1, user2]);
 
-  const handleBattle = useCallback(async () => {
-    const trimmedUser1 = user1.trim();
-    const trimmedUser2 = user2.trim();
+  const comparisonKey = submittedBattle
+    ? `${submittedBattle.first}:${submittedBattle.second}`
+    : null;
 
-    // Use pre-computed validation state
+  const battleQuery = useQuery({
+    queryKey: ["battle", submittedBattle?.first, submittedBattle?.second],
+    queryFn: () => {
+      if (!submittedBattle) {
+        throw new Error("No battle submitted.");
+      }
+
+      return fetchBattleResult(submittedBattle);
+    },
+    enabled: Boolean(submittedBattle),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 0,
+    placeholderData: keepPreviousData,
+  });
+
+  const result = battleQuery.data ?? null;
+  const loading = battleQuery.isFetching && !battleQuery.data;
+  const refreshing = battleQuery.isFetching && Boolean(battleQuery.data);
+
+  const winnerBreakdown = useMemo(() => {
+    if (!result) {
+      return null;
+    }
+
+    const decisiveResults = (result.results || []).filter((item) => item.winner);
+    const user1Wins = decisiveResults.filter((item) => item.winner === "user1");
+    const user2Wins = decisiveResults.filter((item) => item.winner === "user2");
+
+    return {
+      user1Wins,
+      user2Wins,
+      decisiveResults,
+    };
+  }, [result]);
+
+  useEffect(() => {
     if (!validationState.canBattle) {
-      if (!validationState.bothFilled) {
-        addToast("error", "Invalid Input", "Please enter both usernames");
-      } else if (validationState.sameUser) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void queryClient.prefetchQuery({
+        queryKey: ["battle", validationState.first, validationState.second],
+        queryFn: () =>
+          fetchBattleResult({
+            first: validationState.first,
+            second: validationState.second,
+          }),
+        staleTime: 5 * 60 * 1000,
+      });
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    queryClient,
+    validationState.canBattle,
+    validationState.first,
+    validationState.second,
+  ]);
+
+  useEffect(() => {
+    if (!comparisonKey) {
+      return;
+    }
+
+    if (battleQuery.data && handledSuccessKeyRef.current !== comparisonKey) {
+      handledSuccessKeyRef.current = comparisonKey;
+      handledErrorKeyRef.current = null;
+      addToast(
+        "success",
+        "Comparison ready",
+        `${submittedBattle?.first} vs ${submittedBattle?.second} is ready.`
+      );
+    }
+  }, [addToast, battleQuery.data, comparisonKey, submittedBattle?.first, submittedBattle?.second]);
+
+  useEffect(() => {
+    if (!comparisonKey || !battleQuery.error) {
+      return;
+    }
+
+    if (handledErrorKeyRef.current === comparisonKey) {
+      return;
+    }
+
+    handledErrorKeyRef.current = comparisonKey;
+    handledSuccessKeyRef.current = null;
+
+    const error = battleQuery.error;
+    if (error instanceof BattleRequestError) {
+      if (error.status === 404) {
+        addToast("error", "User not found", error.message);
+      } else if (error.status === 429) {
         addToast(
           "error",
-          "Same User",
-          "Please enter different usernames for comparison"
+          "Rate limited",
+          "GitHub is rate limiting requests right now. Try again shortly."
         );
+      } else if (error.status === 408) {
+        addToast("error", "Request timed out", error.message);
+      } else {
+        addToast("error", "Battle failed", error.message);
+      }
+      return;
+    }
+
+    addToast("error", "Battle failed", "Unable to compare these profiles.");
+  }, [addToast, battleQuery.error, comparisonKey]);
+
+  const handleBattle = useCallback(() => {
+    if (!validationState.canBattle) {
+      if (!validationState.bothFilled) {
+        addToast("error", "Missing usernames", "Enter both GitHub usernames.");
+      } else if (validationState.sameUser) {
+        addToast("error", "Same account", "Choose two different developers.");
       } else if (!validationState.validUser1) {
         addToast(
           "error",
-          "Invalid Username",
-          `"${trimmedUser1}" is not a valid GitHub username`
+          "Invalid username",
+          `"${validationState.first}" is not a valid GitHub username.`
         );
       } else if (!validationState.validUser2) {
         addToast(
           "error",
-          "Invalid Username",
-          `"${trimmedUser2}" is not a valid GitHub username`
+          "Invalid username",
+          `"${validationState.second}" is not a valid GitHub username.`
         );
       }
       return;
     }
 
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      const res = await fetch(
-        `/api/battle?user1=${encodeURIComponent(
-          trimmedUser1
-        )}&user2=${encodeURIComponent(trimmedUser2)}`,
-        { signal: controller.signal }
-      );
-
-      clearTimeout(timeoutId);
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 404) {
-          addToast(
-            "error",
-            "User Not Found",
-            data.error || "One or both usernames do not exist on GitHub"
-          );
-        } else if (res.status === 429) {
-          addToast(
-            "error",
-            "Rate Limited",
-            "GitHub API rate limit exceeded. Please try again in a few minutes."
-          );
-        } else {
-          addToast(
-            "error",
-            "Battle Failed",
-            data.error || "Failed to compare profiles. Please try again."
-          );
-        }
-        return;
-      }
-
-      setResult(data);
-      addToast(
-        "success",
-        "Battle Complete!",
-        `Successfully compared ${trimmedUser1} vs ${trimmedUser2}`
-      );
-    } catch (error) {
-      console.error("Battle error:", error);
-      if (error instanceof Error && error.name === "AbortError") {
-        addToast(
-          "error",
-          "Request Timeout",
-          "The battle took too long to complete. Please try again."
-        );
-      } else {
-        addToast(
-          "error",
-          "Battle Failed",
-          "An unexpected error occurred. Please check your internet connection and try again."
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [user1, user2, addToast, validationState.canBattle]);
+    setSubmittedBattle({
+      first: validationState.first,
+      second: validationState.second,
+    });
+  }, [addToast, validationState]);
 
   const handleShareResult = useCallback(async () => {
-    if (!battleRef.current || !result) return;
+    if (!battleRef.current || !result) {
+      return;
+    }
 
     try {
       setIsGenerating(true);
       const dataUrl = await toPng(battleRef.current, {
         cacheBust: true,
-        backgroundColor: "#000000",
+        backgroundColor: "#0a0a0a",
         pixelRatio: 2,
         skipFonts: false,
         width: battleRef.current.offsetWidth,
         height: battleRef.current.offsetHeight,
       });
+
       const link = document.createElement("a");
       link.download = `github-battle-${result.user1.login}-vs-${result.user2.login}.png`;
       link.href = dataUrl;
@@ -178,373 +353,264 @@ export default function BattlePage() {
       link.click();
       document.body.removeChild(link);
 
-      addToast(
-        "success",
-        "Image Downloaded",
-        "Battle result image saved successfully!"
-      );
-    } catch (err) {
-      console.error("Failed to export battle image:", err);
+      addToast("success", "Image downloaded", "Battle card saved as PNG.");
+    } catch {
       addToast(
         "error",
-        "Export Failed",
-        "Failed to generate image. Please try again."
+        "Export failed",
+        "Could not generate the battle image. Please try again."
       );
     } finally {
       setIsGenerating(false);
     }
-  }, [result, addToast]);
+  }, [addToast, result]);
 
   const handleReset = useCallback(() => {
     setUser1("");
     setUser2("");
-    setResult(null);
+    setSubmittedBattle(null);
+    handledSuccessKeyRef.current = null;
+    handledErrorKeyRef.current = null;
   }, []);
 
-  // Memoized info cards to prevent re-rendering
-  const infoCards = useMemo(
-    () => [
-      {
-        title: "🎯 5 Core Metrics",
-        body: "Aura • Contributions • Stars • Issues • PRs • Followers",
-      },
-      {
-        title: "⚡ Live Data",
-        body: "Real-time GitHub stats with smart quality analysis",
-      },
-      {
-        title: "🏆 Fair Battles",
-        body: "Quality over quantity - consistency beats raw numbers",
-      },
-      {
-        title: "🚀 Pro Tips",
-        body: "Active daily commits + quality repos = higher Aura score",
-      },
-    ],
-    []
-  );
-
   return (
-    <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
-      {/* Toast Container */}
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <ToastContainer toasts={toasts} onClose={removeToast} />
 
-      {/* Page Header */}
-      <div className="mb-8 sm:mb-12 text-center">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 sm:mb-6">
-          GitHub 1v1 Battle
-        </h1>
-
-        <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Enter two GitHub usernames and see a comprehensive head‑to‑head
-          breakdown. We compare 8 metrics including contributions, stars,
-          repositories, and more!
-        </p>
-      </div>
-
-      {/* Battle Input Form */}
-      <motion.div
-        className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-8 sm:mb-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Input
-          placeholder="GitHub Username 1"
-          value={user1}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setUser1(e.target.value.replace(/https?:\/\/github.com\//, ""))
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && validationState.canBattle && !loading) {
-              handleBattle();
-            }
-          }}
-          className={`w-64 md:w-72 bg-card/60 text-foreground placeholder:text-muted-foreground transition-colors ${
-            user1.trim() && !validationState.validUser1
-              ? "border-red-500"
-              : validationState.sameUser && user1.trim() && user2.trim()
-              ? "border-yellow-500"
-              : "border-border focus:border-blue-500"
-          }`}
-          disabled={loading}
-        />
-        <span className="font-bold text-xl md:text-2xl text-muted-foreground">
-          VS
-        </span>
-        <Input
-          placeholder="GitHub Username 2"
-          value={user2}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setUser2(e.target.value.replace(/https?:\/\/github.com\//, ""))
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && validationState.canBattle && !loading) {
-              handleBattle();
-            }
-          }}
-          className={`w-64 md:w-72 bg-card/60 text-foreground placeholder:text-muted-foreground transition-colors ${
-            user2.trim() && !validationState.validUser2
-              ? "border-red-500"
-              : validationState.sameUser && user1.trim() && user2.trim()
-              ? "border-yellow-500"
-              : "border-border focus:border-blue-500"
-          }`}
-          disabled={loading}
-        />
-        <Button
-          onClick={handleBattle}
-          disabled={!validationState.canBattle || loading}
-          className="md:ml-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Comparing...
-            </>
-          ) : (
-            "Compare"
-          )}
-        </Button>
-      </motion.div>
-
-      {/* Validation Feedback */}
-      {(user1.trim() || user2.trim()) && !validationState.canBattle && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
-        >
-          {validationState.sameUser && user1.trim() && user2.trim() && (
-            <p className="text-yellow-600 dark:text-yellow-400 text-sm">
-              ⚠️ Please enter different usernames for comparison
-            </p>
-          )}
-          {user1.trim() && !validationState.validUser1 && (
-            <p className="text-red-600 dark:text-red-400 text-sm">
-              ❌ "{user1.trim()}" is not a valid GitHub username
-            </p>
-          )}
-          {user2.trim() && !validationState.validUser2 && (
-            <p className="text-red-600 dark:text-red-400 text-sm">
-              ❌ "{user2.trim()}" is not a valid GitHub username
-            </p>
-          )}
-        </motion.div>
-      )}
-
-      {/* Info Cards - Only show when no result */}
-      {!result && (
-        <div className="mx-auto max-w-4xl mb-8 sm:mb-12">
-          <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
-            {infoCards.map((f) => (
-              <div
-                key={f.title}
-                className="rounded-lg border border-border bg-card/30 p-3 hover:border-border/80 hover:bg-card/50 transition-all duration-200"
-              >
-                <h3 className="text-xs font-medium text-foreground mb-1 tracking-wide">
-                  {f.title}
-                </h3>
-                <p className="text-xs leading-snug text-muted-foreground">
-                  {f.body}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-[10px] text-muted-foreground text-center">
-            Star our repo on GitHub to support us!
-            <a
-              href="https://github.com/anshkaran7/git-aura"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground text-xs hover:bg-muted"
-              >
-                Star on GitHub
-              </Button>
-            </a>
+      <section className="mb-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge
+            variant="outline"
+            className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            GitHub battle
+          </Badge>
+          <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+            Compare two GitHub profiles without the noise.
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
+            Run a clean head-to-head on contribution quality, repo output,
+            followership, and Aura signals in one place.
           </p>
         </div>
+      </section>
+
+      <Card className="rounded-[30px] border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-4 shadow-[0_30px_90px_-65px_rgba(15,23,42,0.55)] sm:p-6">
+        <div className="grid gap-4 lg:grid-cols-[1.1fr_1.1fr_auto] lg:items-end">
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              First developer
+            </label>
+            <Input
+              placeholder="octocat"
+              value={user1}
+              onChange={(event) => setUser1(sanitizeUsername(event.target.value))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && validationState.canBattle && !loading) {
+                  handleBattle();
+                }
+              }}
+              className={
+                user1.trim() && !validationState.validUser1
+                  ? "border-red-500/40"
+                  : validationState.sameUser && validationState.bothFilled
+                    ? "border-amber-500/40"
+                    : undefined
+              }
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Second developer
+            </label>
+            <Input
+              placeholder="torvalds"
+              value={user2}
+              onChange={(event) => setUser2(sanitizeUsername(event.target.value))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && validationState.canBattle && !loading) {
+                  handleBattle();
+                }
+              }}
+              className={
+                user2.trim() && !validationState.validUser2
+                  ? "border-red-500/40"
+                  : validationState.sameUser && validationState.bothFilled
+                    ? "border-amber-500/40"
+                    : undefined
+              }
+              disabled={loading}
+            />
+          </div>
+
+          <Button
+            onClick={handleBattle}
+            disabled={!validationState.canBattle || loading}
+            className="h-11 min-w-[148px]"
+          >
+            {loading ? "Comparing..." : "Compare"}
+            {!loading && <HugeIcon icon={ArrowRight01Icon} size={16} />}
+          </Button>
+        </div>
+
+        {refreshing && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-foreground/60" />
+            Refreshing comparison
+          </div>
+        )}
+
+        {(user1.trim() || user2.trim()) && !validationState.canBattle && (
+          <div className="mt-4 rounded-2xl border border-border bg-background px-4 py-3 text-xs text-muted-foreground">
+            {validationState.sameUser && validationState.bothFilled && (
+              <p>Choose two different usernames for a real comparison.</p>
+            )}
+            {user1.trim() && !validationState.validUser1 && (
+              <p>`{validationState.first}` is not a valid GitHub username.</p>
+            )}
+            {user2.trim() && !validationState.validUser2 && (
+              <p>`{validationState.second}` is not a valid GitHub username.</p>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {!result && (
+        <section className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {infoCards.map((card) => (
+            <Card
+              key={card.title}
+              className="rounded-[24px] border-border/80 bg-card/70 p-5"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-background">
+                <HugeIcon icon={card.icon} size={17} className="text-primary" />
+              </div>
+              <h2 className="mt-4 text-sm font-semibold text-foreground">
+                {card.title}
+              </h2>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
+                {card.body}
+              </p>
+            </Card>
+          ))}
+        </section>
       )}
 
-      {/* Battle Results */}
       <AnimatePresence>
         {result && (
-          <motion.div
+          <motion.section
             ref={battleRef}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.35 }}
-            className="w-full"
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.28 }}
+            className="mt-8 space-y-6"
           >
-            {/* Profile Cards */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-10 mb-8 sm:mb-10">
-              <motion.div
-                animate={result.winner === "user1" ? { scale: 1.03 } : {}}
-                transition={{ duration: 0.3 }}
-              >
-                <GitHubProfileCard
-                  profile={result.user1}
-                  highlight={result.winner === "user1"}
-                />
-              </motion.div>
-              <span className="font-bold text-3xl md:text-4xl text-muted-foreground">
-                VS
-              </span>
-              <motion.div
-                animate={result.winner === "user2" ? { scale: 1.03 } : {}}
-                transition={{ duration: 0.3 }}
-              >
-                <GitHubProfileCard
-                  profile={result.user2}
-                  highlight={result.winner === "user2"}
-                />
-              </motion.div>
-            </div>
-
-            {/* Battle Results Table */}
-            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-4 md:p-6 mb-6 sm:mb-8">
-              <BattleResultTable results={result.results || []} />
-            </div>
-
-            {/* Winner Explanation */}
-            {result && (
-              <div className="mt-6 max-w-3xl mx-auto text-sm md:text-base text-muted-foreground leading-relaxed mb-8 sm:mb-10">
-                {(() => {
-                  const winners = (result.results || []).filter(
-                    (r) => r.winner
-                  );
-
-                  // Handle tie case
-                  if (!winners.length) {
-                    return (
-                      <div className="text-center space-y-4">
-                        <div className="text-6xl mb-4">🤝</div>
-                        <p className="text-xl font-semibold text-yellow-600 dark:text-yellow-300">
-                          It's a Perfect Tie!
-                        </p>
-                        <p className="text-muted-foreground">
-                          Both developers are equally matched across all
-                          metrics. This is rare and shows both have similar
-                          skill levels and activity patterns.
-                        </p>
-                        <div className="mt-4 p-4 bg-yellow-500/10 dark:bg-yellow-900/20 border border-yellow-500/30 dark:border-yellow-700/30 rounded-lg">
-                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                            🏆 When there's a tie, both developers win! Great
-                            work to both {result.user1.login} and{" "}
-                            {result.user2.login}!
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const user1Wins = winners.filter((r) => r.winner === "user1");
-                  const user2Wins = winners.filter((r) => r.winner === "user2");
-                  const overall = result.winner;
-                  const explainMetric = (r: any) => {
-                    if (r.key === "created_at")
-                      return `${r.label}: older account advantage`;
-                    return `${r.label}`;
-                  };
-                  const list = (arr: any[]) =>
-                    arr.map((r) => explainMetric(r)).join(", ");
-                  return (
-                    <div className="space-y-3">
-                      {overall ? (
-                        <p className="font-semibold text-foreground text-center">
-                          🏆 Overall Winner:{" "}
-                          <span className="text-yellow-600 dark:text-yellow-300 text-lg">
-                            {overall === "user1"
-                              ? result.user1.login
-                              : result.user2.login}
-                          </span>{" "}
-                          <span className="text-muted-foreground">
-                            ({result.metrics?.user1Wins || 0} -{" "}
-                            {result.metrics?.user2Wins || 0})
-                          </span>
-                        </p>
-                      ) : (
-                        <div className="text-center space-y-2">
-                          <p className="text-xl font-semibold text-yellow-600 dark:text-yellow-300">
-                            🤝 It's a Tie!
-                          </p>
-                          <p className="text-muted-foreground">
-                            Both developers scored equally (
-                            {result.metrics?.user1Wins || 0} -{" "}
-                            {result.metrics?.user2Wins || 0})
-                          </p>
-                        </div>
-                      )}
-                      {user1Wins.length > 0 && (
-                        <p>
-                          <span className="text-foreground font-medium">
-                            {result.user1.login}
-                          </span>{" "}
-                          led in:
-                          <span className="text-foreground">
-                            {" "}
-                            {list(user1Wins)}
-                          </span>
-                          .
-                        </p>
-                      )}
-                      {user2Wins.length > 0 && (
-                        <p>
-                          <span className="text-foreground font-medium">
-                            {result.user2.login}
-                          </span>{" "}
-                          led in:
-                          <span className="text-muted-foreground">
-                            {" "}
-                            {list(user2Wins)}
-                          </span>
-                          .
-                        </p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        We compare {result.metrics?.totalMetrics || 0} metrics
-                        including contributions, repository quality, and
-                        community engagement. Aura is a composite score based on
-                        activity patterns and consistency.
-                      </p>
-                      {result.metrics?.note && (
-                        <div className="mt-3 p-3 bg-blue-500/10 dark:bg-blue-900/20 border border-blue-500/30 dark:border-blue-700/30 rounded-lg">
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
-                            ℹ️ {result.metrics.note}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+            <div className="grid gap-5 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+              <GitHubProfileCard
+                profile={result.user1}
+                highlight={result.winner === "user1"}
+              />
+              <div className="flex items-center justify-center">
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                  Versus
+                </span>
               </div>
-            )}
+              <GitHubProfileCard
+                profile={result.user2}
+                highlight={result.winner === "user2"}
+              />
+            </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <Button
-                variant="outline"
-                onClick={handleShareResult}
-                disabled={isGenerating}
-              >
-                {isGenerating ? "Generating..." : "Share Result"}
-              </Button>
+            <BattleResultTable results={result.results || []} />
+
+            <Card className="rounded-[26px] border-border/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 sm:p-6">
+              {!winnerBreakdown?.decisiveResults.length ? (
+                <div className="text-center">
+                  <h2 className="text-lg font-semibold">It&apos;s a tie.</h2>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Both developers landed with the same outcome across the
+                    evaluated metrics.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="rounded-full border-border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                    >
+                      Summary
+                    </Badge>
+                    <p className="text-sm font-medium text-foreground">
+                      Winner:{" "}
+                      {result.winner === "user1"
+                        ? result.user1.login
+                        : result.user2.login}
+                    </p>
+                  </div>
+
+                  {winnerBreakdown.user1Wins.length > 0 && (
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {result.user1.login}
+                      </span>{" "}
+                      led in{" "}
+                      {winnerBreakdown.user1Wins
+                        .map((item) => formatMetricLabel(item))
+                        .join(", ")}
+                      .
+                    </p>
+                  )}
+
+                  {winnerBreakdown.user2Wins.length > 0 && (
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {result.user2.login}
+                      </span>{" "}
+                      led in{" "}
+                      {winnerBreakdown.user2Wins
+                        .map((item) => formatMetricLabel(item))
+                        .join(", ")}
+                      .
+                    </p>
+                  )}
+
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Compared across {result.metrics?.totalMetrics || 0} metrics
+                    including Aura, activity, repository output, and community
+                    reach.
+                  </p>
+
+                  {result.metrics?.note && (
+                    <div className="rounded-2xl border border-border bg-background px-4 py-3 text-xs leading-5 text-muted-foreground">
+                      {result.metrics.note}
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Button
                 variant="secondary"
-                onClick={handleReset}
-                className="bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                onClick={() => void handleShareResult()}
+                disabled={isGenerating}
               >
-                Rematch
+                {isGenerating ? "Generating image..." : "Download result"}
               </Button>
-              <Link href={`${user1.trim()}/leaderboard`}>
-                <Button variant="ghost">Leaderboard</Button>
+              <Button variant="outline" onClick={handleReset}>
+                New battle
+              </Button>
+              <Link href={`/${result.user1.login}/leaderboard`}>
+                <Button variant="ghost" className="w-full sm:w-auto">
+                  View leaderboard
+                </Button>
               </Link>
             </div>
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
     </div>

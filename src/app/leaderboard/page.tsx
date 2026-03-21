@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/home";
 import { CustomLeaderboard } from "@/components/leaderboard/CustomLeaderboard";
@@ -9,12 +9,17 @@ import { LoadingState } from "@/components/leaderboard/LoadingState";
 
 export default function LeaderboardPage() {
   const { userId } = useAuth();
+  const { user } = useUser();
   const [banStatus, setBanStatus] = useState<{
     isBanned: boolean;
     reason?: string;
     expiresAt?: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const githubUsername =
+    user?.externalAccounts?.find((account) => account.provider === "github")
+      ?.username || "";
 
   useEffect(() => {
     // ... (no changes needed in this useEffect hook) ...
@@ -142,7 +147,7 @@ export default function LeaderboardPage() {
         </div>
 
         <Suspense fallback={<LoadingState />}>
-          <CustomLeaderboard username="" />
+          <CustomLeaderboard username={githubUsername} />
         </Suspense>
       </div>
     </div>

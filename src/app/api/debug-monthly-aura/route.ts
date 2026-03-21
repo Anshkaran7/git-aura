@@ -3,8 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { fetchGitHubContributions } from "@/lib/github-contributions";
 import {
-  calculateBaseAura,
-  calculateConsistencyBonus,
+  calculateMonthlyAuraBreakdown,
 } from "@/lib/aura-calculations";
 
 export async function GET(request: NextRequest) {
@@ -64,23 +63,17 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const frontendBaseAura = frontendMonthlyContributions * 10;
-    const frontendConsistencyRatio = frontendActiveDays / monthEnd.getDate();
-    const frontendConsistencyBonus = Math.round(
-      frontendConsistencyRatio * 1000
-    );
-    const frontendMonthlyAura = Math.round(
-      frontendBaseAura + frontendActiveDays * 50 + frontendConsistencyBonus
-    );
-
-    // Calculate backend values using backend functions
-    const backendBaseAura = calculateBaseAura(frontendMonthlyContributions);
-    const backendConsistencyBonus = calculateConsistencyBonus(
+    const frontendBreakdown = calculateMonthlyAuraBreakdown(
+      frontendMonthlyContributions,
       frontendActiveDays,
       monthEnd.getDate()
     );
-    const backendMonthlyAura = Math.round(
-      backendBaseAura + frontendActiveDays * 50 + backendConsistencyBonus
+
+    // Calculate backend values using backend functions
+    const backendBreakdown = calculateMonthlyAuraBreakdown(
+      frontendMonthlyContributions,
+      frontendActiveDays,
+      monthEnd.getDate()
     );
 
     // Get stored database values
@@ -106,18 +99,20 @@ export async function GET(request: NextRequest) {
         monthlyContributions: frontendMonthlyContributions,
         activeDays: frontendActiveDays,
         daysInMonth: monthEnd.getDate(),
-        baseAura: frontendBaseAura,
-        consistencyRatio: frontendConsistencyRatio,
-        consistencyBonus: frontendConsistencyBonus,
-        finalMonthlyAura: frontendMonthlyAura,
+        contributionAura: frontendBreakdown.contributionAura,
+        activityBonus: frontendBreakdown.activityBonus,
+        consistencyRatio: frontendActiveDays / monthEnd.getDate(),
+        consistencyBonus: frontendBreakdown.consistencyBonus,
+        finalMonthlyAura: frontendBreakdown.totalAura,
       },
       backend: {
         monthlyContributions: frontendMonthlyContributions,
         activeDays: frontendActiveDays,
         daysInMonth: monthEnd.getDate(),
-        baseAura: backendBaseAura,
-        consistencyBonus: backendConsistencyBonus,
-        finalMonthlyAura: backendMonthlyAura,
+        contributionAura: backendBreakdown.contributionAura,
+        activityBonus: backendBreakdown.activityBonus,
+        consistencyBonus: backendBreakdown.consistencyBonus,
+        finalMonthlyAura: backendBreakdown.totalAura,
       },
       stored: {
         monthly: storedMonthlyData
@@ -137,12 +132,13 @@ export async function GET(request: NextRequest) {
           : null,
       },
       discrepancies: {
-        frontendVsBackend: frontendMonthlyAura !== backendMonthlyAura,
+        frontendVsBackend:
+          frontendBreakdown.totalAura !== backendBreakdown.totalAura,
         frontendVsStored: storedMonthlyData
-          ? frontendMonthlyAura !== storedMonthlyData.totalAura
+          ? frontendBreakdown.totalAura !== storedMonthlyData.totalAura
           : "NO_STORED_DATA",
         backendVsStored: storedMonthlyData
-          ? backendMonthlyAura !== storedMonthlyData.totalAura
+          ? backendBreakdown.totalAura !== storedMonthlyData.totalAura
           : "NO_STORED_DATA",
       },
     });

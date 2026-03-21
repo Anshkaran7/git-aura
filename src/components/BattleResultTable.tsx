@@ -1,4 +1,5 @@
 import React from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface MetricResult {
   key: string;
@@ -13,128 +14,100 @@ interface BattleResultTableProps {
   results: MetricResult[];
 }
 
-const BattleResultTable: React.FC<BattleResultTableProps> = ({ results }) => {
+const METRIC_ICONS: Record<string, string> = {
+  aura: "A",
+  totalContributions: "C",
+  public_repos: "R",
+  totalStars: "S",
+  totalIssues: "I",
+  totalPullRequests: "P",
+  public_gists: "G",
+  followers: "F",
+  following: "+",
+  created_at: "Y",
+};
+
+function formatValue(value: number | string, key: string) {
+  if (key === "created_at" && typeof value === "number") {
+    return `${value.toFixed(1)} yrs`;
+  }
+
+  return typeof value === "number" ? value.toLocaleString() : value;
+}
+
+export default function BattleResultTable({
+  results,
+}: BattleResultTableProps) {
   const safeResults = Array.isArray(results) ? results : [];
 
-  const formatValue = (val: number | string, key: string) => {
-    if (key === "created_at") {
-      if (typeof val === "number") {
-        return `${val.toFixed(1)} yrs`;
-      }
-      return val;
-    }
-
-    if (typeof val === "number") {
-      // Format large numbers with commas
-      if (val >= 1000) {
-        return val.toLocaleString();
-      }
-      return val.toString();
-    }
-
-    return val;
-  };
-
-  const getMetricIcon = (key: string) => {
-    switch (key) {
-      case "aura":
-        return "⭐";
-      case "totalContributions":
-        return "📊";
-      case "public_repos":
-        return "📁";
-      case "totalStars":
-        return "🌟";
-      case "totalIssues":
-        return "�"; // Issues Raised
-      case "totalPullRequests":
-        return "✅"; // PRs Merged
-      case "public_gists":
-        return "📝";
-      case "followers":
-        return "👥";
-      case "following":
-        return "👤";
-      case "created_at":
-        return "📅";
-      default:
-        return "📈";
-    }
-  };
-
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-card rounded-lg overflow-hidden text-foreground border border-border">
-        <div className="bg-muted px-6 py-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">
-            Battle Results
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Comparing {safeResults.length} metrics - Winner highlighted in gold
-          </p>
+    <div className="overflow-hidden rounded-[28px] border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] shadow-[0_30px_80px_-60px_rgba(15,23,42,0.55)]">
+      <div className="border-b border-border bg-background/80 px-4 py-4 sm:px-6">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground sm:text-[15px]">
+              Metric comparison
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {safeResults.length} categories, ranked by stronger output per
+              metric.
+            </p>
+          </div>
+          <Badge
+            variant="outline"
+            className="w-fit rounded-full border-border bg-card px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+          >
+            Head to head
+          </Badge>
         </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted/50">
-                <th className="py-3 px-4 text-left text-sm font-medium text-muted-foreground">
-                  Metric
-                </th>
-                <th className="py-3 px-4 text-center text-sm font-medium text-muted-foreground">
-                  User 1
-                </th>
-                <th className="py-3 px-4 text-center text-sm font-medium text-muted-foreground">
-                  User 2
-                </th>
-                <th className="py-3 px-4 text-left text-sm font-medium text-muted-foreground">
-                  Description
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {safeResults.map((r, index) => (
-                <tr
-                  key={r.key}
-                  className={`border-t border-border hover:bg-muted/30 transition-colors ${
-                    index % 2 === 0 ? "bg-card" : "bg-muted/20"
-                  }`}
-                >
-                  <td className="py-3 px-4 font-medium">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{getMetricIcon(r.key)}</span>
-                      <span>{r.label}</span>
-                    </div>
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-center font-mono text-sm ${
-                      r.winner === "user1"
-                        ? "bg-yellow-500/20 dark:bg-yellow-900/40 font-bold text-yellow-700 dark:text-yellow-200"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {formatValue(r.value1, r.key)}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-center font-mono text-sm ${
-                      r.winner === "user2"
-                        ? "bg-yellow-500/20 dark:bg-yellow-900/40 font-bold text-yellow-700 dark:text-yellow-200"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {formatValue(r.value2, r.key)}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs">
-                    {r.description || "No description available"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="divide-y divide-border">
+        {safeResults.map((result) => (
+          <div
+            key={result.key}
+            className="grid gap-3 px-4 py-4 sm:grid-cols-[1.15fr_0.9fr_0.9fr_1.2fr] sm:items-center sm:px-6"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-background text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {METRIC_ICONS[result.key] ?? "M"}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {result.label}
+                </p>
+                <p className="text-xs text-muted-foreground sm:hidden">
+                  {result.description || "Comparison metric"}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={`rounded-full border px-3 py-2.5 text-center text-sm font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                result.winner === "user1"
+                  ? "border-foreground/15 bg-foreground text-background"
+                  : "border-border bg-background text-foreground/90"
+              }`}
+            >
+              {formatValue(result.value1, result.key)}
+            </div>
+
+            <div
+              className={`rounded-full border px-3 py-2.5 text-center text-sm font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] ${
+                result.winner === "user2"
+                  ? "border-foreground/15 bg-foreground text-background"
+                  : "border-border bg-background text-foreground/90"
+              }`}
+            >
+              {formatValue(result.value2, result.key)}
+            </div>
+
+            <p className="hidden text-xs leading-5 text-muted-foreground sm:block">
+              {result.description || "Comparison metric"}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   );
-};
-
-export default BattleResultTable;
+}

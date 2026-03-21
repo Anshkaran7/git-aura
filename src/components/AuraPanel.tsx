@@ -1,29 +1,28 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useUser, SignInButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import {
-  TrendingUp,
-  Zap,
   Calendar,
-  GitBranch,
-  Users,
   ChevronLeft,
   ChevronRight,
+  GitBranch,
   RefreshCw,
-  Sparkles,
+  TrendingUp,
+  Users,
+  Zap,
 } from "lucide-react";
-import { Theme, GitHubContributions } from "./types";
+import { Button } from "@/components/ui/button";
+import { calculateTotalAura } from "@/lib/aura";
+import { calculateMonthlyAuraBreakdown } from "@/lib/aura-calculations";
 import {
+  calculateStreak,
   formatNumber,
   getAuraStatus,
-  getStreakMessage,
   getCurrentMonthYear,
-  calculateStreak,
+  getStreakMessage,
 } from "@/lib/utils2";
-import { calculateTotalAura } from "@/lib/aura";
-import { generateFunnyProfileMessage } from "@/lib/ai-service";
-import { toast } from "sonner";
+import { GitHubContributions, Theme } from "./types";
 
 interface AuraPanelProps {
   selectedTheme: Theme;
@@ -33,10 +32,56 @@ interface AuraPanelProps {
   isCalculatingAura: boolean;
 }
 
-interface AIProfileMessage {
-  funnyMessage: string;
-  personality: string;
-  motivation: string;
+function calculateMonthlySnapshot(
+  monthYear: string,
+  contributions: GitHubContributions
+) {
+  const [year, month] = monthYear.split("-").map(Number);
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+
+  let monthlyContributions = 0;
+  let activeDays = 0;
+
+  contributions.contributionDays.forEach((day) => {
+    const dayDate = new Date(day.date);
+    if (dayDate >= monthStart && dayDate <= monthEnd) {
+      monthlyContributions += day.contributionCount;
+      if (day.contributionCount > 0) {
+        activeDays += 1;
+      }
+    }
+  });
+
+  const monthlyAura = calculateMonthlyAuraBreakdown(
+    monthlyContributions,
+    activeDays,
+    monthEnd.getDate()
+  ).totalAura;
+
+  return {
+    contributions: monthlyContributions,
+    activeDays,
+    aura: monthlyAura,
+    daysInMonth: monthEnd.getDate(),
+  };
+}
+
+function getMonthlyAuraStatus(monthlyAura: number) {
+  if (monthlyAura >= 4000) {
+    return { level: "Legendary", tone: "text-foreground" };
+  }
+  if (monthlyAura >= 2500) {
+    return { level: "Elite", tone: "text-foreground" };
+  }
+  if (monthlyAura >= 1500) {
+    return { level: "Strong", tone: "text-foreground" };
+  }
+  if (monthlyAura >= 700) {
+    return { level: "Rising", tone: "text-muted-foreground" };
+  }
+
+  return { level: "Starting", tone: "text-muted-foreground" };
 }
 
 const AuraPanel: React.FC<AuraPanelProps> = ({
@@ -46,348 +91,166 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   contributions,
   isCalculatingAura,
 }) => {
+  void selectedTheme;
+
   const { isSignedIn, user } = useUser();
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
-  const [monthlyData, setMonthlyData] = useState<{
-    contributions: number;
-    aura: number;
-    activeDays: number;
-  }>({ contributions: 0, aura: 0, activeDays: 0 });
   const [isSyncingManually, setIsSyncingManually] = useState(false);
-  const [aiMessage, setAiMessage] = useState<AIProfileMessage | null>(null);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
-  // Calculate fallback total aura if userAura is 0 or invalid
-  const fallbackTotalAura =
-    userAura > 0
-      ? userAura
-      : calculateTotalAura(contributions.contributionDays);
+  const fallbackTotalAura = useMemo(
+    () =>
+      userAura > 0
+        ? userAura
+        : calculateTotalAura(contributions.contributionDays),
+    [contributions.contributionDays, userAura]
+  );
 
-  // Calculate fallback current streak if currentStreak is 0 or invalid
-  const fallbackCurrentStreak =
-    currentStreak > 0
-      ? currentStreak
-      : calculateStreak(contributions.contributionDays);
+  const fallbackCurrentStreak = useMemo(
+    () =>
+      currentStreak > 0
+        ? currentStreak
+        : calculateStreak(contributions.contributionDays),
+    [contributions.contributionDays, currentStreak]
+  );
 
-  // Generate AI message based on profile data
-  const generateAIMessage = async () => {
-    if (!isSignedIn || !user || isGeneratingAI) return;
+  const monthlyData = useMemo(
+    () => calculateMonthlySnapshot(currentMonth, contributions),
+    [contributions, currentMonth]
+  );
 
-    setIsGeneratingAI(true);
-
-    try {
-      const githubAccount = user.externalAccounts?.find(
-        (account) => account.provider === "github"
-      );
-
-      if (!githubAccount?.username) {
-        return;
-      }
-
-      // Fetch GitHub profile data
-      const profileResponse = await fetch(
-        `/api/github/profile/${githubAccount.username}`
-      );
-      let profileData = null;
-
-      if (profileResponse.ok) {
-        profileData = await profileResponse.json();
-      }
-
-      // Prepare data for AI with more unique identifiers
-      const aiProfileData = {
-        username: githubAccount.username,
-        displayName: profileData?.name || githubAccount.username,
-        bio: profileData?.bio,
-        location: profileData?.location,
-        company: profileData?.company,
-        publicRepos: profileData?.public_repos || 0,
-        followers: profileData?.followers || 0,
-        following: profileData?.following || 0,
-        createdAt: profileData?.created_at || user.createdAt,
-        contributions: contributions.contributionDays.reduce(
-          (sum, day) => sum + day.contributionCount,
-          0
-        ),
-        currentStreak: fallbackCurrentStreak,
-        totalAura: fallbackTotalAura,
-        monthlyAura: monthlyData.aura,
-        activeDays: monthlyData.activeDays,
-        // Add more unique data for better AI generation
-        userId: user.id,
-        accountAge: Math.floor(
-          (Date.now() - new Date(user.createdAt || Date.now()).getTime()) /
-            (1000 * 60 * 60 * 24)
-        ),
-        averageContributions:
-          contributions.contributionDays.length > 0
-            ? contributions.contributionDays.reduce(
-                (sum, day) => sum + day.contributionCount,
-                0
-              ) / contributions.contributionDays.length
-            : 0,
-        maxContributions: Math.max(
-          ...contributions.contributionDays.map((day) => day.contributionCount),
-          0
-        ),
-      };
-
-      const aiResponse = await generateFunnyProfileMessage(aiProfileData);
-      setAiMessage(aiResponse);
-    } catch (error) {
-      console.error("Error generating AI message:", error);
-    } finally {
-      setIsGeneratingAI(false);
+  const consistency = useMemo(() => {
+    if (monthlyData.daysInMonth === 0) {
+      return 0;
     }
-  };
 
-  // Generate AI message when user data is available
-  useEffect(() => {
-    if (
-      isSignedIn &&
-      user &&
-      contributions.contributionDays.length > 0 &&
-      !isCalculatingAura
-    ) {
-      const timer = setTimeout(() => {
-        generateAIMessage();
-      }, 3000); // Delay to ensure all data is loaded
+    return Math.round((monthlyData.activeDays / monthlyData.daysInMonth) * 100);
+  }, [monthlyData.activeDays, monthlyData.daysInMonth]);
 
-      return () => clearTimeout(timer);
-    }
-  }, [
-    isSignedIn,
-    user,
-    contributions.contributionDays.length,
-    isCalculatingAura,
-    fallbackTotalAura,
-    fallbackCurrentStreak,
-    monthlyData,
-  ]);
+  const auraStatus = useMemo(
+    () => getAuraStatus(fallbackTotalAura),
+    [fallbackTotalAura]
+  );
+  const streakStatus = useMemo(
+    () => getStreakMessage(fallbackCurrentStreak),
+    [fallbackCurrentStreak]
+  );
+  const monthlyAuraStatus = useMemo(
+    () => getMonthlyAuraStatus(monthlyData.aura),
+    [monthlyData.aura]
+  );
 
-  // Function to manually sync all aura data with backend
-  const handleManualSync = async () => {
-    if (!isSignedIn || !user || isSyncingManually) {
+  const formatMonthYear = useCallback((monthYear: string) => {
+    const [year, month] = monthYear.split("-").map(Number);
+    return new Date(year, month - 1).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  }, []);
+
+  const syncMonthlyAura = useCallback(async () => {
+    if (!isSignedIn || !user || currentMonth !== getCurrentMonthYear()) {
       return;
     }
 
-    setIsSyncingManually(true);
+    await fetch("/api/save-monthly-aura", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        monthYear: currentMonth,
+        contributionsCount: monthlyData.contributions,
+        activeDays: monthlyData.activeDays,
+        allContributions: contributions.contributionDays,
+      }),
+    });
+  }, [
+    contributions.contributionDays,
+    currentMonth,
+    isSignedIn,
+    monthlyData.activeDays,
+    monthlyData.contributions,
+    user,
+  ]);
 
-    try {
-      // Sync current month data FIRST to establish correct monthly aura
-      if (currentMonth === getCurrentMonthYear()) {
-        const [year, month] = currentMonth.split("-").map(Number);
-        const monthStart = new Date(year, month - 1, 1);
-        const monthEnd = new Date(year, month, 0);
-
-        let monthlyContributions = 0;
-        let activeDays = 0;
-
-        contributions.contributionDays.forEach((day) => {
-          const dayDate = new Date(day.date);
-          if (dayDate >= monthStart && dayDate <= monthEnd) {
-            monthlyContributions += day.contributionCount;
-            if (day.contributionCount > 0) {
-              activeDays++;
-            }
-          }
-        });
-
-        const monthlyResponse = await fetch("/api/save-monthly-aura", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            monthYear: currentMonth,
-            contributionsCount: monthlyContributions,
-            activeDays: activeDays,
-            allContributions: contributions.contributionDays,
-          }),
-        });
-
-        if (monthlyResponse.ok) {
-        }
-
-        // Wait a moment to ensure monthly data is committed before total aura sync
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-
-      // Then sync total aura (this will respect the monthly data set above)
-      await syncTotalAuraWithBackend();
-
-      // Regenerate AI message after sync
-      await generateAIMessage();
-
-      // toast.success("✅ Aura data synced! Ranks will update shortly.", {
-      //   duration: 4000,
-      // });
-    } catch (error) {
-      // console.error("❌ [AuraPanel] Manual sync failed:", error);
-      // toast.error("❌ Failed to sync aura data. Please try again.");
-    } finally {
-      setIsSyncingManually(false);
-    }
-  };
-
-  // Function to sync total aura data with backend
-  const syncTotalAuraWithBackend = async () => {
+  const syncTotalAuraWithBackend = useCallback(async () => {
     if (!isSignedIn || !user || contributions.contributionDays.length === 0) {
       return;
     }
 
-    try {
-      const githubAccount = user.externalAccounts?.find(
-        (account) => account.provider === "github"
-      );
-
-      if (!githubAccount?.username) {
-        // console.warn(
-        //   "⚠️ [AuraPanel] No GitHub account found for total aura sync"
-        // );
-        return;
-      }
-
-      // console.log(
-      //   `🔄 [AuraPanel] Auto-syncing total aura data for ${githubAccount.username}`
-      // );
-
-      const response = await fetch("/api/save-user-aura", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          githubUsername: githubAccount.username,
-          contributionDays: contributions.contributionDays,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        // console.log(`✅ [AuraPanel] Successfully synced total aura:`, result);
-      } else {
-        const errorData = await response.json();
-        // console.warn(`⚠️ [AuraPanel] Failed to sync total aura:`, errorData);
-      }
-    } catch (error) {
-      // console.error("❌ [AuraPanel] Error syncing total aura:", error);
-    }
-  };
-
-  // Auto-sync total aura when contributions data is available
-  useEffect(() => {
-    if (
-      isSignedIn &&
-      user &&
-      contributions.contributionDays.length > 0 &&
-      !isCalculatingAura
-    ) {
-      // Delay the sync to ensure all data is loaded
-      const timer = setTimeout(() => {
-        syncTotalAuraWithBackend();
-      }, 2000); // Increased delay to ensure monthly data is synced first
-
-      return () => clearTimeout(timer);
-    }
-  }, [
-    isSignedIn,
-    user,
-    contributions.contributionDays.length,
-    isCalculatingAura,
-  ]);
-
-  // Debug logging to understand the aura calculation issue
-  useEffect(() => {
-    if (contributions.contributionDays.length > 0) {
-      const localCalculatedAura = calculateTotalAura(
-        contributions.contributionDays
-      );
-      const localCalculatedStreak = calculateStreak(
-        contributions.contributionDays
-      );
-    }
-  }, [
-    userAura,
-    currentStreak,
-    contributions,
-    fallbackTotalAura,
-    fallbackCurrentStreak,
-    isCalculatingAura,
-  ]);
-
-  const auraStatus = getAuraStatus(fallbackTotalAura);
-  const streakStatus = getStreakMessage(fallbackCurrentStreak);
-
-  useEffect(() => {
-    calculateMonthlyData();
-  }, [currentMonth, contributions]);
-
-  const calculateMonthlyData = async () => {
-    const [year, month] = currentMonth.split("-").map(Number);
-    const monthStart = new Date(year, month - 1, 1);
-    const monthEnd = new Date(year, month, 0);
-
-    let monthlyContributions = 0;
-    let activeDays = 0;
-
-    contributions.contributionDays.forEach((day) => {
-      const dayDate = new Date(day.date);
-      if (dayDate >= monthStart && dayDate <= monthEnd) {
-        monthlyContributions += day.contributionCount;
-        if (day.contributionCount > 0) {
-          activeDays++;
-        }
-      }
-    });
-
-    // Calculate monthly aura using the official calculation method
-    const baseAura = monthlyContributions * 10; // calculateBaseAura
-    const consistencyRatio = activeDays / monthEnd.getDate();
-    const consistencyBonus = Math.round(consistencyRatio * 1000); // calculateConsistencyBonus
-    const monthlyAura = Math.round(
-      baseAura + activeDays * 50 + consistencyBonus
+    const githubAccount = user.externalAccounts?.find(
+      (account) => account.provider === "github"
     );
 
-    setMonthlyData({
-      contributions: monthlyContributions,
-      aura: monthlyAura,
-      activeDays: activeDays,
-    });
-
-    // Auto-sync monthly data to backend if user is signed in and it's current month
-    if (isSignedIn && user && currentMonth === getCurrentMonthYear()) {
-      try {
-        const response = await fetch("/api/save-monthly-aura", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            monthYear: currentMonth,
-            contributionsCount: monthlyContributions,
-            activeDays: activeDays,
-            allContributions: contributions.contributionDays, // Pass all contributions for complete aura calculation
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-        } else {
-          const errorData = await response.json();
-          console.warn(
-            `⚠️ [AuraPanel] Failed to sync monthly data:`,
-            errorData
-          );
-        }
-      } catch (error) {
-        console.error("❌ [AuraPanel] Error syncing monthly data:", error);
-      }
+    if (!githubAccount?.username) {
+      return;
     }
-  };
 
-  const navigateMonth = (direction: "prev" | "next") => {
+    await fetch("/api/save-user-aura", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        githubUsername: githubAccount.username,
+        contributionDays: contributions.contributionDays,
+      }),
+    });
+  }, [contributions.contributionDays, isSignedIn, user]);
+
+  useEffect(() => {
+    if (!isSignedIn || !user || contributions.contributionDays.length === 0) {
+      return;
+    }
+
+    void syncMonthlyAura();
+  }, [
+    contributions.contributionDays.length,
+    isSignedIn,
+    syncMonthlyAura,
+    user,
+  ]);
+
+  useEffect(() => {
+    if (!isSignedIn || !user || contributions.contributionDays.length === 0) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void syncTotalAuraWithBackend();
+    }, 1200);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    contributions.contributionDays.length,
+    isSignedIn,
+    syncTotalAuraWithBackend,
+    user,
+  ]);
+
+  const handleManualSync = useCallback(async () => {
+    if (!isSignedIn || !user || isSyncingManually || isCalculatingAura) {
+      return;
+    }
+
+    setIsSyncingManually(true);
+    try {
+      await syncMonthlyAura();
+      await syncTotalAuraWithBackend();
+    } finally {
+      setIsSyncingManually(false);
+    }
+  }, [
+    isCalculatingAura,
+    isSignedIn,
+    isSyncingManually,
+    syncMonthlyAura,
+    syncTotalAuraWithBackend,
+    user,
+  ]);
+
+  const navigateMonth = useCallback((direction: "prev" | "next") => {
     const [year, month] = currentMonth.split("-").map(Number);
     const date = new Date(year, month - 1);
 
@@ -397,262 +260,181 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
       date.setMonth(date.getMonth() + 1);
     }
 
-    const newMonthYear = `${date.getFullYear()}-${String(
-      date.getMonth() + 1
-    ).padStart(2, "0")}`;
-    setCurrentMonth(newMonthYear);
-  };
-
-  const formatMonthYear = (monthYear: string) => {
-    const [year, month] = monthYear.split("-");
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  };
-
-  const getMonthlyAuraStatus = (monthlyAura: number) => {
-    if (monthlyAura >= 5000)
-      return { level: "🔥 Legendary", color: "text-red-500" };
-    if (monthlyAura >= 3000)
-      return { level: "⚡ Epic", color: "text-purple-500" };
-    if (monthlyAura >= 2000)
-      return { level: "💎 Elite", color: "text-blue-500" };
-    if (monthlyAura >= 1000)
-      return { level: "🌟 Pro", color: "text-green-500" };
-    if (monthlyAura >= 500)
-      return { level: "🚀 Rising", color: "text-yellow-500" };
-    return { level: "🌱 Starting", color: "text-gray-500" };
-  };
-
-  const monthlyAuraStatus = getMonthlyAuraStatus(monthlyData.aura);
+    setCurrentMonth(
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+    );
+  }, [currentMonth]);
 
   return (
-    <div className="bg-card backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-border shadow-2xl mt-4 sm:mt-6 md:mt-8 mx-1 sm:mx-0">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-        <h3 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-          <span className="truncate">Aura Analysis</span>
-        </h3>
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+    <section className="mt-6 rounded-[28px] border border-border bg-card/85 p-4 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)] sm:p-6">
+      <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Aura analysis
+          </p>
+          <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-[-0.03em] text-foreground">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            Performance overview
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-2">
           {isCalculatingAura && (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-muted-foreground"></div>
-              <span className="text-sm text-muted-foreground">Calculating...</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
+              <div className="h-3 w-3 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+              Calculating
             </div>
           )}
+
           {isSignedIn && user && (
             <button
               onClick={handleManualSync}
               disabled={isSyncingManually || isCalculatingAura}
-              className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed text-muted-foreground rounded-md transition-all border border-border bg-secondary hover:bg-muted"
-              title="Sync aura data with backend"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
-                className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                className={`h-3.5 w-3.5 ${
                   isSyncingManually ? "animate-spin" : ""
                 }`}
               />
-              <span className="hidden sm:inline">
-                {isSyncingManually ? "Syncing..." : "Sync"}
-              </span>
+              {isSyncingManually ? "Syncing" : "Sync"}
             </button>
           )}
         </div>
       </div>
 
-      {/* Monthly View Toggle and Navigation */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">
-            Monthly Analysis
-          </span>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" />
+          Monthly breakdown
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
+
+        <div className="inline-flex items-center gap-2 self-start rounded-full border border-border bg-background p-1">
           <button
             onClick={() => navigateMonth("prev")}
-            className="p-1.5 sm:p-2 rounded-md hover:bg-muted active:bg-secondary"
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+            aria-label="Previous month"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap bg-background rounded border border-border">
+          <span className="min-w-[132px] text-center text-xs font-medium text-foreground">
             {formatMonthYear(currentMonth)}
           </span>
           <button
             onClick={() => navigateMonth("next")}
-            className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:p-1.5 sm:p-2 rounded-md hover:bg-muted active:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={currentMonth >= getCurrentMonthYear()}
+            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            aria-label="Next month"
           >
-            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Monthly Aura Status Card */}
-      <div className="mb-4 sm:mb-6">
-        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border-2 border-dashed bg-secondary border-border backdrop-blur-sm">
-          <div className="text-center">
-            <h4
-              className={`text-base sm:text-lg font-bold ${monthlyAuraStatus.color} mb-2`}
-            >
-              {monthlyAuraStatus.level}
-            </h4>
-            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-foreground">
-              {formatMonthYear(currentMonth)} Performance
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
-              <span
-                className={`${monthlyAuraStatus.color} font-semibold whitespace-nowrap`}
-              >
-                {formatNumber(monthlyData.aura)} Monthly Aura
-              </span>
-              <span className="text-foreground font-semibold flex items-center gap-1 whitespace-nowrap">
-                📊 {monthlyData.activeDays} Active Days
-              </span>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[1.15fr_1fr]">
+        <div className="rounded-[24px] border border-border bg-background p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            {monthlyAuraStatus.level}
+          </p>
+          <h4 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+            {formatNumber(monthlyData.aura)}
+          </h4>
+          <p className={`mt-2 text-sm ${monthlyAuraStatus.tone}`}>
+            Monthly Aura for {formatMonthYear(currentMonth)}
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <GitBranch className="h-3.5 w-3.5" />
+                Contributions
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {monthlyData.contributions.toLocaleString()}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Users className="h-3.5 w-3.5" />
+                Active days
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {monthlyData.activeDays}
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Monthly Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
-          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
-              Monthly Aura
-            </span>
-          </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
-            {formatNumber(monthlyData.aura)}
-          </div>
-        </div>
-
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
-          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <GitBranch className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
-              Contributions
-            </span>
-          </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
-            {monthlyData.contributions}
-          </div>
-        </div>
-
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
-          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
-              Active Days
-            </span>
-          </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
-            {monthlyData.activeDays}
-          </div>
-        </div>
-
-        <div className="p-2 sm:p-3 md:p-4 rounded-lg bg-background border border-border hover:bg-muted transition-all">
-          <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
-              Consistency
-            </span>
-          </div>
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">
-            {Math.round(
-              (monthlyData.activeDays /
-                new Date(
-                  parseInt(currentMonth.split("-")[0]),
-                  parseInt(currentMonth.split("-")[1]),
-                  0
-                ).getDate()) *
-                100
-            )}
-            %
-          </div>
-        </div>
-      </div>
-
-      {/* Overall Aura Status Card */}
-      <div className="mb-4 sm:mb-6">
-        <div className="p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl border border-border bg-background backdrop-blur-sm">
-          <div className="text-center">
-            <div className="text-2xl sm:text-3xl md:text-4xl mb-2">
+        <div className="rounded-[24px] border border-border bg-background p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Overall standing
+          </p>
+          <div className="mt-4 flex items-start gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card text-xl">
               {auraStatus.emoji}
             </div>
-            <h4
-              className={`text-base sm:text-lg font-bold ${auraStatus.color} mb-2`}
-            >
-              {auraStatus.level}
-            </h4>
-            <p className="text-sm sm:text-base md:text-lg mb-3 px-2 text-foreground">
-              {auraStatus.message}
-            </p>
-
-            {/* {isSignedIn && user && (
-              <div className="mb-4 p-3 rounded-lg border border-[#39d353]/30 bg-gradient-to-r from-[#0d1117]/50 to-[#161b21]/50 backdrop-blur-sm">
-                {isGeneratingAI ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#39d353]"></div>
-                    <span className="text-sm text-muted-foreground">
-                      Generating AI message...
-                    </span>
-                  </div>
-                ) : aiMessage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Sparkles className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-xs sm:text-sm font-semibold text-muted-foreground bg-[#39d353]/10 px-2 py-1 rounded-full">
-                        {aiMessage.personality}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-200 leading-relaxed">
-                      {aiMessage.funnyMessage}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {aiMessage.motivation}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            )} */}
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm">
-              <span
-                className={`${auraStatus.color} font-semibold whitespace-nowrap`}
-              >
-                {formatNumber(fallbackTotalAura)} Total Aura
-              </span>
-              <span
-                className={`${streakStatus.color} font-semibold flex items-center gap-1 whitespace-nowrap`}
-              >
-                {streakStatus.emoji} {fallbackCurrentStreak} Day Streak
-              </span>
+            <div>
+              <h4 className={`text-lg font-semibold ${auraStatus.color}`}>
+                {auraStatus.level}
+              </h4>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                {auraStatus.message}
+              </p>
             </div>
           </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Zap className="h-3.5 w-3.5" />
+                Total Aura
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatNumber(fallbackTotalAura)}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <TrendingUp className="h-3.5 w-3.5" />
+                Streak
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {fallbackCurrentStreak} days
+              </p>
+            </div>
+            <div className="rounded-2xl border border-border bg-card px-4 py-3">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5" />
+                Consistency
+              </div>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {consistency}%
+              </p>
+            </div>
+          </div>
+
+          <p className={`mt-4 text-xs ${streakStatus.color}`}>
+            {streakStatus.emoji} {fallbackCurrentStreak}-day streak
+          </p>
         </div>
       </div>
 
       {!isSignedIn && (
-        <div className="mt-4 sm:mt-6 p-3 sm:p-4 md:p-6 rounded-lg border-2 border-dashed border-border text-center bg-card backdrop-blur-sm">
-          <div className="text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3">
-            🚀
-          </div>
-          <h4 className="text-base sm:text-lg font-bold mb-2 sm:mb-3 text-foreground">
-            Ready to join the aura game?
-          </h4>
-          <p className="mb-3 sm:mb-4 text-sm sm:text-base px-2 text-muted-foreground">
-            Sign in to save your aura, earn epic badges, and dominate the
-            leaderboard! 💪
+        <div className="mt-4 rounded-[24px] border border-dashed border-border bg-background p-5 text-center">
+          <p className="text-sm font-medium text-foreground">
+            Sign in to sync your Aura and monthly stats.
           </p>
-          <SignInButton mode="modal">
-            <Button variant="secondary" size="lg">
-              🔥 Start My Aura Journey
-            </Button>
-          </SignInButton>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            Logged-in users can persist rankings, badges, and up-to-date monthly
+            snapshots.
+          </p>
+          <div className="mt-4">
+            <SignInButton mode="modal">
+              <Button>Sign in to sync</Button>
+            </SignInButton>
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

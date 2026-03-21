@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getGitHubAvatarFallback } from "@/lib/avatar";
 import { prisma } from "@/lib/prisma";
 import {
   buildPagination,
@@ -67,7 +68,8 @@ export async function GET(request: NextRequest) {
           github_username: entry.user.githubUsername || "",
           avatar_url:
             entry.user.avatarUrl ||
-            `https://github.com/${entry.user.githubUsername}.png`,
+            getGitHubAvatarFallback(entry.user.githubUsername) ||
+            "",
           total_aura: entry.totalAura,
           current_streak: entry.user.currentStreak || 0,
         },
@@ -108,6 +110,7 @@ export async function GET(request: NextRequest) {
       leaderboard,
       pagination,
       userRank: userRankEntry?.rank ?? null,
+      userEntry: userRankEntry ?? null,
     });
   } catch (error) {
     console.error("Error in all-time leaderboard API:", error);

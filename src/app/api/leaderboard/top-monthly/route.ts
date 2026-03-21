@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getGitHubAvatarFallback } from "@/lib/avatar";
 import { prisma } from "@/lib/prisma";
+import {
+  getMonthlyRankingValues,
+  sortMonthlyRankedEntries,
+} from "@/lib/leaderboard";
 import { formatNumber } from "@/lib/utils2";
 
 // Explicitly set runtime to nodejs to avoid edge runtime issues
@@ -49,16 +54,22 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        orderBy: [
-          { totalAura: "desc" },
-          { contributionsCount: "desc" },
-          { user: { currentStreak: "desc" } },
-        ],
-        take: 5,
       });
     });
 
-    if (!monthlyData || monthlyData.length === 0) {
+    const topMonthlyData = sortMonthlyRankedEntries(
+      monthlyData,
+      (entry) => ({
+        ...getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ),
+      })
+    ).slice(0, 5);
+
+    if (!topMonthlyData || topMonthlyData.length === 0) {
       return NextResponse.json({
         topUsers: [],
         monthYear: currentMonthYear,
@@ -71,46 +82,57 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data for the AnimatedTooltip component
-    const transformedData = monthlyData.map((entry, index) => ({
-      id: index + 1,
-      name:
-        entry.user.displayName ||
-        entry.user.githubUsername ||
-        `User ${index + 1}`,
-      designation: `Aura Score: ${formatNumber(entry.totalAura)}`,
-      image:
-        entry.user.avatarUrl ||
-        `https://github.com/${entry.user.githubUsername}.png`,
-      githubUsername: entry.user.githubUsername,
-      rank: index + 1, // Rank based on sorted order
-      totalAura: entry.totalAura,
-      contributions: entry.contributionsCount,
-      currentStreak: entry.user.currentStreak || 0,
-    }));
+    const transformedData = topMonthlyData.map((entry, index) => {
+      const normalizedAura = getMonthlyRankingValues(
+        entry.totalAura,
+        entry.contributionsCount,
+        currentMonthYear,
+        entry.user.githubUsername || ""
+      ).aura;
+
+      return {
+        id: index + 1,
+        name:
+          entry.user.displayName ||
+          entry.user.githubUsername ||
+          `User ${index + 1}`,
+        designation: `Aura Score: ${formatNumber(normalizedAura)}`,
+        image:
+          entry.user.avatarUrl ||
+          getGitHubAvatarFallback(entry.user.githubUsername) ||
+          "",
+        githubUsername: entry.user.githubUsername,
+        rank: index + 1,
+        totalAura: normalizedAura,
+        contributions: entry.contributionsCount,
+        currentStreak: entry.user.currentStreak || 0,
+      };
+    });
 
     // Get monthly stats with retry logic
-    const monthlyStats = await withRetry(async () => {
-      return await prisma.monthlyLeaderboard.aggregate({
-        where: {
-          monthYear: currentMonthYear,
-        },
-        _count: {
-          _all: true, // Total participants
-        },
-        _sum: {
-          totalAura: true,
-          contributionsCount: true,
-        },
-      });
-    });
+    const totalAuraPoints = monthlyData.reduce(
+      (sum, entry) =>
+        sum +
+        getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ).aura,
+      0
+    );
+    const totalContributions = monthlyData.reduce(
+      (sum, entry) => sum + entry.contributionsCount,
+      0
+    );
 
     return NextResponse.json({
       topUsers: transformedData,
       monthYear: currentMonthYear,
       stats: {
-        totalAuraPoints: monthlyStats._sum.totalAura || 0,
-        totalContributions: monthlyStats._sum.contributionsCount || 0,
-        totalParticipants: monthlyStats._count._all,
+        totalAuraPoints,
+        totalContributions,
+        totalParticipants: monthlyData.length,
       },
     });
   } catch (error) {

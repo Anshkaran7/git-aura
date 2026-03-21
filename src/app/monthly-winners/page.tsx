@@ -1,24 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { toPng } from "html-to-image";
+import Image from "next/image";
+import {
+  Award,
+  Calendar,
   ChevronLeft,
   ChevronRight,
-  Trophy,
-  Medal,
-  Award,
   Crown,
-  Calendar,
-  Users,
-  Zap,
+  Medal,
   Share2,
+  Trophy,
+  Zap,
 } from "lucide-react";
-import Image from "next/image";
 import { Header } from "@/components/home";
-import { toPng } from "html-to-image";
-import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface BadgeType {
   id: string;
@@ -61,96 +67,74 @@ interface PaginationInfo {
   hasPrevPage: boolean;
 }
 
-/** ——— Brand-y rank styles with glow tokens ——— */
-const RANK_TOKENS = {
+interface MonthlyWinnersResponse {
+  data: MonthlyWinnersData[];
+  pagination: PaginationInfo;
+}
+
+const rankStyles = {
   1: {
     badge: "/badge/1st.png",
-    ring: "ring-yellow-400/25",
-    border: "border-yellow-400/40",
-    chip: "bg-yellow-500/10 text-yellow-300 border-yellow-400/30",
-    haloFrom: "from-yellow-500/25",
-    haloTo: "to-amber-500/10",
-    icon: "text-yellow-400",
-    gradientText:
-      "bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent drop-shadow-sm",
+    label: "First place",
+    icon: Crown,
+    border: "border-foreground/15",
+    surface: "bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]",
   },
   2: {
     badge: "/badge/2nd.png",
-    ring: "ring-zinc-400/25",
-    border: "border-zinc-400/40",
-    chip: "bg-zinc-500/10 text-zinc-300 border-zinc-400/30",
-    haloFrom: "from-zinc-400/25",
-    haloTo: "to-slate-500/10",
-    icon: "text-zinc-300",
-    gradientText:
-      "bg-gradient-to-r from-zinc-200 to-slate-300 bg-clip-text text-transparent drop-shadow-sm",
+    label: "Second place",
+    icon: Medal,
+    border: "border-border",
+    surface: "bg-background",
   },
   3: {
     badge: "/badge/3rd.png",
-    ring: "ring-amber-500/25",
-    border: "border-amber-500/40",
-    chip: "bg-amber-500/10 text-amber-300 border-amber-500/30",
-    haloFrom: "from-amber-400/25",
-    haloTo: "to-orange-500/10",
-    icon: "text-amber-300",
-    gradientText:
-      "bg-gradient-to-r from-amber-200 to-orange-300 bg-clip-text text-transparent drop-shadow-sm",
+    label: "Third place",
+    icon: Award,
+    border: "border-border",
+    surface: "bg-background",
   },
-};
+} as const;
 
-const RankIcon = ({ rank }: { rank: number }) => {
-  switch (rank) {
-    case 1:
-      return (
-        <Crown
-          className="w-6 h-6 md:w-7 md:h-7 text-yellow-400"
-          aria-label="First place"
-        />
-      );
-    case 2:
-      return (
-        <Medal
-          className="w-6 h-6 md:w-7 md:h-7 text-zinc-300"
-          aria-label="Second place"
-        />
-      );
-    case 3:
-      return (
-        <Award
-          className="w-6 h-6 md:w-7 md:h-7 text-amber-400"
-          aria-label="Third place"
-        />
-      );
-    default:
-      return (
-        <Trophy
-          className="w-6 h-6 md:w-7 md:h-7 text-muted-foreground"
-          aria-label="Rank"
-        />
-      );
+async function fetchMonthlyWinners(page: number): Promise<MonthlyWinnersResponse> {
+  const response = await fetch(`/api/monthly-winners?page=${page}&limit=6`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch monthly winners.");
   }
-};
 
-const formatMonthYear = (monthYear: string) => {
-  const [year, month] = monthYear.split("-");
-  const date = new Date(Number(year), Number(month) - 1);
-  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-};
+  return response.json();
+}
 
-/** ——— Winner Card ——— */
-const WinnerCard = ({
+function formatMonthYear(monthYear: string) {
+  const [year, month] = monthYear.split("-").map(Number);
+  return new Date(year, month - 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function RankIcon({ rank }: { rank: 1 | 2 | 3 }) {
+  const Icon = rankStyles[rank].icon;
+  return <Icon className="h-4 w-4 text-foreground" />;
+}
+
+function WinnerCard({
   winner,
   monthYear,
 }: {
   winner: MonthlyWinner;
   monthYear: string;
-}) => {
-  const t = RANK_TOKENS[winner.rank];
+}) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const styles = rankStyles[winner.rank];
 
-  const handleShare = async () => {
-    if (!cardRef.current) return;
+  const handleShare = useCallback(async () => {
+    if (!cardRef.current) {
+      return;
+    }
+
     try {
       setIsGenerating(true);
       const dataUrl = await toPng(cardRef.current, {
@@ -164,25 +148,21 @@ const WinnerCard = ({
       const blob = await response.blob();
       const formData = new FormData();
       formData.append("image", blob);
-      formData.append(
-        "name",
-        `${winner.user.githubUsername}-winner-${monthYear}`
-      );
+      formData.append("name", `${winner.user.githubUsername}-winner-${monthYear}`);
 
       const uploadResponse = await fetch("/api/upload-image", {
         method: "POST",
         body: formData,
       });
-      if (!uploadResponse.ok) throw new Error("Failed to upload image");
-      const { url: imageUrl } = await uploadResponse.json();
 
-      const rankText =
-        winner.rank === 1 ? "1st 🥇" : winner.rank === 2 ? "2nd 🥈" : "3rd 🥉";
-      const shareText = `🎉 Ranked ${rankText} on GitAura's monthly leaderboard (${formatMonthYear(
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const { url: imageUrl } = await uploadResponse.json();
+      const shareText = `Ranked #${winner.rank} on GitAura in ${formatMonthYear(
         monthYear
-      )}) — ${winner.totalAura.toLocaleString()} Aura, ${
-        winner.contributionsCount
-      } contributions. Join in! 🚀`;
+      )} with ${winner.totalAura.toLocaleString()} Aura.`;
       const shareUrl = `${window.location.origin}/monthly-winners`;
 
       window.open(
@@ -194,325 +174,267 @@ const WinnerCard = ({
         "_blank",
         "width=600,height=400"
       );
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  /** podium elevation */
-  const podium =
-    winner.rank === 1
-      ? "order-2 md:-translate-y-10 lg:-translate-y-12 scale-[1.06]"
-      : winner.rank === 2
-      ? "order-1 md:-translate-y-4 scale-[1.02]"
-      : "order-3 md:-translate-y-2";
+  }, [monthYear, winner.rank, winner.totalAura, winner.user.githubUsername]);
 
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 18, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className={`relative ${podium} w-full max-w-[300px] group`}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28 }}
+      className={`group relative overflow-hidden rounded-[30px] border ${styles.border} ${styles.surface} p-5 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1`}
     >
-      {/* soft halo */}
-      <div
-        className={`pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-b ${t.haloFrom} ${t.haloTo} blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500`}
-        aria-hidden
-      />
+      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_70%)]" />
 
-      <div
-        className={[
-          "relative rounded-3xl border backdrop-blur-xl transition-all duration-300",
-          "bg-gradient-to-b from-white/5 to-white/[0.03] dark:from-white/3 dark:to-white/[0.04]",
-          "shadow-[0_8px_40px_-8px_rgba(0,0,0,0.45)] group-hover:shadow-[0_12px_50px_-8px_rgba(0,0,0,0.6)]",
-          t.border,
-        ].join(" ")}
+      <div className="absolute right-4 top-4">
+        <Image
+          src={styles.badge}
+          alt={styles.label}
+          width={54}
+          height={54}
+          className="h-12 w-12 object-contain"
+          unoptimized
+        />
+      </div>
+
+      <button
+        onClick={() => void handleShare()}
+        disabled={isGenerating}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Share winner"
       >
-        {/* badge top-right */}
-        <div className="absolute right-4 top-4 z-20">
-          <Image
-            src={t.badge}
-            alt={`${winner.rank} place badge`}
-            width={56}
-            height={56}
-            className="drop-shadow-xl"
-            priority
-            unoptimized
-          />
+        {isGenerating ? (
+          <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+        ) : (
+          <Share2 className="h-4 w-4" />
+        )}
+      </button>
+
+      <div className="mt-5 flex flex-col items-center text-center">
+        <UserAvatar
+          src={winner.user.avatarUrl}
+          githubUsername={winner.user.githubUsername}
+          displayName={winner.user.displayName}
+          alt={winner.user.displayName || winner.user.githubUsername}
+          className="h-24 w-24 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]"
+          initialsClassName="text-lg tracking-[0.08em]"
+          size={192}
+        />
+
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <RankIcon rank={winner.rank} />
+          #{winner.rank}
         </div>
 
-        {/* share button */}
-        <button
-          onClick={handleShare}
-          disabled={isGenerating}
-          className={`absolute left-4 top-4 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border text-xs 
-          ${t.chip} hover:bg-white/10 transition`}
-          aria-label="Share achievement"
-        >
-          {isGenerating ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          ) : (
-            <Share2 className="h-4 w-4" />
-          )}
-        </button>
+        <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.045em] text-foreground">
+          {winner.user.displayName}
+        </h3>
+        <p className="mt-1 text-[15px] text-muted-foreground">
+          @{winner.user.githubUsername}
+        </p>
 
-        {/* header / avatar */}
-        <div className="px-6 pb-6 pt-10">
-          <div className="flex flex-col items-center">
-            <div className="relative mb-4 group-hover:scale-[1.03] transition-transform duration-300">
-              <div
-                className={`absolute -inset-3 rounded-full ring-8 ${t.ring} transition-opacity`}
-              />
-              <div className="relative h-28 w-28 overflow-hidden rounded-full border border-white/10 shadow-2xl">
-                <Image
-                  src={winner.user.avatarUrl || "https://github.com/ghost.png"}
-                  alt={`${winner.user.displayName || "User"} avatar`}
-                  fill
-                  className="object-cover"
-                  sizes="112px"
-                  priority
-                />
-              </div>
+        <div className="mt-5 grid w-full grid-cols-2 gap-3">
+          <div className="rounded-[24px] border border-border bg-background px-4 py-3.5 text-left">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Zap className="h-3.5 w-3.5" />
+              Aura
             </div>
-
-            <div className="text-center">
-              <div className="mx-auto mb-1 inline-flex items-center gap-2">
-                <RankIcon rank={winner.rank} />
-                <span className={`text-xl font-bold uppercase ${t.gradientText}`}>
-                  #{winner.rank}
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-foreground leading-tight">
-                {winner.user.displayName}
-              </h3>
-              <p className="text-sm font-medium text-muted-foreground mt-0.5">
-                @{winner.user.githubUsername}
-              </p>
+            <p className="mt-2 text-lg font-semibold text-foreground">
+              {winner.totalAura.toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-[24px] border border-border bg-background px-4 py-3.5 text-left">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
+              Contributions
             </div>
-
-            {/* metrics chips */}
-            <div className="mt-5 grid w-full grid-cols-2 gap-3">
-              <div
-                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip} transition-all duration-300`}
-              >
-                <Zap className={`h-4 w-4 ${t.icon}`} />
-                <span className="tabular-nums font-semibold">
-                  {winner.totalAura.toLocaleString()}
-                </span>
-                <span className="opacity-80 font-medium">Aura</span>
-              </div>
-              <div
-                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip} transition-all duration-300`}
-              >
-                <Users className={`h-4 w-4 ${t.icon}`} />
-                <span className="tabular-nums font-semibold">
-                  {winner.contributionsCount}
-                </span>
-                <span className="opacity-80 font-medium">Contribs</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() =>
-                window.open(
-                  `/user/${winner.user.githubUsername}`,
-                  "_blank",
-                  "noopener"
-                )
-              }
-              className="mt-6 rounded-full w-full shadow-md font-semibold transition-transform active:scale-95"
-              variant="secondary"
-            >
-              View Profile
-            </Button>
+            <p className="mt-2 text-lg font-semibold text-foreground">
+              {winner.contributionsCount.toLocaleString()}
+            </p>
           </div>
         </div>
+
+        <Button
+          variant="secondary"
+          className="mt-6 w-full"
+          onClick={() =>
+            window.open(`/user/${winner.user.githubUsername}`, "_blank", "noopener")
+          }
+        >
+          View profile
+        </Button>
       </div>
     </motion.div>
   );
-};
+}
 
-/** ——— Winners Grid ——— */
-const WinnersGrid = ({ monthData }: { monthData: MonthlyWinnersData }) => {
+function WinnersGrid({ monthData }: { monthData: MonthlyWinnersData }) {
   const ordered = [...monthData.winners].sort((a, b) => a.rank - b.rank);
+
   return (
-    <div className="relative">
-      {/* background accents */}
-      <div
-        className="pointer-events-none absolute inset-x-0 -top-16 mx-auto h-40 w-[80%] rounded-full bg-gradient-to-r from-indigo-500/10 via-primary/10 to-emerald-500/10 blur-3xl"
-        aria-hidden
-      />
-      <div className="flex min-h-[420px] items-end justify-center gap-3 sm:gap-6 md:gap-10">
-        {ordered.map((w) => (
-          <WinnerCard key={w.id} winner={w} monthYear={monthData.monthYear} />
+    <section className="space-y-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            Hall of fame
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+            {formatMonthYear(monthData.monthYear)}
+          </h2>
+        </div>
+        <Badge
+          variant="outline"
+          className="w-fit rounded-full border-border bg-card px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+        >
+          Top 3 archived
+        </Badge>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {ordered.map((winner) => (
+          <WinnerCard
+            key={winner.id}
+            winner={winner}
+            monthYear={monthData.monthYear}
+          />
         ))}
       </div>
-
-      {/* podium base */}
-      <div className="mx-auto mt-6 grid max-w-lg grid-cols-3 items-end gap-3 sm:gap-6 md:gap-10">
-        <div className="h-2 rounded-md bg-white/5" />
-        <div className="h-3 rounded-md bg-white/8" />
-        <div className="h-1.5 rounded-md bg-white/5" />
-      </div>
-    </div>
+    </section>
   );
-};
+}
 
-/** ——— Pagination ——— */
-const Pagination = ({
+function Pagination({
   pagination,
   onPageChange,
 }: {
   pagination: PaginationInfo;
-  onPageChange: (newPage: number) => void;
-}) => {
-  if (pagination.totalPages <= 1) return null;
+  onPageChange: (page: number) => void;
+}) {
+  if (pagination.totalPages <= 1) {
+    return null;
+  }
+
   return (
-    <nav
-      className="mt-12 flex items-center justify-center gap-3"
-      role="navigation"
-      aria-label="Pagination"
-    >
+    <nav className="mt-10 flex items-center justify-center gap-3">
       <Button
         variant="outline"
-        onClick={() => onPageChange(pagination.currentPage - 1)}
         disabled={!pagination.hasPrevPage}
-        aria-label="Previous page"
+        onClick={() => onPageChange(pagination.currentPage - 1)}
       >
-        <ChevronLeft className="mr-2 h-4 w-4" />
+        <ChevronLeft className="h-4 w-4" />
         Prev
       </Button>
 
-      <div
-        className="hidden items-center gap-2 sm:flex"
-        aria-label="Page numbers"
-      >
-        {Array.from({ length: pagination.totalPages }).map((_, i) => {
-          const page = i + 1;
-          const active = page === pagination.currentPage;
-          return (
-            <Button
-              key={page}
-              variant={active ? "default" : "outline"}
-              onClick={() => onPageChange(page)}
-              size="sm"
-              aria-current={active ? "page" : undefined}
-              className="min-w-9"
-            >
-              {page}
-            </Button>
-          );
-        })}
-      </div>
-
-      <div className="sm:hidden text-sm text-muted-foreground">
-        Page <span className="tabular-nums">{pagination.currentPage}</span> /{" "}
-        <span className="tabular-nums">{pagination.totalPages}</span>
+      <div className="rounded-full border border-border bg-card px-4 py-2 text-xs text-muted-foreground">
+        Page {pagination.currentPage} of {pagination.totalPages}
       </div>
 
       <Button
         variant="outline"
-        onClick={() => onPageChange(pagination.currentPage + 1)}
         disabled={!pagination.hasNextPage}
-        aria-label="Next page"
+        onClick={() => onPageChange(pagination.currentPage + 1)}
       >
         Next
-        <ChevronRight className="ml-2 h-4 w-4" />
+        <ChevronRight className="h-4 w-4" />
       </Button>
     </nav>
   );
-};
+}
 
 export default function MonthlyWinnersPage() {
-  const [winnersData, setWinnersData] = useState<MonthlyWinnersData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    currentPage: 1,
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+
+  const currentMonthYear = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  }, []);
+
+  const winnersQuery = useQuery({
+    queryKey: ["monthly-winners", currentPage],
+    queryFn: () => fetchMonthlyWinners(currentPage),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    placeholderData: keepPreviousData,
+  });
+
+  const visibleWinnersData = useMemo(
+    () =>
+      (winnersQuery.data?.data || []).filter(
+        (month) => month.monthYear !== currentMonthYear
+      ),
+    [currentMonthYear, winnersQuery.data?.data]
+  );
+
+  const pagination = winnersQuery.data?.pagination ?? {
+    currentPage,
     totalPages: 1,
     totalMonths: 0,
     hasNextPage: false,
     hasPrevPage: false,
-  });
-
-  // Compute the current month-year string (e.g., "2025-10") and filter it out from display
-  const now = new Date();
-  const currentMonthYear = `${now.getFullYear()}-${String(
-    now.getMonth() + 1
-  ).padStart(2, "0")}`;
-  const visibleWinnersData = winnersData.filter(
-    (month) => month.monthYear !== currentMonthYear
-  );
-
-  const fetchWinnersData = useCallback(async (page: number = 1) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/monthly-winners?page=${page}&limit=6`);
-      if (!response.ok) throw new Error("Failed to fetch monthly winners");
-      const data = await response.json();
-
-      setWinnersData(data.data || []);
-      setPagination((prev) => ({ ...prev, ...data.pagination }));
-    } catch (e) {
-      setError((e as Error).message || "Unknown error fetching data");
-      setWinnersData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchWinnersData(1);
-  }, [fetchWinnersData]);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages)
-      fetchWinnersData(newPage);
   };
 
-  if (loading) {
+  useEffect(() => {
+    if (!pagination.hasNextPage) {
+      return;
+    }
+
+    void queryClient.prefetchQuery({
+      queryKey: ["monthly-winners", currentPage + 1],
+      queryFn: () => fetchMonthlyWinners(currentPage + 1),
+      staleTime: 5 * 60 * 1000,
+    });
+  }, [currentPage, pagination.hasNextPage, queryClient]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (page >= 1 && page <= pagination.totalPages) {
+        setCurrentPage(page);
+      }
+    },
+    [pagination.totalPages]
+  );
+
+  if (winnersQuery.isLoading && !winnersQuery.data) {
     return (
       <div className="min-h-screen bg-background">
         <Header leaderboard={false} dashboard={false} />
-        <main
-          className="mx-auto max-w-6xl px-4 pt-24 pb-10"
-          role="main"
-          aria-busy="true"
-        >
-          <div className="relative mx-auto max-w-sm overflow-hidden rounded-2xl border border-white/10 p-10 text-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-white/5 to-emerald-500/10 blur-2xl" />
-            <div className="relative">
-              <div className="mx-auto h-14 w-14 animate-spin rounded-full border-2 border-b-transparent border-t-transparent" />
-              <p className="mt-4 text-lg text-foreground">
-                Loading Monthly Winners…
-              </p>
-            </div>
-          </div>
+        <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
+          <Card className="rounded-[28px] border-border bg-card p-10 text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Loading monthly winners...
+            </p>
+          </Card>
         </main>
       </div>
     );
   }
 
-  if (error) {
+  if (winnersQuery.isError) {
     return (
       <div className="min-h-screen bg-background">
         <Header leaderboard={false} dashboard={false} />
-        <main className="mx-auto max-w-6xl px-4 pt-24 pb-10" role="main">
-          <Card className="border-destructive/40 bg-destructive/10 text-center">
-            <CardContent className="py-12">
-              <h3 className="mb-2 text-2xl font-bold text-red-400">
-                Error Loading Data
-              </h3>
-              <p className="text-red-300">{error}</p>
-              <Button
-                onClick={() => fetchWinnersData(pagination.currentPage)}
-                className="mt-6"
-              >
+        <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
+          <Card className="rounded-[28px] border-red-500/20 bg-red-500/10 text-center">
+            <CardContent className="py-10">
+              <h2 className="text-lg font-semibold text-foreground">
+                Unable to load monthly winners
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {winnersQuery.error instanceof Error
+                  ? winnersQuery.error.message
+                  : "Unknown error."}
+              </p>
+              <Button className="mt-5" onClick={() => void winnersQuery.refetch()}>
                 Retry
               </Button>
             </CardContent>
@@ -524,66 +446,52 @@ export default function MonthlyWinnersPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* subtle page background accents */}
-      <div
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(60%_40%_at_50%_-10%,rgba(56,189,248,0.10),transparent),radial-gradient(40%_30%_at_20%_10%,rgba(99,102,241,0.10),transparent),radial-gradient(30%_20%_at_80%_0%,rgba(16,185,129,0.08),transparent)]"
-        aria-hidden
-      />
       <Header leaderboard={false} dashboard={false} />
 
-      <main className="mx-auto max-w-6xl px-4 pt-24 pb-10" role="main">
-        {/* Title */}
-        <section aria-label="Page Overview" className="mb-12 text-center">
-          <div className="mx-auto flex max-w-2xl items-center justify-center gap-3">
-            <Trophy className="h-10 w-10 text-yellow-400" />
-            <h1 className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-5xl">
-              Monthly Winners
-            </h1>
-            <Trophy className="h-10 w-10 text-yellow-400" />
-          </div>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-lg text-muted-foreground">
-            Celebrating the top developers who dominated the monthly leaderboard
-            with standout contributions and Aura.
+      <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
+        <section className="mb-10 max-w-3xl">
+          <Badge
+            variant="outline"
+            className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          >
+            Monthly winners
+          </Badge>
+          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
+            Archived podium finishes, month by month.
+          </h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-[15px]">
+            A quieter hall of fame for the developers who led GitAura in Aura
+            and contribution output each month.
           </p>
+          {winnersQuery.isFetching && winnersQuery.data && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-foreground/60" />
+              Updating archive
+            </div>
+          )}
         </section>
 
-        {/* Months */}
         {visibleWinnersData.length === 0 ? (
-          <Card className="border border-border bg-card/40">
-            <CardContent className="py-20 text-center">
-              <Trophy
-                className="mx-auto mb-4 h-20 w-20 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <h3 className="mb-2 text-2xl font-bold text-foreground">
-                No Monthly Winners Yet
-              </h3>
-              <p className="text-muted-foreground">
-                Winners are captured automatically at the end of each month.
-                Check back soon!
+          <Card className="rounded-[28px] border-border bg-card/80">
+            <CardContent className="py-16 text-center">
+              <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h2 className="mt-4 text-xl font-semibold text-foreground">
+                No winners archived yet
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Monthly winners will appear here once the first leaderboard
+                snapshots are saved.
               </p>
             </CardContent>
           </Card>
         ) : (
-          visibleWinnersData.map((month) => (
-            <section key={month.monthYear} className="mb-16">
-              <div className="mb-10 text-center">
-                <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2.5">
-                  <Calendar
-                    className="h-5 w-5 text-primary"
-                    aria-hidden="true"
-                  />
-                  <h2 className="text-xl font-semibold text-foreground">
-                    {formatMonthYear(month.monthYear)}
-                  </h2>
-                </div>
-              </div>
-              <WinnersGrid monthData={month} />
-            </section>
-          ))
+          <div className="space-y-10">
+            {visibleWinnersData.map((monthData) => (
+              <WinnersGrid key={monthData.monthYear} monthData={monthData} />
+            ))}
+            <Pagination pagination={pagination} onPageChange={handlePageChange} />
+          </div>
         )}
-
-        <Pagination pagination={pagination} onPageChange={handlePageChange} />
       </main>
     </div>
   );

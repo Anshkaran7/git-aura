@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  AlertCircleIcon,
+  ClockAlertIcon,
+  ShieldUserIcon,
+} from "@hugeicons/core-free-icons";
+import { Ban, CheckCircle, Search, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  AlertCircle,
-  Ban,
-  CheckCircle,
-  Clock,
-  Shield,
-  User,
-  ChevronDown,
-} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { HugeIcon } from "@/components/ui/huge-icon";
 
 interface UserInfo {
   id: string;
@@ -29,7 +28,7 @@ interface UserInfo {
 interface BanAction {
   action: "ban" | "unban";
   reason?: string;
-  expiresIn?: number; // hours
+  expiresIn?: number;
 }
 
 interface SearchUser {
@@ -51,98 +50,106 @@ export default function UserManagement() {
   const [error, setError] = useState<string | null>(null);
   const [banReason, setBanReason] = useState("");
   const [banDuration, setBanDuration] = useState<number | "">("");
-
-  // Autocomplete states
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Search for user suggestions
-  const searchUsers = async (query: string) => {
-    if (!query.trim() || query.length < 2) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
+  const formatDate = useCallback((dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  }, []);
+
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query.trim() || query.trim().length < 2) {
       setSearchResults([]);
       setShowDropdown(false);
+      setSearchLoading(false);
+      searchAbortRef.current?.abort();
       return;
     }
 
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
     setSearchLoading(true);
+
     try {
       const response = await fetch(
-        `/api/admin/search-users?q=${encodeURIComponent(query)}`
+        `/api/admin/search-users?q=${encodeURIComponent(query.trim())}`,
+        { signal: controller.signal }
       );
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data.users || []);
-        setShowDropdown(true);
+
+      if (!response.ok) {
+        throw new Error("Failed to search users");
       }
+
+      const data = await response.json();
+      setSearchResults(data.users || []);
+      setShowDropdown(true);
     } catch (err) {
-      console.error("Error searching users:", err);
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+
+      setSearchResults([]);
+      setShowDropdown(false);
     } finally {
       setSearchLoading(false);
     }
-  };
+  }, []);
 
-  // Get detailed user info
-  const searchUser = async (userId?: string) => {
-    const targetId = userId || searchTerm;
-    if (!targetId.trim()) return;
+  const searchUser = useCallback(async (userId?: string) => {
+    const targetId = (userId || searchTerm).trim();
+    if (!targetId) {
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setUserInfo(null);
     setShowDropdown(false);
-    setSearchResults([]); // Clear search results when searching
+    setSearchResults([]);
 
     try {
-      const isUserId = targetId.startsWith("user_"); // Clerk user ID format check
+      const isUserId = targetId.startsWith("user_");
       const queryParam = isUserId
-        ? `userId=${targetId}`
-        : `username=${targetId}`;
+        ? `userId=${encodeURIComponent(targetId)}`
+        : `username=${encodeURIComponent(targetId)}`;
 
       const response = await fetch(`/api/admin/ban-user?${queryParam}`);
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error("You don't have admin permissions");
-        } else if (response.status === 404) {
-          throw new Error("User not found");
-        } else {
-          throw new Error("Failed to fetch user information");
+          throw new Error("You don't have admin permissions.");
         }
+        if (response.status === 404) {
+          throw new Error("User not found.");
+        }
+        throw new Error("Failed to fetch user information.");
       }
 
       const data = await response.json();
       setUserInfo(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm]);
 
-  // Handle user selection from dropdown
-  const selectUser = (user: SearchUser) => {
-    setSearchTerm(user.githubUsername || user.displayName || user.email);
-    setShowDropdown(false);
-    setSearchResults([]); // Clear search results
-    searchUser(user.id);
-  };
-
-  // Debounced search
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       if (searchTerm && !userInfo) {
-        // Only search if no user is currently selected
-        searchUsers(searchTerm);
+        void searchUsers(searchTerm);
       }
-    }, 300);
+    }, 250);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm, userInfo]);
+    return () => window.clearTimeout(timer);
+  }, [searchTerm, searchUsers, userInfo]);
 
-  // Click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -157,268 +164,248 @@ export default function UserManagement() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleBanAction = async (action: BanAction) => {
-    if (!userInfo) return;
+  useEffect(() => {
+    return () => {
+      searchAbortRef.current?.abort();
+    };
+  }, []);
+
+  const handleBanAction = useCallback(async (action: BanAction) => {
+    if (!userInfo) {
+      return;
+    }
 
     setActionLoading(true);
     setError(null);
 
     try {
-      const payload = {
-        targetUserId: userInfo.id,
-        action: action.action,
-        reason: action.reason,
-        expiresIn: action.expiresIn,
-      };
-
       const response = await fetch("/api/admin/ban-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          targetUserId: userInfo.id,
+          action: action.action,
+          reason: action.reason,
+          expiresIn: action.expiresIn,
+        }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to perform action");
-      }
 
       const result = await response.json();
 
-      // Refresh user info
-      await searchUser();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to perform action.");
+      }
 
-      // Clear form
       setBanReason("");
       setBanDuration("");
-
-      console.log(`✅ Action completed: ${result.message}`);
+      await searchUser(userInfo.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "An unexpected error occurred.");
     } finally {
       setActionLoading(false);
     }
-  };
+  }, [searchUser, userInfo]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
+  const selectUser = useCallback((user: SearchUser) => {
+    setSearchTerm(user.githubUsername || user.displayName || user.email);
+    setShowDropdown(false);
+    setSearchResults([]);
+    void searchUser(user.id);
+  }, [searchUser]);
 
-  const isTemporaryBan = userInfo?.banExpiresAt;
+  const isTemporaryBan = Boolean(userInfo?.banExpiresAt);
   const isBanExpired =
-    isTemporaryBan && new Date(userInfo.banExpiresAt!) < new Date();
+    Boolean(userInfo?.banExpiresAt) &&
+    new Date(userInfo?.banExpiresAt ?? 0) < new Date();
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Header Section */}
-      {/* <div className="text-center">
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <div className="p-3 sm:p-4 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full border border-blue-500/30">
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400" />
+    <div className="space-y-5">
+      <section>
+        <div className="max-w-2xl">
+          <Badge
+            variant="outline"
+            className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+          >
+            Admin tools
+          </Badge>
+          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground">
+            Manage user access cleanly.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Search for a user, review their account status, and apply a ban or
+            unban action with clear context.
+          </p>
+        </div>
+      </section>
+
+      <Card className="rounded-[28px] border-border/80 bg-card/80 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground sm:text-[15px]">
+              User lookup
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Search by GitHub username, display name, email, or Clerk user ID.
+            </p>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background">
+            <HugeIcon icon={ShieldUserIcon} size={18} className="text-primary" />
           </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2 sm:mb-3">
-          User Management
-        </h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Search and manage user accounts with advanced controls
-        </p>
-      </div> */}
 
-      {/* Search Section */}
-      <Card className="p-4 sm:p-6 bg-gray-900/50 border border-gray-800/50 backdrop-blur-sm">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2 sm:mb-3">
-              Search User
-            </label>
-            <div className="relative" ref={dropdownRef}>
-              <div className="flex gap-2 sm:gap-3">
-                <div className="flex-1 relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Type to search users... (GitHub username, name, or email)"
-                    className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200 pr-10"
-                    onKeyPress={(e) => e.key === "Enter" && searchUser()}
-                    onFocus={() => {
-                      if (searchTerm.length >= 2 && !userInfo) {
-                        setShowDropdown(true);
-                      }
-                    }}
-                  />
-                  {searchLoading && (
-                    <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                    </div>
-                  )}
-                  {searchResults.length > 0 && (
-                    <ChevronDown className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  )}
-                </div>
-                <Button
-                  onClick={() => searchUser()}
-                  disabled={loading || !searchTerm.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-foreground font-medium px-4 sm:px-6 py-3 sm:py-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Searching...
-                    </div>
-                  ) : (
-                    "Search"
-                  )}
-                </Button>
+        <div className="mt-5" ref={dropdownRef}>
+          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <div className="relative">
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search users..."
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void searchUser();
+                  }
+                }}
+                onFocus={() => {
+                  if (searchTerm.trim().length >= 2 && !userInfo) {
+                    setShowDropdown(true);
+                  }
+                }}
+                className="pr-10"
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                {searchLoading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+                ) : (
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                )}
               </div>
 
-              {/* Dropdown Results */}
-              {showDropdown && searchResults.length > 0 && !userInfo && (
-                <div className="absolute z-10 w-full mt-2 bg-gray-900/95 border border-gray-700/50 rounded-lg shadow-2xl max-h-60 overflow-y-auto backdrop-blur-sm">
-                  {searchResults.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => selectUser(user)}
-                      className="p-3 sm:p-4 hover:bg-gray-800/80 cursor-pointer border-b border-gray-700/50 last:border-b-0 flex items-center gap-3 transition-all duration-200"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center overflow-hidden border border-gray-600/50">
-                        {user.avatarUrl ? (
-                          <img
-                            src={user.avatarUrl}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-5 h-5 text-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-foreground font-medium truncate">
-                            @
-                            {user.githubUsername ||
-                              user.displayName ||
-                              "Unknown"}
-                          </span>
-                          {user.isBanned && (
-                            <Badge
-                              variant="destructive"
-                              className="text-xs bg-red-500/20 text-red-300 border border-red-500/30"
-                            >
-                              <Ban className="w-3 h-3 mr-1" />
-                              Banned
-                            </Badge>
+              {showDropdown && !userInfo && (
+                <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-[22px] border border-border bg-card shadow-[0_25px_60px_-40px_rgba(15,23,42,0.4)]">
+                  {searchResults.length > 0 ? (
+                    searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => selectUser(user)}
+                        className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-background"
+                      >
+                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+                          {user.avatarUrl ? (
+                            <img
+                              src={user.avatarUrl}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <User className="h-4 w-4 text-muted-foreground" />
                           )}
                         </div>
-                        <div className="text-sm text-gray-400 truncate">
-                          {user.displayName &&
-                            user.githubUsername !== user.displayName && (
-                              <span className="text-gray-300">
-                                {user.displayName} •{" "}
-                              </span>
-                            )}
-                          {user.email}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            @{user.githubUsername || user.displayName || "Unknown"}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {user.email}
+                          </p>
                         </div>
-                      </div>
+                        {user.isBanned && (
+                          <Badge
+                            variant="outline"
+                            className="rounded-full border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-red-300"
+                          >
+                            Banned
+                          </Badge>
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-5 text-center text-sm text-muted-foreground">
+                      No users found.
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
-
-              {/* No results message */}
-              {showDropdown &&
-                searchTerm.length >= 2 &&
-                searchResults.length === 0 &&
-                !searchLoading &&
-                !userInfo && (
-                  <div className="absolute z-10 w-full mt-2 bg-gray-900/95 border border-gray-700/50 rounded-lg shadow-2xl p-4 backdrop-blur-sm">
-                    <div className="text-gray-400 text-center flex items-center justify-center gap-2">
-                      <User className="w-4 h-4" />
-                      No users found
-                    </div>
-                  </div>
-                )}
             </div>
+
+            <Button
+              onClick={() => void searchUser()}
+              disabled={loading || !searchTerm.trim()}
+              className="h-11"
+            >
+              {loading ? "Searching..." : "Search user"}
+            </Button>
           </div>
         </div>
       </Card>
 
-      {/* Error Display */}
       {error && (
-        <Card className="p-4 sm:p-6 border-red-500/30 bg-red-900/10 backdrop-blur-sm">
-          <div className="flex items-center gap-3 text-red-300">
-            <div className="p-2 bg-red-500/20 rounded-full">
-              <AlertCircle className="w-5 h-5 text-red-400" />
-            </div>
-            <span className="font-medium">{error}</span>
+        <Card className="rounded-[24px] border-red-500/20 bg-red-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <HugeIcon icon={AlertCircleIcon} size={18} className="mt-0.5 text-red-300" />
+            <p className="text-sm leading-6 text-red-100">{error}</p>
           </div>
         </Card>
       )}
 
-      {/* User Information */}
       {userInfo && (
-        <Card className="p-4 sm:p-6 bg-gray-900/50 border border-gray-800/50 backdrop-blur-sm space-y-6">
-          <div className="flex items-start gap-4 sm:gap-6">
-            <div className="p-3 sm:p-4 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full border border-gray-600/50">
-              <User className="w-6 h-6 sm:w-7 sm:h-7 text-gray-300" />
+        <Card className="rounded-[28px] border-border/80 bg-card/80 p-5 sm:p-6">
+          <div className="flex flex-col gap-5 border-b border-border pb-5 sm:flex-row sm:items-start">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-border bg-background">
+              <User className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div className="flex-1 space-y-3 sm:space-y-4">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h3 className="text-xl sm:text-2xl font-bold text-foreground">
-                  {userInfo.displayName ||
-                    userInfo.githubUsername ||
-                    "Unknown User"}
-                </h3>
+
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-xl font-semibold tracking-[-0.03em] text-foreground">
+                  {userInfo.displayName || userInfo.githubUsername || "Unknown user"}
+                </h2>
                 <Badge
-                  variant={userInfo.isBanned ? "destructive" : "default"}
+                  variant="outline"
                   className={
                     userInfo.isBanned
-                      ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                      : "bg-green-500/20 text-green-300 border border-green-500/30"
+                      ? "rounded-full border-red-500/20 bg-red-500/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-red-300"
+                      : "rounded-full border-border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
                   }
                 >
-                  {userInfo.isBanned ? (
-                    <>
-                      <Ban className="w-3 h-3 mr-1" />
-                      {isBanExpired ? "Expired Ban" : "Banned"}
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Active
-                    </>
-                  )}
+                  {userInfo.isBanned
+                    ? isBanExpired
+                      ? "Ban expired"
+                      : "Banned"
+                    : "Active"}
                 </Badge>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-sm sm:text-base">
-                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
-                  <p className="text-gray-400 mb-1">
-                    <strong>GitHub:</strong>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <div className="rounded-[22px] border border-border bg-background px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    GitHub
                   </p>
-                  <p className="text-foreground font-medium">
+                  <p className="mt-2 text-sm text-foreground">
                     @{userInfo.githubUsername || "Not connected"}
                   </p>
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
-                  <p className="text-gray-400 mb-1">
-                    <strong>Email:</strong>
+                <div className="rounded-[22px] border border-border bg-background px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Email
                   </p>
-                  <p className="text-foreground font-medium">{userInfo.email}</p>
+                  <p className="mt-2 break-all text-sm text-foreground">
+                    {userInfo.email}
+                  </p>
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
-                  <p className="text-gray-400 mb-1">
-                    <strong>User ID:</strong>
+                <div className="rounded-[22px] border border-border bg-background px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    User ID
                   </p>
-                  <p className="text-foreground font-mono text-xs sm:text-sm break-all">
+                  <p className="mt-2 break-all font-mono text-xs text-foreground">
                     {userInfo.id}
                   </p>
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/30">
-                  <p className="text-gray-400 mb-1">
-                    <strong>Joined:</strong>
+                <div className="rounded-[22px] border border-border bg-background px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Joined
                   </p>
-                  <p className="text-foreground font-medium">
+                  <p className="mt-2 text-sm text-foreground">
                     {formatDate(userInfo.createdAt)}
                   </p>
                 </div>
@@ -426,157 +413,112 @@ export default function UserManagement() {
             </div>
           </div>
 
-          {/* Ban Information */}
           {userInfo.isBanned && (
-            <div className="bg-gradient-to-r from-red-950/40 to-orange-950/20 border border-red-500/30 rounded-lg p-4 sm:p-6 backdrop-blur-sm">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-red-500/20 rounded-full">
-                  <Ban className="w-5 h-5 text-red-400" />
-                </div>
-                <div className="space-y-3 flex-1">
-                  <h4 className="font-semibold text-red-300 text-lg">
-                    Ban Details
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {userInfo.banReason && (
-                      <div className="bg-red-900/20 rounded-lg p-3 border border-red-500/20">
-                        <p className="text-gray-400 text-sm mb-1">
-                          <strong>Reason:</strong>
-                        </p>
-                        <p className="text-red-200 font-medium">
-                          {userInfo.banReason}
-                        </p>
-                      </div>
-                    )}
-                    {userInfo.bannedAt && (
-                      <div className="bg-red-900/20 rounded-lg p-3 border border-red-500/20">
-                        <p className="text-gray-400 text-sm mb-1">
-                          <strong>Banned on:</strong>
-                        </p>
-                        <p className="text-red-200 font-medium">
-                          {formatDate(userInfo.bannedAt)}
-                        </p>
-                      </div>
-                    )}
-                    {isTemporaryBan && (
-                      <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-500/20 sm:col-span-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Clock className="w-4 h-4 text-orange-400" />
-                          <p className="text-gray-400 text-sm">
-                            <strong>Expires:</strong>
-                          </p>
-                        </div>
-                        <p className="text-orange-200 font-medium">
-                          {formatDate(userInfo.banExpiresAt!)}
-                          {isBanExpired && (
-                            <span className="text-green-400 ml-2 font-semibold">
-                              (Expired)
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+            <div className="mt-5 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4">
+              <div className="flex items-start gap-3">
+                <HugeIcon icon={AlertCircleIcon} size={18} className="mt-0.5 text-red-300" />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Ban details
+                  </h3>
+                  {userInfo.banReason && (
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      Reason: {userInfo.banReason}
+                    </p>
+                  )}
+                  {userInfo.bannedAt && (
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      Banned at: {formatDate(userInfo.bannedAt)}
+                    </p>
+                  )}
+                  {isTemporaryBan && userInfo.banExpiresAt && (
+                    <div className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
+                      <HugeIcon icon={ClockAlertIcon} size={16} className="mt-1 text-amber-300" />
+                      <span>
+                        Expires: {formatDate(userInfo.banExpiresAt)}
+                        {isBanExpired && " (expired)"}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Action Section */}
-          <div className="border-t border-gray-700/50 pt-6">
+          <div className="mt-5 border-t border-border pt-5">
             {userInfo.isBanned ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500/20 rounded-full">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                  </div>
-                  <h4 className="font-semibold text-foreground text-lg">
-                    Unban User
-                  </h4>
-                </div>
-                <p className="text-gray-400 text-sm">
-                  Remove the ban and restore user access to the platform.
+              <div className="space-y-3">
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Remove the restriction and restore account access.
                 </p>
                 <Button
-                  onClick={() => handleBanAction({ action: "unban" })}
+                  onClick={() => void handleBanAction({ action: "unban" })}
                   disabled={actionLoading}
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Processing...
-                    </div>
+                    "Processing..."
                   ) : (
-                    "Unban User"
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Unban user
+                    </>
                   )}
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-500/20 rounded-full">
-                    <Ban className="w-5 h-5 text-red-400" />
-                  </div>
-                  <h4 className="font-semibold text-foreground text-lg">Ban User</h4>
-                </div>
-                <p className="text-gray-400 text-sm">
-                  Restrict user access to the platform. You can set a temporary
-                  ban or make it permanent.
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Restrict access with a clear reason. Leave duration empty for a
+                  permanent ban.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Ban Reason
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Ban reason
                     </label>
-                    <input
-                      type="text"
+                    <Input
                       value={banReason}
-                      onChange={(e) => setBanReason(e.target.value)}
-                      placeholder="Enter ban reason"
-                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
+                      onChange={(event) => setBanReason(event.target.value)}
+                      placeholder="Explain why this access is being restricted"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Duration (hours, leave empty for permanent)
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Duration in hours
                     </label>
-                    <input
+                    <Input
                       type="number"
                       value={banDuration}
-                      onChange={(e) =>
+                      onChange={(event) =>
                         setBanDuration(
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          event.target.value === "" ? "" : Number(event.target.value)
                         )
                       }
-                      placeholder="Optional: hours until unban"
-                      className="w-full p-3 sm:p-4 bg-gray-800/80 border border-gray-700/50 rounded-lg text-foreground placeholder-gray-400 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all duration-200"
                       min="1"
+                      placeholder="Optional"
                     />
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() =>
-                      handleBanAction({
-                        action: "ban",
-                        reason: banReason || "No reason provided",
-                        expiresIn: banDuration || undefined,
-                      })
-                    }
-                    disabled={actionLoading || !banReason.trim()}
-                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-foreground font-medium px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {actionLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Processing...
-                      </div>
-                    ) : (
-                      "Ban User"
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  onClick={() =>
+                    void handleBanAction({
+                      action: "ban",
+                      reason: banReason.trim(),
+                      expiresIn: banDuration || undefined,
+                    })
+                  }
+                  disabled={actionLoading || !banReason.trim()}
+                  variant="destructive"
+                >
+                  {actionLoading ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <Ban className="h-4 w-4" />
+                      Ban user
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </div>

@@ -104,7 +104,7 @@ export function calculateConsistencyBonus(
   daysInMonth: number
 ): number {
   const consistencyRatio = activeDays / daysInMonth;
-  return Math.round(consistencyRatio * 1000); // Up to 1000 points for perfect consistency
+  return Math.round(consistencyRatio * 250);
 }
 
 // Calculate quality bonus based on repos, followers, etc.
@@ -184,14 +184,35 @@ export function calculateTotalAura(
 }
 
 // Calculate monthly aura
+export function calculateMonthlyAuraBreakdown(
+  monthlyContributions: number,
+  activeDays: number,
+  daysInMonth: number
+) {
+  const contributionAura = monthlyContributions * 5;
+  const activityBonus = activeDays * 10;
+  const consistencyBonus = calculateConsistencyBonus(activeDays, daysInMonth);
+
+  return {
+    contributionAura,
+    activityBonus,
+    consistencyBonus,
+    totalAura: Math.round(
+      contributionAura + activityBonus + consistencyBonus
+    ),
+  };
+}
+
 export function calculateMonthlyAura(
   monthlyContributions: number,
   activeDays: number,
   daysInMonth: number
 ): number {
-  const baseAura = calculateBaseAura(monthlyContributions);
-  const consistencyBonus = calculateConsistencyBonus(activeDays, daysInMonth);
-  return Math.round(baseAura + activeDays * 50 + consistencyBonus);
+  return calculateMonthlyAuraBreakdown(
+    monthlyContributions,
+    activeDays,
+    daysInMonth
+  ).totalAura;
 }
 
 // Create aura calculation record for a specific date

@@ -1,519 +1,310 @@
 "use client";
 
-// import type { Metadata } from "next"; // Uncomment if you want to use metadata for this page
+import Link from "next/link";
+import {
+  Analytics01Icon,
+  ArrowRight01Icon,
+  Award01Icon,
+  GithubIcon,
+  RankingIcon,
+  SparklesIcon,
+} from "@hugeicons/core-free-icons";
+import Contributors from "@/components/Contributors";
 import { Header } from "@/components/home";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useTheme } from "next-themes";
-import {
-  Github,
-  GitFork,
-  Bug,
-  Code,
-  Users,
-  Star,
-  ExternalLink,
-  ArrowRight,
-} from "lucide-react";
-import Link from "next/link";
-import Squares from "@/components/ui/Squares";
-import Contributors from "@/components/Contributors";
-import Image from "next/image";
+import { HugeIcon } from "@/components/ui/huge-icon";
 
-// export const metadata: Metadata = {
-//   title: "Contribute to GitAura | Help Build the Future of GitHub Analytics",
-//   description:
-//     "Join the GitAura community! Learn how to contribute by finding bugs, raising issues, and submitting pull requests to make GitAura even better.",
-//   openGraph: {
-//     title: "Contribute to GitAura",
-//     description:
-//       "Help build the future of GitHub analytics. Contribute to GitAura by reporting bugs, suggesting features, or submitting code.",
-//     type: "website",
-//   },
-//   twitter: {
-//     card: "summary_large_image",
-//     title: "Contribute to GitAura",
-//     description:
-//       "Help build the future of GitHub analytics. Join our open-source community!",
-//   },
-// };
-
-const contributionSteps = [
+const contributionAreas = [
   {
-    number: "01",
-    icon: Bug,
-    title: "Find Issues or Bugs",
-    subtitle: "Time to play detective with our codebase",
+    title: "Fix bugs",
     description:
-      "Explore GitAura and spot bugs that need fixing or features that could be better",
-    details: [
-      "Test different features thoroughly",
-      "Check existing GitHub issues",
-      "Look for UI/UX improvements",
-      "Think about new useful features",
-    ],
-    color: "text-primary",
-    bgColor: "bg-primary/10",
+      "Polish rough edges, strengthen reliability, and make the product feel more finished.",
+    icon: Analytics01Icon,
+    tag: "Quality",
   },
   {
-    number: "02",
-    icon: Github,
-    title: "Raise an Issue",
-    subtitle: "Document your findings like a pro",
+    title: "Ship features",
     description:
-      "Create detailed GitHub issues that make our team say 'wow, this person gets it'",
-    details: [
-      "Use clear, descriptive titles",
-      "Provide reproduction steps",
-      "Include screenshots if relevant",
-      "Suggest implementation ideas",
-    ],
-    color: "text-accent",
-    bgColor: "bg-accent/10",
+      "Build focused improvements that make GitAura more useful for developers every day.",
+    icon: SparklesIcon,
+    tag: "Product",
   },
   {
-    number: "03",
-    icon: GitFork,
-    title: "Fork & Work",
-    subtitle: "Time to get your hands dirty with code",
+    title: "Refine UI",
     description:
-      "Fork our repo, create your branch, and start building the solution",
-    details: [
-      "Fork the GitAura repository",
-      "Create feature branch",
-      "Follow our coding standards",
-      "Write tests for changes",
-    ],
-    color: "text-secondary",
-    bgColor: "bg-secondary/10",
+      "Improve clarity, reduce noise, and help the interface feel sharp across screens.",
+    icon: RankingIcon,
+    tag: "Design",
   },
   {
-    number: "04",
-    icon: Code,
-    title: "Submit PR",
-    subtitle: "The moment of truth - get your code reviewed",
+    title: "Improve docs",
     description:
-      "Submit a clean PR and watch our team marvel at your coding skills",
-    details: [
-      "Create detailed pull request",
-      "Link to original issue",
-      "Ensure all tests pass",
-      "Respond to review feedback",
-    ],
-    color: "text-primary",
-    bgColor: "bg-primary/10",
+      "Help other contributors move faster with better setup steps and clearer guidance.",
+    icon: Award01Icon,
+    tag: "Docs",
   },
 ];
 
-const contributionTypes = [
+const workflow = [
   {
-    icon: Bug,
-    title: "Bug Fixes",
-    description: "Help us squash bugs and improve stability",
-    badge: "🐛 Critical",
-    gradient: "from-red-900/5 to-red-800/10",
+    step: "01",
+    title: "Spot something worth improving",
+    description:
+      "Look for bugs, UI gaps, edge cases, or performance wins that would materially improve the app.",
   },
   {
-    icon: Star,
-    title: "New Features",
-    description: "Build exciting new functionality",
-    badge: "✨ Creative",
-    gradient: "from-blue-900/5 to-blue-800/10",
+    step: "02",
+    title: "Open an issue with context",
+    description:
+      "Share the problem, expected behavior, reproduction steps, and any implementation idea you already have.",
   },
   {
-    icon: Code,
-    title: "Code Quality",
-    description: "Improve performance and structure",
-    badge: "⚡ Performance",
-    gradient: "from-green-900/5 to-green-800/10",
+    step: "03",
+    title: "Fork, build, and keep it focused",
+    description:
+      "Work in a small branch, stay consistent with the existing stack, and avoid unrelated changes in the same PR.",
   },
   {
-    icon: Users,
-    title: "Documentation",
-    description: "Help others understand GitAura",
-    badge: "📚 Knowledge",
-    gradient: "from-purple-900/5 to-purple-800/10",
+    step: "04",
+    title: "Submit a clean PR",
+    description:
+      "Explain the change clearly, link the issue, and make review easy with concise notes or screenshots.",
   },
 ];
 
-const techStack = [
-  "Next.js 14 with App Router",
+const standards = [
+  "Keep changes scoped and easy to review.",
+  "Prefer clean TypeScript and predictable component structure.",
+  "Handle loading, empty, and error states before calling a screen done.",
+  "Match the app's minimal visual system instead of introducing a new style.",
+  "Update docs or copy when behavior changes.",
+  "Be collaborative and kind in reviews.",
+];
+
+const stack = [
+  "Next.js App Router",
   "TypeScript",
   "Tailwind CSS",
-  "Prisma & PostgreSQL",
-  "Clerk Authentication",
+  "Prisma + PostgreSQL",
+  "Clerk",
   "GitHub API",
 ];
 
-const guidelines = [
-  "Follow TypeScript best practices",
-  "Write meaningful commit messages",
-  "Add tests for new features",
-  "Keep PRs focused and small",
-  "Update documentation when needed",
-  "Be respectful in all interactions",
-];
-
 export default function ContributePage() {
-  const { resolvedTheme } = useTheme();
   return (
     <>
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8 sm:py-12">
-        <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
-        <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden z-10 pointer-events-none" />
-        {/* Animated Squares Background */}
-        {resolvedTheme === "dark" && (
-          <div className="absolute bg-black w-full h-full z-30 pointer-events-auto">
-            <Squares
-              speed={0.3}
-              squareSize={20}
-              direction="diagonal"
-              borderColor="#ffffff15"
-              hoverFillColor="#00ff25"
-            />
-          </div>
-        )}
-        <Image
-          src="/background.png"
-          alt="Hero Background"
-          width={1000}
-          height={1000}
-          className="absolute top-10 left-0 w-full h-[110vh] z-20 pointer-events-none"
-        />
-        {/* Background Effects */}
-        <div className="absolute inset-0 z-20 pointer-events-none bg-[radial-gradient(circle_at_0%_0%,white,transparent_50%),radial-gradient(circle_at_100%_0%,white,transparent_50%),radial-gradient(circle_at_0%_100%,white,transparent_50%),radial-gradient(circle_at_100%_100%,white,transparent_50%)] dark:hidden">
-          <div className="absolute top-0 left-1/4 ... bg-muted/10 ..."></div>
-          <div className="absolute bottom-0 right-1/4 ... bg-accent/10 ..."></div>
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-30 pointer-events-none">
-          <div className="max-w-4xl mx-auto">
-            {/* Badge */}
-            <Badge
-              variant="outline"
-              className="mb-3 sm:mb-4 border-black text-primary text-xs sm:text-sm px-3 py-1"
-            >
-              🚀 Open Source Project
-            </Badge>
-
-            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-foreground">
-              Help Build <span className="text-primary">GitAura</span>
-            </h1>
-
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed px-2 sm:px-4">
-              Join our community of developers and help shape the future of
-              GitHub analytics. Whether you're fixing bugs, adding features, or
-              improving docs - every contribution matters!
-            </p>
-
-            <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center pointer-events-auto max-w-md xs:max-w-none mx-auto">
-              <Link
-                href="https://github.com/Anshkaran7/git-aura"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full xs:w-auto"
+      <main className="bg-background text-foreground">
+        <section className="border-b border-border/80">
+          <div className="mx-auto max-w-6xl px-4 pb-14 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center">
+              <Badge
+                variant="outline"
+                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
               >
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full group"
+                Open Source
+              </Badge>
+              <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
+                Help shape GitAura with calm, thoughtful contributions.
+              </h1>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                GitAura is built in the open. If you care about better UI,
+                cleaner code, stronger edge-case handling, or steadier
+                performance, there is meaningful work here for you.
+              </p>
+              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                <Link
+                  href="https://github.com/Anshkaran7/git-aura"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Github className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:rotate-12 transition-transform" />
-                  View on GitHub
-                  <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 ml-2" />
-                </Button>
-              </Link>
-
-              <Link
-                href="https://github.com/Anshkaran7/git-aura/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full xs:w-auto"
-              >
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full"
+                  <Button className="w-full sm:w-auto">
+                    <HugeIcon icon={GithubIcon} size={16} />
+                    View repository
+                    <HugeIcon icon={ArrowRight01Icon} size={16} />
+                  </Button>
+                </Link>
+                <Link
+                  href="https://github.com/Anshkaran7/git-aura/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Bug className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Browse Issues
-                </Button>
-              </Link>
+                  <Button variant="secondary" className="w-full sm:w-auto">
+                    Browse issues
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Ways to Contribute */}
-      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
-        {/* Background Grid */}
-        <div className="absolute inset-0 opacity-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
-              `,
-              backgroundSize: "20px 20px, 25px 25px",
-            }}
-          ></div>
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <Badge
-              variant="outline"
-              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
-            >
-              🔥 Multiple Ways to Help
-            </Badge>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Ways to <span className="text-primary">Contribute</span>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
-              From code warriors to documentation heroes - there's a place for
-              everyone in our community
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
-            {contributionTypes.map((type, index) => (
-              <Card
-                key={index}
-                className={`
-                  group relative p-4 sm:p-6 hover:scale-105 transition-all duration-300 
-                  border border-border bg-gradient-to-br ${type.gradient}
-                  hover:shadow-lg hover:shadow-primary/5
-                  animate-in fade-in-50 slide-in-from-bottom-10
-                `}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border group-hover:bg-primary/10 transition-colors duration-300">
-                      <type.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {contributionAreas.map((area) => (
+                <Card
+                  key={area.title}
+                  className="rounded-[24px] border-border/80 bg-card/80 p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.32)]"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background">
+                      <HugeIcon icon={area.icon} size={18} className="text-primary" />
                     </div>
                     <Badge
-                      variant="secondary"
-                      className="text-xs shrink-0 px-2 py-1"
+                      variant="outline"
+                      className="rounded-full border-border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
                     >
-                      {type.badge}
+                      {area.tag}
                     </Badge>
                   </div>
-
-                  <h3 className="text-base sm:text-lg lg:text-xl font-semibold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300">
-                    {type.title}
-                  </h3>
-
-                  <p className="text-muted-foreground leading-relaxed text-xs sm:text-sm">
-                    {type.description}
+                  <h2 className="mt-5 text-base font-semibold">{area.title}</h2>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
+                    {area.description}
                   </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How to Contribute Process */}
-      <section className="py-8 sm:py-12 lg:py-24 bg-background relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-0 right-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-accent/10 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <Badge
-              variant="outline"
-              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
-            >
-              📋 Simple 4-Step Process
-            </Badge>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              How to <span className="text-primary">Contribute</span>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
-              From finding issues to merging PRs - here's your roadmap to
-              becoming a GitAura contributor
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12 lg:mb-16">
-            {contributionSteps.map((step, index) => (
-              <div key={index} className="relative">
-                <Card className="card-hover p-4 sm:p-6 lg:p-8 h-full relative z-10 hover:scale-105 transition-all duration-500 border border-border">
-                  {/* Step Number */}
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
-                    <div className="text-2xl sm:text-3xl lg:text-4xl xl:text-6xl font-bold text-primary">
-                      {step.number}
-                    </div>
-                    <div className="p-2 sm:p-3 lg:p-4 rounded-xl bg-muted border border-border text-primary">
-                      <step.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 xl:w-8 xl:h-8 text-primary" />
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-1 sm:mb-2">
-                        {step.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm lg:text-base text-primary font-medium mb-3 sm:mb-4">
-                        {step.subtitle}
-                      </p>
-                      <p className="text-xs sm:text-sm lg:text-base text-muted-foreground mb-4 sm:mb-6">
-                        {step.description}
-                      </p>
-                    </div>
-
-                    <ul className="space-y-2">
-                      {step.details.map((detail, detailIndex) => (
-                        <li
-                          key={detailIndex}
-                          className="flex items-start gap-2 text-muted-foreground text-xs sm:text-sm"
-                        >
-                          <span className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                          {detail}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </Card>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Tech Stack & Guidelines */}
-      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Tech Stack */}
-            <Card className="card-hover p-4 sm:p-6 lg:p-8 border border-border">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-4 sm:mb-6">
-                Tech Stack We Use
-              </h3>
-              <div className="space-y-3">
-                {techStack.map((tech, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary rounded-full flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">
-                      {tech}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Guidelines */}
-            <Card className="card-hover p-4 sm:p-6 lg:p-8 border border-border">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground mb-4 sm:mb-6">
-                Contribution Guidelines
-              </h3>
-              <div className="space-y-3">
-                {guidelines.map((guideline, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-accent rounded-full mt-2 flex-shrink-0"></span>
-                    <span className="text-muted-foreground text-sm sm:text-base">
-                      {guideline}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Contributors Section */}
-      <section className="py-8 sm:py-12 lg:py-24 bg-background relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-24 sm:w-36 lg:w-72 h-24 sm:h-36 lg:h-72 bg-muted/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-32 sm:w-48 lg:w-96 h-32 sm:h-48 lg:h-96 bg-accent/10 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <Badge
-              variant="outline"
-              className="mb-3 sm:mb-4 border-border text-primary text-xs sm:text-sm px-3 py-1"
-            >
-              👥 Community Heroes
-            </Badge>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6">
-              Meet Our <span className="text-primary">Contributors</span>
-            </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4">
-              These amazing developers are building the future of GitHub
-              analytics with us
-            </p>
-          </div>
-
-          <Contributors />
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-8 sm:py-12 lg:py-24 bg-card relative overflow-hidden">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center">
-            <Card className="card-hover p-6 sm:p-8 lg:p-12 max-w-4xl mx-auto border border-border bg-gradient-to-br from-muted/50 to-background">
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3 sm:mb-4">
-                Ready to <span className="text-primary">Contribute</span>?
+        <section className="border-b border-border/80">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+            <div className="mb-8 max-w-2xl">
+              <Badge
+                variant="outline"
+                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+              >
+                Workflow
+              </Badge>
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                A clean contribution path.
               </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-                Join our community of contributors and help make GitAura the
-                best GitHub analytics platform. Every contribution, no matter
-                how small, makes a difference!
+              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                Keep the process simple, focused, and easy for maintainers to
+                review.
               </p>
+            </div>
 
-              <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 justify-center max-w-md xs:max-w-none mx-auto">
-                <Link
-                  href="https://github.com/Anshkaran7/git-aura/fork"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full xs:w-auto"
+            <div className="grid gap-4 md:grid-cols-2">
+              {workflow.map((item) => (
+                <Card
+                  key={item.step}
+                  className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6"
                 >
-                  <Button
-                    variant="default"
-                    size="lg"
-                    className="w-full px-4 sm:px-6 lg:px-8 py-3 text-sm sm:text-base group"
-                  >
-                    <GitFork className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Fork Repository
-                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      Step {item.step}
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold tracking-[-0.02em]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
+                    {item.description}
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <Link
-                  href="https://github.com/Anshkaran7/git-aura/issues/new"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full xs:w-auto"
-                >
-                  <Button
-                    variant="secondary"
-                    size="lg"
-                    className="w-full px-4 sm:px-6 lg:px-8 py-3 text-sm sm:text-base"
+        <section className="border-b border-border/80">
+          <div className="mx-auto grid max-w-6xl gap-4 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:px-8">
+            <Card className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6">
+              <h3 className="text-lg font-semibold">Tech stack</h3>
+              <div className="mt-5 grid gap-2">
+                {stack.map((item) => (
+                  <div
+                    key={item}
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-background px-3 py-3 text-sm text-muted-foreground"
                   >
-                    <Bug className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Report Issue
-                  </Button>
-                </Link>
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6">
+              <h3 className="text-lg font-semibold">Contribution standards</h3>
+              <div className="mt-5 grid gap-2">
+                {standards.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-6 text-muted-foreground"
+                  >
+                    {item}
+                  </div>
+                ))}
               </div>
             </Card>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <section className="border-b border-border/80">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+            <div className="mb-8 max-w-2xl">
+              <Badge
+                variant="outline"
+                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+              >
+                Contributors
+              </Badge>
+              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                People building it forward.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                GitAura is getting better because real people keep improving the
+                details.
+              </p>
+            </div>
+            <Contributors />
+          </div>
+        </section>
+
+        <section>
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+            <Card className="rounded-[28px] border-border/80 bg-card/80 p-6 sm:p-8">
+              <div className="max-w-2xl">
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
+                >
+                  Ready to contribute
+                </Badge>
+                <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+                  Start with one focused improvement.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
+                  Small, well-executed changes are far more valuable than noisy,
+                  oversized pull requests.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="https://github.com/Anshkaran7/git-aura/fork"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button className="w-full sm:w-auto">
+                      <HugeIcon icon={GithubIcon} size={16} />
+                      Fork repository
+                    </Button>
+                  </Link>
+                  <Link
+                    href="https://github.com/Anshkaran7/git-aura/issues/new"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="secondary" className="w-full sm:w-auto">
+                      Open an issue
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </section>
+      </main>
     </>
   );
 }

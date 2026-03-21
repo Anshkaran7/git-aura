@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getGitHubAvatarFallback } from "@/lib/avatar";
 import { prisma } from "@/lib/prisma";
 import {
   buildPagination,
+  getMonthlyRankingValues,
   paginateEntries,
   parseLeaderboardPagination,
   parseMonthWindow,
+  sortMonthlyRankedEntries,
 } from "@/lib/leaderboard";
 
 export async function GET(request: NextRequest) {
@@ -65,9 +68,17 @@ export async function GET(request: NextRequest) {
       monthlyData.map((entry) => [entry.userId, entry])
     );
 
-    const rankedEntries = allUsers
-      .map((user) => {
+    const rankedEntries = sortMonthlyRankedEntries(
+      allUsers.map((user) => {
         const leaderboardEntry = monthlyDataMap.get(user.id);
+        const normalizedAura = leaderboardEntry
+          ? getMonthlyRankingValues(
+              leaderboardEntry.totalAura,
+              leaderboardEntry.contributionsCount,
+              monthWindow.monthYear,
+              user.githubUsername || ""
+            ).aura
+          : 0;
 
         return {
           rank: 0,
@@ -76,11 +87,13 @@ export async function GET(request: NextRequest) {
             display_name: user.displayName || user.githubUsername || "",
             github_username: user.githubUsername || "",
             avatar_url:
-              user.avatarUrl || `https://github.com/${user.githubUsername}.png`,
-            total_aura: leaderboardEntry?.totalAura || 0,
+              user.avatarUrl ||
+              getGitHubAvatarFallback(user.githubUsername) ||
+              "",
+            total_aura: normalizedAura,
             current_streak: user.currentStreak || 0,
           },
-          aura: leaderboardEntry?.totalAura || 0,
+          aura: normalizedAura,
           contributions: leaderboardEntry?.contributionsCount || 0,
           badges: user.userBadges
             .filter((userBadge) => userBadge.badge !== null)
@@ -95,20 +108,13 @@ export async function GET(request: NextRequest) {
               rank: userBadge.rank || undefined,
             })),
         };
+      }),
+      (entry) => ({
+        aura: entry.aura,
+        contributions: entry.contributions || 0,
+        username: entry.user.github_username.toLowerCase(),
       })
-      .sort((leftEntry, rightEntry) => {
-        if (rightEntry.aura !== leftEntry.aura) {
-          return rightEntry.aura - leftEntry.aura;
-        }
-
-        if ((rightEntry.contributions || 0) !== (leftEntry.contributions || 0)) {
-          return (rightEntry.contributions || 0) - (leftEntry.contributions || 0);
-        }
-
-        return leftEntry.user.github_username.localeCompare(
-          rightEntry.user.github_username
-        );
-      })
+    )
       .map((entry, index) => ({
         ...entry,
         rank: index + 1,
@@ -136,6 +142,7 @@ export async function GET(request: NextRequest) {
       leaderboard,
       pagination,
       userRank: userRankEntry?.rank ?? null,
+      userEntry: userRankEntry ?? null,
     });
   } catch (error) {
     console.error("Error in monthly leaderboard API:", error);

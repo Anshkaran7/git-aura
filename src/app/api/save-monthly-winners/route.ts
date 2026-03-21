@@ -1,37 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret for security
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Parse request body to get specific month if provided
-    let requestBody = {};
+    let requestBody: { monthYear?: string } = {};
     try {
       requestBody = await request.json();
-    } catch (e) {
-      // If no body, use current month
+    } catch {
+      requestBody = {};
     }
 
     const now = new Date();
-
-    // Use provided monthYear or default to current month
     const currentMonthYear =
-      (requestBody as any).monthYear ||
+      requestBody.monthYear ||
       `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-    console.log(`🏆 Capturing monthly winners for ${currentMonthYear}`);
-
-    // Get top 3 users from monthly leaderboard for the current month
-    const topUsers = await prisma.monthlyLeaderboard.findMany({
+    const leaderboardEntries = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: currentMonthYear,
         user: {
-          isBanned: false, // Exclude banned users
+          isBanned: false,
         },
       },
       include: {
@@ -41,119 +35,106 @@ export async function POST(request: NextRequest) {
             displayName: true,
             githubUsername: true,
             avatarUrl: true,
-            isBanned: true,
           },
         },
       },
-      orderBy: {
-        totalAura: "desc",
-      },
-      take: 3,
     });
 
+    const topUsers = sortMonthlyRankedEntries(
+      leaderboardEntries,
+      (entry) => ({
+        ...getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ),
+      })
+    ).slice(0, 3);
+
     if (topUsers.length === 0) {
-      console.log(
-        `❌ No users found in monthly leaderboard for ${currentMonthYear}`
-      );
       return NextResponse.json({
         success: false,
         message: `No users found in monthly leaderboard for ${currentMonthYear}`,
       });
     }
 
-    const savedWinners = [];
+    await prisma.$transaction(async (tx) => {
+      await tx.monthlyWinners.deleteMany({
+        where: {
+          monthYear: currentMonthYear,
+        },
+      });
 
-    // Save top 3 as monthly winners
-    for (let i = 0; i < topUsers.length; i++) {
-      const user = topUsers[i];
-      const rank = i + 1;
+      for (let index = 0; index < topUsers.length; index += 1) {
+        const user = topUsers[index];
 
-      try {
-        // Check if this user is already saved as a winner for this month
-        const existingWinner = await prisma.monthlyWinners.findUnique({
-          where: {
-            userId_monthYear: {
-              userId: user.userId,
-              monthYear: currentMonthYear,
-            },
+        await tx.monthlyWinners.create({
+          data: {
+            userId: user.userId,
+            monthYear: currentMonthYear,
+            rank: index + 1,
+            totalAura: getMonthlyRankingValues(
+              user.totalAura,
+              user.contributionsCount,
+              currentMonthYear,
+              user.user.githubUsername || ""
+            ).aura,
+            contributionsCount: user.contributionsCount,
+            badgeAwarded: false,
           },
         });
-
-        if (!existingWinner) {
-          // Save the winner
-          const winner = await prisma.monthlyWinners.create({
-            data: {
-              userId: user.userId,
-              monthYear: currentMonthYear,
-              rank: rank,
-              totalAura: user.totalAura,
-              contributionsCount: user.contributionsCount,
-              badgeAwarded: false, // Will be updated when badge is awarded
-            },
-            include: {
-              user: {
-                select: {
-                  displayName: true,
-                  githubUsername: true,
-                  avatarUrl: true,
-                },
-              },
-            },
-          });
-
-          savedWinners.push({
-            rank: rank,
-            user: {
-              id: user.userId,
-              displayName: winner.user.displayName,
-              githubUsername: winner.user.githubUsername,
-              avatarUrl: winner.user.avatarUrl,
-            },
-            totalAura: user.totalAura,
-            contributionsCount: user.contributionsCount,
-          });
-
-          console.log(
-            `✅ Saved ${winner.user.githubUsername} as #${rank} winner for ${currentMonthYear}`
-          );
-        } else {
-          console.log(
-            `ℹ️ ${user.user.githubUsername} already saved as winner for ${currentMonthYear}`
-          );
-        }
-      } catch (error) {
-        console.error(`❌ Error saving winner for user ${user.userId}:`, error);
       }
-    }
+    });
 
-    // Also trigger badge awarding for these winners
+    const savedWinners = topUsers.map((user, index) => ({
+      rank: index + 1,
+      user: {
+        id: user.userId,
+        displayName: user.user.displayName,
+        githubUsername: user.user.githubUsername,
+        avatarUrl: user.user.avatarUrl,
+      },
+      totalAura: getMonthlyRankingValues(
+        user.totalAura,
+        user.contributionsCount,
+        currentMonthYear,
+        user.user.githubUsername || ""
+      ).aura,
+      contributionsCount: user.contributionsCount,
+    }));
+
     try {
-      const badgeResponse = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-        }/api/award-badges`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const isCurrentMonth =
+        currentMonthYear ===
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-      if (badgeResponse.ok) {
-        // Update badge awarded status for saved winners
-        for (const winner of savedWinners) {
-          await prisma.monthlyWinners.updateMany({
-            where: {
-              userId: winner.user.id,
-              monthYear: currentMonthYear,
+      if (isCurrentMonth) {
+        const badgeResponse = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/api/award-badges`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-            data: {
-              badgeAwarded: true,
-            },
-          });
+          }
+        );
+
+        if (badgeResponse.ok) {
+          for (const winner of savedWinners) {
+            await prisma.monthlyWinners.updateMany({
+              where: {
+                userId: winner.user.id,
+                monthYear: currentMonthYear,
+              },
+              data: {
+                badgeAwarded: true,
+              },
+            });
+          }
         }
-        console.log(`🏅 Badges awarded for ${currentMonthYear} winners`);
       }
     } catch (error) {
       console.error("❌ Error awarding badges:", error);

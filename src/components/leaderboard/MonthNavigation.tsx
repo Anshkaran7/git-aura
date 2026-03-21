@@ -1,5 +1,6 @@
 import { ArrowLeft01Icon, ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons";
 import { HugeIcon } from "@/components/ui/huge-icon";
+import { LEADERBOARD_LAUNCH_MONTH } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 
 interface MonthNavigationProps {
@@ -21,6 +22,7 @@ export function MonthNavigation({
     <div className="flex w-full items-center justify-center gap-2 sm:w-auto">
       <button
         onClick={() => onMonthChange("prev")}
+        disabled={currentMonth <= LEADERBOARD_LAUNCH_MONTH}
         className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 transition-all hover:border-primary/30 hover:text-primary"
         aria-label="Previous month"
       >

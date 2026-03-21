@@ -53,18 +53,12 @@ export async function fetchGitHubContributions(
     const graphqlQuery = {
       query: `query($userName:String!) { 
         user(login: $userName) {
+          createdAt
           followers { totalCount }
           following { totalCount }
           issues(states: [OPEN, CLOSED]) { totalCount }
           pullRequests(states: MERGED, first: 100) {
             totalCount
-            nodes {
-              title
-              number
-              mergedAt
-              url
-              repository { nameWithOwner }
-            }
           }
           contributionsCollection { 
             contributionCalendar { 
@@ -143,10 +137,20 @@ export async function fetchGitHubContributions(
         };
       }
 
-      return {
-        success: false,
-        error: contributionsData.errors[0].message,
-      };
+      const hasUsableContributionData = Boolean(
+        contributionsData.data?.user?.contributionsCollection
+      );
+
+      if (!hasUsableContributionData) {
+        return {
+          success: false,
+          error: contributionsData.errors[0].message,
+        };
+      }
+
+      console.warn(
+        `GitHub GraphQL returned partial data for ${username}; continuing with available contribution data.`
+      );
     }
 
     // console.log(`Debug: Raw GraphQL response for ${username}:`, {
@@ -184,8 +188,6 @@ export async function fetchGitHubContributions(
     const userData = contributionsData.data.user;
     const totalIssues = userData.issues?.totalCount ?? 0;
     const totalPullRequests = userData.pullRequests?.totalCount ?? 0;
-    // Optionally, you can also extract the PR nodes for more detailed display if needed:
-    const pullRequestNodes = userData.pullRequests?.nodes || [];
     const totalRepositories = userData.repositories?.totalCount ?? 0;
     const totalGists = 0; // Gists removed from query due to Fine-Grained PAT limitations
     const totalFollowers = userData.followers?.totalCount ?? 0;
@@ -212,7 +214,6 @@ export async function fetchGitHubContributions(
       contributionDays: allContributions,
       totalIssues,
       totalPullRequests,
-      pullRequestNodes, // for detailed PR info if needed in UI
       totalRepositories,
       totalGists,
       totalFollowers,

@@ -60,12 +60,12 @@ export default async function AdminUsersPage() {
 
   if (!(await isAdmin())) {
     return (
-      <div className="min-h-screen bg-background transition-colors duration-300 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="mx-auto max-w-md rounded-[28px] border border-border bg-card p-8 text-center shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)]">
           <div className="mb-6">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
               <svg
-                className="w-8 h-8 text-red-400"
+                className="h-8 w-8 text-red-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -78,17 +78,17 @@ export default async function AdminUsersPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
+            <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground sm:text-3xl">
               Access Denied
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              You don't have permission to access this page.
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              You do not have permission to access the admin user management
+              screen.
             </p>
           </div>
-          <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
-            <p className="text-gray-400 text-sm">
-              You are not authorized to access this page. Please contact the
-              administrator.
+          <div className="rounded-[22px] border border-border bg-background p-4">
+            <p className="text-sm leading-6 text-muted-foreground">
+              Contact an administrator if you believe this is incorrect.
             </p>
           </div>
         </div>
@@ -97,8 +97,8 @@ export default async function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-24 sm:px-6 sm:pt-28">
         <UserManagement />
       </div>
     </div>

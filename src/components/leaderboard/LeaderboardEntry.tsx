@@ -11,6 +11,7 @@ import { formatNumber, getBadgeColor } from "@/lib/utils2";
 import { ViewType, LeaderboardEntry as LeaderboardEntryType } from "./types";
 import { useAuth } from "@clerk/nextjs";
 import { HugeIcon } from "@/components/ui/huge-icon";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { BadgeIcon } from "@/components/badges/BadgeIcon";
 
 interface LeaderboardEntryProps {
@@ -51,13 +52,13 @@ export function LeaderboardEntry({
   const getRankColor = (rank: number) => {
     switch (rank) {
       case 1:
-        return "from-yellow-400/20 to-yellow-600/20";
+        return "from-amber-100/90 via-amber-50/80 to-white/70 dark:from-yellow-400/20 dark:to-yellow-600/20";
       case 2:
-        return "from-gray-300/20 to-gray-500/20";
+        return "from-zinc-100/90 via-zinc-50/80 to-white/70 dark:from-gray-300/20 dark:to-gray-500/20";
       case 3:
-        return "from-amber-500/20 to-amber-700/20";
+        return "from-orange-100/90 via-orange-50/80 to-white/70 dark:from-amber-500/20 dark:to-amber-700/20";
       default:
-        return "from-gray-800/20 to-gray-900/20";
+        return "from-transparent to-transparent";
     }
   };
 
@@ -75,7 +76,7 @@ export function LeaderboardEntry({
           : "border-border/70"
       }`}
     >
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_42%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),transparent_42%)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_42%)]" />
       {entry.rank <= 3 ? (
         <div
           className={`absolute inset-0 bg-gradient-to-r ${getRankColor(
@@ -84,7 +85,7 @@ export function LeaderboardEntry({
         />
       ) : null}
 
-      <div className="relative flex flex-col gap-3 bg-card/85 p-3 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative flex flex-col gap-3 bg-card/95 p-3 backdrop-blur-xl dark:bg-card/85 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex items-center justify-center shrink-0">
             {getRankIcon(entry.rank)}
@@ -92,10 +93,14 @@ export function LeaderboardEntry({
 
           <div className="flex min-w-0 items-center gap-3">
             <Link href={profileHref} className="shrink-0 transition-opacity hover:opacity-85">
-              <img
+              <UserAvatar
                 src={entry.user.avatar_url}
+                githubUsername={entry.user.github_username}
+                displayName={entry.user.display_name}
                 alt={entry.user.display_name}
-                className="h-10 w-10 rounded-full border border-white/15 object-cover ring-2 ring-background/60"
+                className="h-10 w-10 ring-2 ring-background/60"
+                initialsClassName="text-[10px]"
+                size={80}
               />
             </Link>
             <div className="min-w-0">
@@ -153,13 +158,13 @@ export function LeaderboardEntry({
             </div>
             <div className="flex flex-wrap justify-end gap-1.5">
               {entry.contributions !== undefined ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-background/85 px-2 py-1 text-[10px] font-medium text-secondary-foreground dark:border-border/70 dark:bg-background/80 dark:text-muted-foreground">
                   <HugeIcon icon={GitCommitIcon} size={12} className="text-emerald-400" />
                   {formatNumber(entry.contributions)}
                 </span>
               ) : null}
-              <span className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-1 text-[10px] font-medium text-muted-foreground">
-                <HugeIcon icon={FireIcon} size={12} className="text-orange-400" />
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-background/85 px-2 py-1 text-[10px] font-medium text-secondary-foreground dark:border-border/70 dark:bg-background/80 dark:text-muted-foreground">
+                <HugeIcon icon={FireIcon} size={12} className="text-orange-500 dark:text-orange-400" />
                 {entry.user.current_streak} streak
               </span>
             </div>

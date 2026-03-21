@@ -1,10 +1,9 @@
 "use client";
-import React from "react";
-import { Users, UserPlus, Coffee, X, Linkedin, Download } from "lucide-react";
-import { Theme, GitHubProfile, GitHubContributions } from "./types";
-import ContributionGrid from "./ContributionGrid";
-import MontlyContribution from "./MontlyContribution";
 
+import React from "react";
+import { Coffee, Download, Linkedin, UserPlus, Users } from "lucide-react";
+import ContributionGrid from "./ContributionGrid";
+import { GitHubContributions, GitHubProfile, Theme } from "./types";
 import Image from "next/image";
 
 interface ProfileCardProps {
@@ -18,6 +17,9 @@ interface ProfileCardProps {
   isGenerating?: boolean;
 }
 
+const actionButtonBase =
+  "inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-background text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
+
 const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
   contributions,
@@ -28,168 +30,145 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   handleDownload,
   isGenerating = false,
 }) => {
+  void selectedTheme;
+
   return (
     <div
       ref={profileRef}
       data-profile-card
-      className="bg-card backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-2xl border border-border mx-1 sm:mx-0">
-      {/* Browser Window Controls */}
-      <div className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 bg-background backdrop-blur-sm border-b border-border">
-        <div className="flex gap-1 sm:gap-1.5">
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/90" />
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-500/90" />
-          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-green-500/90" />
-        </div>
-        <div className="flex-1 flex items-center justify-center mx-2 sm:mx-auto text-foreground">
-          <a
-            href={`https://github.com/${profile?.login}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 sm:gap-2 px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1.5 rounded-md bg-secondary hover:bg-muted backdrop-blur-sm border border-border transition-all touch-manipulation max-w-full overflow-hidden group"
-          >
-            <span className="opacity-60 shrink-0 text-[10px] sm:text-xs md:text-sm">
-              github.com/
-            </span>
-            <span className="truncate text-[10px] sm:text-xs md:text-sm group-hover:text-primary transition-colors">
-              {profile?.login}
-            </span>
-          </a>
+      className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)]"
+    >
+      <div className="flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 sm:px-5">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#a3a3a3]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#737373]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#404040]" />
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <a
+          href={`https://github.com/${profile.login}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-w-0 flex-1 items-center justify-center rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <span className="truncate">github.com/{profile.login}</span>
+        </a>
+
+        <div className="flex items-center gap-2">
           <button
             onClick={handleShareTwitter}
-
             disabled={isGenerating}
-            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-              isGenerating
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-[#000000] hover:bg-[#181818] active:bg-[#272727]"
-            }`}
-            title={isGenerating ? "Generating image..." : "Share on Twitter"}
+            className={actionButtonBase}
+            title={isGenerating ? "Generating image..." : "Share"}
           >
             {isGenerating ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
             ) : (
               <Image
                 alt="X logo"
-                width={0}
-                height={0}
+                width={16}
+                height={16}
                 src="/twitter.png"
-                className="w-4 h-4"
+                className="h-4 w-4"
               />
             )}
           </button>
           <button
             onClick={handleShareLinkedin}
-
             disabled={isGenerating}
-            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-              isGenerating
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86]"
-            }`}
+            className={actionButtonBase}
             title={isGenerating ? "Generating image..." : "Share on LinkedIn"}
           >
             {isGenerating ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
             ) : (
-              <Linkedin className="w-4 h-4" />
+              <Linkedin className="h-4 w-4" />
             )}
           </button>
-
           <button
             onClick={handleDownload}
             disabled={isGenerating}
-            className={`p-1.5 sm:p-2 rounded-md transition-colors text-white ${
-              isGenerating
-                ? "bg-gray-600 cursor-not-allowed opacity-50"
-                : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
-            }`}
-            title={isGenerating ? "Generating image..." : "Download as Image"}
+            className={actionButtonBase}
+            title={isGenerating ? "Generating image..." : "Download image"}
           >
             {isGenerating ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
             ) : (
-              <Download className="w-4 h-4" />
+              <Download className="h-4 w-4" />
             )}
           </button>
         </div>
       </div>
 
-      {/* Profile Content */}
-      <div className="p-3 sm:p-4 md:p-6 lg:p-8 bg-gradient-to-b from-card to-background">
-        {/* Profile Header */}
-        <div className="flex flex-col sm:flex-row items-center justify-between sm:items-start gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 md:gap-6 w-full sm:w-auto">
+      <div className="bg-gradient-to-b from-card to-background px-4 py-5 sm:px-6 sm:py-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <img
               src={profile.avatar_url}
               alt={profile.name || profile.login}
-              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full ring-2 ring-border shadow-md"
+              className="h-20 w-20 rounded-full border border-border object-cover sm:h-24 sm:w-24"
             />
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground mb-1 font-mona-sans truncate">
+
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold tracking-[-0.03em] text-foreground sm:text-2xl">
                 {profile.name || profile.login}
               </h1>
-              <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-3 font-mona-sans truncate">
+              <p className="mt-1 text-sm text-muted-foreground">
                 @{profile.login}
               </p>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 text-xs sm:text-sm font-mona-sans">
-                <div className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                  <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="whitespace-nowrap">
-                    {profile.followers.toLocaleString()} Followers
-                  </span>
+
+              <div className="mt-4 flex flex-wrap gap-2.5 text-xs text-muted-foreground">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5">
+                  <Users className="h-3.5 w-3.5" />
+                  <span>{profile.followers.toLocaleString()} followers</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-                  <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="whitespace-nowrap">
-                    {profile.following.toLocaleString()} Following
-                  </span>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5">
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>{profile.following.toLocaleString()} following</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="text-center sm:text-right w-full sm:w-auto">
-            <div className="text-lg sm:text-xl md:text-2xl font-semibold text-foreground font-mona-sans">
-              {profile.public_repos.toLocaleString()}
-            </div>
-            <div className="text-xs sm:text-sm text-muted-foreground font-mona-sans">
+          <div className="rounded-[24px] border border-border bg-background px-4 py-3 text-left sm:min-w-[140px] sm:text-right">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               Repositories
-            </div>
+            </p>
+            <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+              {profile.public_repos.toLocaleString()}
+            </p>
           </div>
         </div>
 
-        {/* Bio */}
         {profile.bio && (
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <p className="flex flex-col sm:flex-row items-center sm:items-start gap-2 text-sm sm:text-base leading-relaxed text-foreground font-mona-sans">
-              <Coffee className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="text-center sm:text-left break-words">
-                {profile.bio}
-              </span>
+          <div className="mt-5 rounded-[24px] border border-border bg-background px-4 py-4">
+            <p className="flex gap-3 text-sm leading-6 text-muted-foreground">
+              <Coffee className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{profile.bio}</span>
             </p>
           </div>
         )}
 
-        {/* Contribution section */}
-        <div className="mt-4 sm:mt-6 md:mt-8">
-          <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-4">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-foreground font-mona-sans text-center sm:text-left">
-              {contributions.totalContributions.toLocaleString()} contributions
-            </h2>
-            <div className="text-xs sm:text-sm text-muted-foreground font-mona-sans whitespace-nowrap">
-              {new Date(profile.created_at).getFullYear()} - Present
+        <div className="mt-6 rounded-[24px] border border-border bg-background px-4 py-4 sm:px-5">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground sm:text-[15px]">
+                Contribution history
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {contributions.totalContributions.toLocaleString()} total
+                contributions
+              </p>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {new Date(profile.created_at).getFullYear()} to present
             </div>
           </div>
 
-          <div className="w-full">
-            <ContributionGrid
-              contributions={contributions}
-              selectedTheme={selectedTheme}
-            />
-          </div>
+          <ContributionGrid
+            contributions={contributions}
+            selectedTheme={selectedTheme}
+          />
         </div>
       </div>
     </div>

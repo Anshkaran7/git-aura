@@ -2,6 +2,7 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const MONTH_YEAR_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+export const LEADERBOARD_LAUNCH_MONTH = "2025-07";
 
 export interface MonthWindow {
   monthYear: string;
@@ -12,6 +13,53 @@ export interface MonthWindow {
 export interface PaginationOptions {
   page: number;
   limit: number;
+}
+
+export interface MonthlyRankingValues {
+  aura: number;
+  contributions: number;
+  username: string;
+}
+
+export function compareMonthYear(left: string, right: string) {
+  return left.localeCompare(right);
+}
+
+export function isMonthBeforeLaunch(monthYear: string) {
+  return compareMonthYear(monthYear, LEADERBOARD_LAUNCH_MONTH) < 0;
+}
+
+export function clampMonthYearToLaunch(monthYear: string) {
+  return isMonthBeforeLaunch(monthYear) ? LEADERBOARD_LAUNCH_MONTH : monthYear;
+}
+
+export function getDaysInMonthFromMonthYear(monthYear: string) {
+  const [year, month] = monthYear.split("-").map(Number);
+  return new Date(year, month, 0).getDate();
+}
+
+export function getNormalizedMonthlyAura(
+  totalAura: number,
+  contributionsCount: number,
+  monthYear: string
+) {
+  const daysInMonth = getDaysInMonthFromMonthYear(monthYear);
+  const maxExpectedAura = contributionsCount * 5 + daysInMonth * 10 + 250;
+
+  return Math.min(totalAura, maxExpectedAura);
+}
+
+export function getMonthlyRankingValues(
+  totalAura: number,
+  contributionsCount: number,
+  monthYear: string,
+  username: string
+): MonthlyRankingValues {
+  return {
+    aura: getNormalizedMonthlyAura(totalAura, contributionsCount, monthYear),
+    contributions: contributionsCount,
+    username: username.toLowerCase(),
+  };
 }
 
 export function parsePositiveInt(
@@ -61,8 +109,36 @@ export function paginateEntries<T>(entries: T[], pagination: PaginationOptions) 
   return entries.slice(startIndex, startIndex + safeLimit);
 }
 
+export function compareMonthlyRankingValues(
+  left: MonthlyRankingValues,
+  right: MonthlyRankingValues
+) {
+  if (right.aura !== left.aura) {
+    return right.aura - left.aura;
+  }
+
+  if (right.contributions !== left.contributions) {
+    return right.contributions - left.contributions;
+  }
+
+  return left.username.localeCompare(right.username);
+}
+
+export function sortMonthlyRankedEntries<T>(
+  entries: T[],
+  getValues: (entry: T) => MonthlyRankingValues
+) {
+  return [...entries].sort((left, right) =>
+    compareMonthlyRankingValues(getValues(left), getValues(right))
+  );
+}
+
 export function parseMonthWindow(monthYear: string | null): MonthWindow | null {
   if (!monthYear || !MONTH_YEAR_PATTERN.test(monthYear)) {
+    return null;
+  }
+
+  if (isMonthBeforeLaunch(monthYear)) {
     return null;
   }
 

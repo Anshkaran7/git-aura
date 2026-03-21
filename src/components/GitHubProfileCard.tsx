@@ -21,6 +21,7 @@ import {
 } from "./types";
 import MontlyContribution from "./MontlyContribution";
 import ShareModal from "./ShareModal";
+import { UserAvatar } from "./ui/user-avatar";
 
 interface GitHubProfileCardProps {
   initialUsername?: string;
@@ -115,7 +116,6 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
     // Prevent duplicate calls for the same username or if already loading
     if (loading || searchedUsername === username.trim()) {
-      console.log("Skipping duplicate fetchProfile call for:", username);
       return;
     }
 
@@ -366,40 +366,45 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     ).toFixed(1);
     return (
       <div
-        className={`relative w-[320px] md:w-[340px] rounded-xl border ${
+        className={`relative w-full max-w-[340px] rounded-[28px] border ${
           highlight
-            ? "border-yellow-400 shadow-[0_0_0_1px_rgba(250,204,21,0.4)]"
-            : "border-border"
-        } bg-gradient-to-b from-card to-card/80 p-5 flex flex-col gap-4`}
+            ? "border-foreground/20 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.6)]"
+            : "border-border shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)]"
+        } bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] p-5 flex flex-col gap-4`}
       >
+        <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.07),transparent_70%)]" />
         {/* Winner badge */}
         {highlight && (
-          <span className="absolute -top-3 left-4 px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide bg-yellow-400 text-black shadow">
+          <span className="absolute -top-3 left-4 rounded-full border border-border bg-foreground px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-background shadow-[0_10px_30px_-18px_rgba(255,255,255,0.45)]">
             WINNER
           </span>
         )}
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <img
+        <div className="relative flex items-center gap-3">
+          <UserAvatar
             src={directProfile.avatar_url}
+            githubUsername={directProfile.login}
+            displayName={directProfile.name || directProfile.login}
             alt={directProfile.login}
-            className="w-16 h-16 rounded-full border border-border object-cover"
+            className="h-16 w-16 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]"
+            initialsClassName="text-sm"
+            size={128}
           />
           <div className="flex flex-col min-w-0">
-            <h2 className="text-base font-semibold text-foreground truncate">
+            <h2 className="truncate text-[1.45rem] font-semibold tracking-[-0.04em] text-foreground">
               {directProfile.name || directProfile.login}
             </h2>
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="truncate text-[15px] text-muted-foreground">
               @{directProfile.login}
             </p>
-            <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
+            <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
                 {directProfile.public_repos} repos
               </span>
-              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
+              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
                 {directProfile.followers} followers
               </span>
-              <span className="px-1.5 py-0.5 bg-muted/60 rounded border border-border">
+              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
                 {directProfile.following} following
               </span>
             </div>
@@ -407,18 +412,22 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         </div>
         {/* Bio */}
         {directProfile.bio && (
-          <p className="text-[11px] leading-relaxed text-muted-foreground line-clamp-4">
+          <p className="text-[12px] leading-6 text-muted-foreground line-clamp-4">
             {directProfile.bio}
           </p>
         )}
         {/* Meta */}
         <div className="grid grid-cols-2 gap-3 text-[11px]">
-          <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
-            <span className="text-muted-foreground">Joined</span>
+          <div className="flex flex-col gap-1 rounded-[20px] border border-border bg-background/90 p-3.5">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Joined
+            </span>
             <span className="text-foreground font-medium">{joinedYear}</span>
           </div>
-          <div className="flex flex-col gap-1 bg-muted/30 rounded-lg p-2 border border-border/60">
-            <span className="text-muted-foreground">Age</span>
+          <div className="flex flex-col gap-1 rounded-[20px] border border-border bg-background/90 p-3.5">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+              Age
+            </span>
             <span className="text-foreground font-medium">
               {accountAgeYears} yrs
             </span>
@@ -428,13 +437,15 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     );
   }
   return (
-    <div className="min-h-screen bg-background font-mona-sans transition-colors duration-300">
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-background font-mona-sans">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
-          <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-3 sm:p-4 md:p-5 rounded-lg mb-4 sm:mb-6 border border-gray-700/50 mx-1 sm:mx-0">
-            <p className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm">
-              <span className="text-red-400 text-base sm:text-lg">⚠️</span>
+          <div className="mb-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4">
+            <p className="flex flex-col gap-2 text-xs text-red-100 sm:text-sm">
+              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-red-200">
+                Error
+              </span>
               <span className="flex-1">{error}</span>
             </p>
           </div>
@@ -445,8 +456,8 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {/* Loading State */}
             {loading ? (
-              <div className="flex items-center justify-center w-full py-12 sm:py-16 md:py-20">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-b-2 border-gray-300"></div>
+              <div className="flex w-full items-center justify-center py-16">
+                <div className="h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground"></div>
               </div>
             ) : profile ? (
               <>
@@ -509,14 +520,14 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
 
       {/* Footer - Hide on badges view */}
       {currentView !== "badges" && (
-        <footer className="fixed inset-x-0 bottom-0 py-2 sm:py-3 md:py-4 px-2 sm:px-4 text-gray-300 bg-background/80 backdrop-blur-sm border-t border-gray-800/50">
-          <p className="text-[10px] sm:text-xs md:text-sm max-w-screen-xl mx-auto text-center">
+        <footer className="border-t border-border bg-background/90 px-4 py-4 backdrop-blur-sm">
+          <p className="mx-auto max-w-screen-xl text-center text-[11px] text-muted-foreground sm:text-xs">
             Made with ❤️ by{" "}
             <a
               href="https://karandev.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:no-underline transition-all duration-200 text-gray-300 hover:text-foreground"
+              className="text-foreground underline underline-offset-4 transition-colors hover:text-primary"
             >
               Karan
             </a>

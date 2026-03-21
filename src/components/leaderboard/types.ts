@@ -39,6 +39,7 @@ export interface LeaderboardResponse {
   leaderboard: LeaderboardEntry[];
   pagination: PaginationInfo;
   userRank: number | null;
+  userEntry?: LeaderboardEntry | null;
 }
 
 export type ViewType = "monthly" | "alltime";

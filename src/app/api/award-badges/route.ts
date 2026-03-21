@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 
 // Badge definitions for top 3 positions
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Get top 3 users from monthly leaderboard, excluding banned users
-    const topUsers = await prisma.monthlyLeaderboard.findMany({
+    const leaderboardEntries = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: currentMonthYear,
         user: {
@@ -82,11 +83,19 @@ export async function POST(req: NextRequest) {
           },
         },
       },
-      orderBy: {
-        totalAura: "desc",
-      },
-      take: 3,
     });
+
+    const topUsers = sortMonthlyRankedEntries(
+      leaderboardEntries,
+      (entry) => ({
+        ...getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ),
+      })
+    ).slice(0, 3);
 
     if (topUsers.length === 0) {
       return NextResponse.json({
@@ -127,7 +136,12 @@ export async function POST(req: NextRequest) {
               monthYear: currentMonthYear,
               rank: position,
               metadata: {
-                totalAura: user.totalAura,
+                totalAura: getMonthlyRankingValues(
+                  user.totalAura,
+                  user.contributionsCount,
+                  currentMonthYear,
+                  user.user.githubUsername || ""
+                ).aura,
                 contributionsCount: user.contributionsCount,
                 awardedAt: new Date().toISOString(),
               },
@@ -156,7 +170,12 @@ export async function POST(req: NextRequest) {
               icon: badge.icon,
               rarity: badge.rarity,
             },
-            aura: user.totalAura,
+            aura: getMonthlyRankingValues(
+              user.totalAura,
+              user.contributionsCount,
+              currentMonthYear,
+              user.user.githubUsername || ""
+            ).aura,
           });
         } else {
         }
@@ -176,7 +195,12 @@ export async function POST(req: NextRequest) {
           displayName: user.user.displayName,
           githubUsername: user.user.githubUsername,
         },
-        aura: user.totalAura,
+        aura: getMonthlyRankingValues(
+          user.totalAura,
+          user.contributionsCount,
+          currentMonthYear,
+          user.user.githubUsername || ""
+        ).aura,
       })),
       awardedBadges,
     });
@@ -198,7 +222,7 @@ export async function GET(req: NextRequest) {
     const currentMonthYear = getCurrentMonthYear();
 
     // Get top 3 users and their badges for current month
-    const topUsers = await prisma.monthlyLeaderboard.findMany({
+    const leaderboardEntries = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: currentMonthYear,
       },
@@ -219,11 +243,19 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: {
-        totalAura: "desc",
-      },
-      take: 3,
     });
+
+    const topUsers = sortMonthlyRankedEntries(
+      leaderboardEntries,
+      (entry) => ({
+        ...getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ),
+      })
+    ).slice(0, 3);
 
     return NextResponse.json({
       monthYear: currentMonthYear,
@@ -234,7 +266,12 @@ export async function GET(req: NextRequest) {
           displayName: user.user.displayName,
           githubUsername: user.user.githubUsername,
         },
-        aura: user.totalAura,
+        aura: getMonthlyRankingValues(
+          user.totalAura,
+          user.contributionsCount,
+          currentMonthYear,
+          user.user.githubUsername || ""
+        ).aura,
         badges: user.user.userBadges.map((ub) => ({
           name: ub.badge?.name,
           description: ub.badge?.description,

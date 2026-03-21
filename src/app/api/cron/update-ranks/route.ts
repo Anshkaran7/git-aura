@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,14 +16,30 @@ export async function POST(request: NextRequest) {
     ).padStart(2, "0")}`;
 
     // Update monthly ranks
-    const monthlyLeaderboard = await prisma.monthlyLeaderboard.findMany({
+    const monthlyEntries = await prisma.monthlyLeaderboard.findMany({
       where: {
         monthYear: currentMonthYear,
       },
-      orderBy: {
-        totalAura: "desc",
+      include: {
+        user: {
+          select: {
+            githubUsername: true,
+          },
+        },
       },
     });
+
+    const monthlyLeaderboard = sortMonthlyRankedEntries(
+      monthlyEntries,
+      (entry) => ({
+        ...getMonthlyRankingValues(
+          entry.totalAura,
+          entry.contributionsCount,
+          currentMonthYear,
+          entry.user.githubUsername || ""
+        ),
+      })
+    );
 
     // Update ranks in batches to avoid timeout
     for (let i = 0; i < monthlyLeaderboard.length; i++) {

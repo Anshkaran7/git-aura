@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
+import {
+  calculateAndStoreUserAura,
+  calculateMonthlyAuraBreakdown,
+} from "@/lib/aura-calculations";
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,11 +47,11 @@ export async function POST(req: NextRequest) {
       // Calculate monthly aura using SAME logic as frontend
       const [year, month] = monthYear.split("-").map(Number);
       const daysInMonth = new Date(year, month, 0).getDate();
-      const frontendMatchingAura = Math.round(
-        contributionsCount * 10 + // Base aura
-          activeDays * 50 + // Active days bonus
-          Math.round((activeDays / daysInMonth) * 1000) // Consistency bonus
-      );
+      const frontendMatchingAura = calculateMonthlyAuraBreakdown(
+        contributionsCount,
+        activeDays,
+        daysInMonth
+      ).totalAura;
 
       await prisma.monthlyLeaderboard.upsert({
         where: {
@@ -112,11 +115,11 @@ export async function POST(req: NextRequest) {
     const daysInMonth = new Date(year, month, 0).getDate();
 
     // Calculate monthly aura using the simple formula
-    const monthlyAura = Math.round(
-      contributionsCount * 10 + // 10 points per contribution
-        activeDays * 50 + // 50 points per active day
-        (activeDays / daysInMonth) * 1000 // Consistency bonus (up to 1000 points)
-    );
+    const monthlyAura = calculateMonthlyAuraBreakdown(
+      contributionsCount,
+      activeDays,
+      daysInMonth
+    ).totalAura;
 
     // Update monthly leaderboard
     await prisma.monthlyLeaderboard.upsert({

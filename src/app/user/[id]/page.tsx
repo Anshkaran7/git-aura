@@ -6,6 +6,7 @@ import { toPng } from "html-to-image";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
 import { Header } from "@/components/home";
+import { Button } from "@/components/ui/button";
 import MontlyContribution from "@/components/MontlyContribution";
 import ProfileCard from "@/components/ProfileCard";
 import AuraPanel from "@/components/AuraPanel";
@@ -297,8 +298,13 @@ function UserPage() {
       <div className="min-h-screen bg-background">
         <div className="pt-20">
           <Header leaderboard={false} profile={true} />
-          <div className="flex items-center justify-center w-full py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
+          <div className="flex items-center justify-center px-4 py-20">
+            <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Loading profile...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -311,41 +317,39 @@ function UserPage() {
       <div className="min-h-screen bg-background">
         <div className="pt-20">
           <Header leaderboard={false} profile={true} />
-          <div className="max-w-4xl mx-auto px-4 py-20">
-            <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-8 rounded-lg border border-gray-700/50 text-center">
+          <div className="mx-auto max-w-4xl px-4 py-20">
+            <div className="rounded-[28px] border border-border bg-card p-8 text-center shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)]">
               <div className="mb-6">
                 <span className="text-6xl mb-4 block">🔒</span>
-                <h2 className="text-2xl font-bold mb-4">User Not Found</h2>
-                <p className="text-gray-400 mb-6">
-                  The user{" "}
-                  <span className="text-foreground font-mono">@{userId}</span> is not
-                  registered on our platform.
+                <h2 className="mb-4 text-2xl font-semibold tracking-[-0.03em] text-foreground">
+                  User Not Found
+                </h2>
+                <p className="mb-6 text-sm leading-6 text-muted-foreground">
+                  The user <span className="font-mono text-foreground">@{userId}</span>{" "}
+                  is not registered on GitAura.
                   {!isSignedIn && " You need to sign in to view user profiles."}
                 </p>
               </div>
 
               {!isSignedIn ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Sign in with GitHub to join our community and view profiles
                   </p>
                   <SignInButton mode="modal">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-foreground px-6 py-3 rounded-lg font-semibold transition-colors">
+                    <Button>
                       Sign In to Continue
-                    </button>
+                    </Button>
                   </SignInButton>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     Only registered users can be viewed on our platform
                   </p>
-                  <button
-                    onClick={() => window.history.back()}
-                    className="bg-gray-600 hover:bg-gray-700 text-foreground px-6 py-3 rounded-lg font-semibold transition-colors"
-                  >
+                  <Button variant="secondary" onClick={() => window.history.back()}>
                     Go Back
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -363,53 +367,63 @@ function UserPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="max-w-4xl mx-auto px-4 mb-6">
-              <div className="bg-gray-900/60 backdrop-blur-sm text-gray-200 p-4 rounded-lg border border-gray-700/50">
-                <p className="flex items-center gap-2 text-sm">
-                  <span className="text-red-400 text-lg">⚠️</span>
-                  <span>{error}</span>
-                </p>
+            <div className="mx-auto mb-6 max-w-4xl px-4">
+              <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4">
+                <p className="text-sm text-red-100">{error}</p>
               </div>
             </div>
           )}
 
-          {/* Loading State */}
-          {loading ? (
-            <div className="flex items-center justify-center w-full py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300"></div>
-            </div>
-          ) : profile ? (
-            <div className="space-y-8 max-w-6xl mx-auto">
-              <ProfileCard
-                profile={profile}
-                contributions={contributions}
-                selectedTheme={selectedTheme}
-                profileRef={profileRef}
-                handleShareTwitter={() => handleShare("twitter")}
-                handleShareLinkedin={() => handleShare("linkedin")}
-                handleDownload={handleExportImage}
-                isGenerating={isGenerating}
-              />
-              <MontlyContribution
-                selectedTheme={selectedTheme}
-                contributions={contributions}
-              />
-            </div>
-          ) : (
-            !error && (
-              <div className="max-w-4xl mx-auto px-4">
-                <EmptyState
+          <div className="mx-auto max-w-6xl px-4 pb-8">
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
+                  <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Loading profile...
+                  </p>
+                </div>
+              </div>
+            ) : profile ? (
+              <div className="space-y-6">
+                <ProfileCard
+                  profile={profile}
+                  contributions={contributions}
                   selectedTheme={selectedTheme}
-                  onLoadProfile={(username) => {
-                    if (username !== userId && !loading) {
-                      // Redirect to new user page
-                      window.location.href = `/user/${username}`;
-                    }
-                  }}
+                  profileRef={profileRef}
+                  handleShareTwitter={() => handleShare("twitter")}
+                  handleShareLinkedin={() => handleShare("linkedin")}
+                  handleDownload={handleExportImage}
+                  isGenerating={isGenerating}
+                />
+                <MontlyContribution
+                  selectedTheme={selectedTheme}
+                  contributions={contributions}
+                />
+                <AuraPanel
+                  selectedTheme={selectedTheme}
+                  userAura={userAura}
+                  currentStreak={currentStreak}
+                  contributions={contributions}
+                  isCalculatingAura={isCalculatingAura}
                 />
               </div>
-            )
-          )}
+            ) : (
+              !error && (
+                <div className="mx-auto max-w-4xl">
+                  <EmptyState
+                    selectedTheme={selectedTheme}
+                    onLoadProfile={(username) => {
+                      if (username !== userId && !loading) {
+                        window.location.href = `/user/${username}`;
+                      }
+                    }}
+                  />
+                </div>
+              )
+            )}
+          </div>
         </div>
       </div>
     </>

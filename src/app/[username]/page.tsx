@@ -40,10 +40,12 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
       <div className="pt-20">
         <Suspense
           fallback={
-            <div className="flex items-center justify-center min-h-screen bg-background">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading GitHub profile...</p>
+            <div className="flex min-h-screen items-center justify-center bg-background px-4">
+              <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
+                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Loading GitHub profile...
+                </p>
               </div>
             </div>
           }

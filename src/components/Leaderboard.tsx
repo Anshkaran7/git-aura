@@ -17,9 +17,11 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
+import { calculateMonthlyAuraBreakdown } from "@/lib/aura-calculations";
 import { GitHubContributions } from "./types";
 import { ErrorState } from "./leaderboard/ErrorState";
 import { BadgeIcon } from "./badges/BadgeIcon";
+import { UserAvatar } from "./ui/user-avatar";
 
 interface User {
   id: string;
@@ -163,11 +165,11 @@ const Leaderboard = ({
     });
 
     // Calculate monthly aura based on contributions and activity
-    const monthlyAura = Math.round(
-      monthlyContributions * 10 + // 10 points per contribution
-        activeDays * 50 + // 50 points per active day
-        (activeDays / monthEnd.getDate()) * 1000 // Consistency bonus (up to 1000 points)
-    );
+    const monthlyAura = calculateMonthlyAuraBreakdown(
+      monthlyContributions,
+      activeDays,
+      monthEnd.getDate()
+    ).totalAura;
 
     setMonthlyData({
       contributions: monthlyContributions,
@@ -558,10 +560,14 @@ const Leaderboard = ({
                         href={`/user/${entry.user.github_username}`}
                         className="hover:opacity-80 transition-opacity shrink-0"
                       >
-                        <img
+                        <UserAvatar
                           src={entry.user.avatar_url}
+                          githubUsername={entry.user.github_username}
+                          displayName={entry.user.display_name}
                           alt={entry.user.display_name}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full ring-2 ring-gray-600/50"
+                          className="h-8 w-8 ring-2 ring-gray-600/50 sm:h-10 sm:w-10"
+                          initialsClassName="text-[10px]"
+                          size={80}
                         />
                       </a>
                       <div className="flex flex-col min-w-0 flex-1">

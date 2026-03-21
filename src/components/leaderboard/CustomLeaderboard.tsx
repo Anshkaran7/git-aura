@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { clampMonthYearToLaunch, LEADERBOARD_LAUNCH_MONTH } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 import { ViewType, LeaderboardEntry, LeaderboardResponse } from "./types";
 import { ViewToggle } from "./ViewToggle";
@@ -17,19 +19,81 @@ interface CustomLeaderboardProps {
 const MAX_ENTRIES = 100;
 const PAGE_SIZE = 20;
 
+function buildLeaderboardApiUrl(
+  view: ViewType,
+  currentMonth: string,
+  highlightedUsername?: string
+) {
+  const params = new URLSearchParams({
+    page: "1",
+    limit: String(MAX_ENTRIES),
+  });
+
+  if (highlightedUsername) {
+    params.set("username", highlightedUsername);
+  }
+
+  if (view === "monthly") {
+    params.set("monthYear", currentMonth);
+    return `/api/leaderboard/monthly?${params.toString()}`;
+  }
+
+  return `/api/leaderboard/alltime?${params.toString()}`;
+}
+
+function normalizeLeaderboardEntry(
+  entry?: Partial<LeaderboardEntry> | null
+): LeaderboardEntry | null {
+  if (!entry?.user?.id || !entry.user.github_username) {
+    return null;
+  }
+
+  return {
+    ...entry,
+    rank: entry.rank || 0,
+    aura: entry.aura ?? 0,
+    contributions: entry.contributions,
+    badges: Array.isArray(entry.badges) ? entry.badges : [],
+    user: {
+      ...entry.user,
+      display_name: entry.user.display_name || entry.user.github_username,
+      avatar_url: entry.user.avatar_url || "",
+      total_aura: entry.user.total_aura ?? entry.aura ?? 0,
+      current_streak: entry.user.current_streak ?? 0,
+    },
+  };
+}
+
+function normalizeLeaderboardEntries(
+  data?: Partial<LeaderboardResponse>
+): LeaderboardEntry[] {
+  if (!Array.isArray(data?.leaderboard)) {
+    return [];
+  }
+
+  return data.leaderboard
+    .filter((entry): entry is LeaderboardEntry => Boolean(entry?.user?.id))
+    .map((entry, index) => ({
+      ...entry,
+      rank: entry.rank || index + 1,
+      aura: entry.aura ?? 0,
+      badges: Array.isArray(entry.badges) ? entry.badges : [],
+    }))
+    .slice(0, MAX_ENTRIES);
+}
+
 export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
+  const { isSignedIn, user } = useUser();
+  const queryClient = useQueryClient();
   const [view, setView] = useState<ViewType>(username ? "monthly" : "alltime");
-  const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [currentUser, setCurrentUser] = useState<LeaderboardEntry | null>(null);
-  const [userOutOfTop100, setUserOutOfTop100] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(
+    clampMonthYearToLaunch(getCurrentMonthYear())
+  );
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const [isRefreshingCurrentUser, setIsRefreshingCurrentUser] = useState(false);
 
   const observerTarget = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const requestIdRef = useRef(0);
+  const refreshedMonthKeyRef = useRef<string | null>(null);
 
   const loadMore = useCallback(() => {
     setDisplayCount((previousCount) =>
@@ -37,42 +101,35 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
     );
   }, []);
 
+  const signedInGithubUsername = useMemo(
+    () =>
+      user?.externalAccounts?.find((account) => account.provider === "github")
+        ?.username || "",
+    [user]
+  );
+
+  const highlightedUsername = useMemo(
+    () => username || signedInGithubUsername,
+    [signedInGithubUsername, username]
+  );
+
   useEffect(() => {
     setView(username ? "monthly" : "alltime");
   }, [username]);
 
-  const fetchLeaderboardData = useCallback(async () => {
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    abortControllerRef.current?.abort();
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    setLoading(true);
-    setError(null);
-    setUserOutOfTop100(false);
-    setCurrentUser(null);
-
-    try {
-      const params = new URLSearchParams({
-        page: "1",
-        limit: String(MAX_ENTRIES),
-      });
-
-      let apiUrl = "/api/leaderboard/alltime";
-
-      if (view === "monthly") {
-        params.set("monthYear", currentMonth);
-        apiUrl = `/api/leaderboard/monthly?${params.toString()}`;
-      } else {
-        apiUrl = `/api/leaderboard/alltime?${params.toString()}`;
-      }
-
-      const response = await fetch(apiUrl, {
-        signal: controller.signal,
-        cache: "no-store",
-      });
+  const leaderboardQuery = useQuery<
+    Partial<LeaderboardResponse> & { error?: string }
+  >({
+    queryKey: ["leaderboard", view, currentMonth],
+    placeholderData: (previousData) => previousData,
+    queryFn: async ({ signal }) => {
+      const response = await fetch(
+        buildLeaderboardApiUrl(view, currentMonth, highlightedUsername),
+        {
+          signal,
+          cache: "no-store",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch leaderboard (${response.status})`);
@@ -86,62 +143,138 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
         throw new Error(data.error);
       }
 
-      if (requestId !== requestIdRef.current) {
-        return;
-      }
+      return data;
+    },
+  });
 
-      const entries = Array.isArray(data.leaderboard) ? data.leaderboard : [];
-      const normalizedEntries = entries
-        .filter((entry): entry is LeaderboardEntry => Boolean(entry?.user?.id))
-        .map((entry, index) => ({
-          ...entry,
-          rank: entry.rank || index + 1,
-          aura: entry.aura ?? 0,
-          badges: Array.isArray(entry.badges) ? entry.badges : [],
-        }));
+  const leaderboardData = useMemo(
+    () => normalizeLeaderboardEntries(leaderboardQuery.data),
+    [leaderboardQuery.data]
+  );
 
-      const visibleEntries = normalizedEntries.slice(0, MAX_ENTRIES);
-      const matchedUser = username
-        ? normalizedEntries.find(
-            (entry) =>
-              entry.user.github_username.toLowerCase() === username.toLowerCase()
-          ) || null
-        : null;
+  const currentUser = useMemo(() => {
+    const exactUserEntry = normalizeLeaderboardEntry(leaderboardQuery.data?.userEntry);
 
-      setCurrentUser(matchedUser);
-      setUserOutOfTop100(Boolean(matchedUser && matchedUser.rank > MAX_ENTRIES));
-      setLeaderboardData(visibleEntries);
-      setDisplayCount(
-        visibleEntries.length === 0
-          ? 0
-          : Math.min(PAGE_SIZE, visibleEntries.length)
-      );
-    } catch (error) {
-      if (controller.signal.aborted) {
-        return;
-      }
-
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Unable to load leaderboard right now.";
-
-      setError(message);
-      setLeaderboardData([]);
-      setCurrentUser(null);
-      setUserOutOfTop100(false);
-      setDisplayCount(PAGE_SIZE);
-    } finally {
-      if (requestId === requestIdRef.current) {
-        setLoading(false);
-      }
+    if (exactUserEntry) {
+      return exactUserEntry;
     }
-  }, [currentMonth, username, view]);
+
+    if (!highlightedUsername) {
+      return null;
+    }
+
+    return (
+      leaderboardData.find(
+        (entry) =>
+          entry.user.github_username.toLowerCase() ===
+          highlightedUsername.toLowerCase()
+      ) || null
+    );
+  }, [highlightedUsername, leaderboardData, leaderboardQuery.data?.userEntry]);
+
+  const userOutOfTop100 = Boolean(currentUser && currentUser.rank > MAX_ENTRIES);
+
+  const errorMessage = useMemo(() => {
+    if (!leaderboardQuery.error) {
+      return null;
+    }
+
+    return leaderboardQuery.error instanceof Error
+      ? leaderboardQuery.error.message
+      : "Unable to load leaderboard right now.";
+  }, [leaderboardQuery.error]);
+
+  useEffect(() => {
+    setDisplayCount(
+      leaderboardData.length === 0
+        ? 0
+        : Math.min(PAGE_SIZE, leaderboardData.length)
+    );
+  }, [leaderboardData.length, view, currentMonth]);
+
+  useEffect(() => {
+    const isCurrentMonth = currentMonth === getCurrentMonthYear();
+    const shouldRefreshCurrentUser =
+      isSignedIn &&
+      Boolean(signedInGithubUsername) &&
+      highlightedUsername.toLowerCase() === signedInGithubUsername.toLowerCase();
+
+    if (view !== "monthly" || !isCurrentMonth || !shouldRefreshCurrentUser) {
+      return;
+    }
+
+    const refreshKey = `${signedInGithubUsername}:${currentMonth}`;
+    if (refreshedMonthKeyRef.current === refreshKey) {
+      return;
+    }
+
+    refreshedMonthKeyRef.current = refreshKey;
+    let cancelled = false;
+
+    const refreshCurrentUserAura = async () => {
+      setIsRefreshingCurrentUser(true);
+
+      try {
+        const response = await fetch("/api/refresh-user-aura", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: signedInGithubUsername,
+          }),
+        });
+
+        if (!response.ok) {
+          const refreshError = await response
+            .json()
+            .catch(() => ({ error: "Unknown refresh error" }));
+
+          console.warn("Skipping leaderboard aura refresh:", {
+            status: response.status,
+            error: refreshError.error,
+            details: refreshError.details,
+          });
+          return;
+        }
+
+        if (!cancelled) {
+          await queryClient.invalidateQueries({
+            queryKey: ["leaderboard", "monthly", currentMonth],
+          });
+        }
+      } catch (error) {
+        console.error("Error refreshing current user aura:", error);
+      } finally {
+        if (!cancelled) {
+          setIsRefreshingCurrentUser(false);
+        }
+      }
+    };
+
+    void refreshCurrentUserAura();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentMonth,
+    highlightedUsername,
+    isSignedIn,
+    queryClient,
+    signedInGithubUsername,
+    view,
+  ]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && !loading && !error && displayCount < leaderboardData.length) {
+        if (
+          entries[0]?.isIntersecting &&
+          !leaderboardQuery.isPending &&
+          !errorMessage &&
+          displayCount < leaderboardData.length
+        ) {
           loadMore();
         }
       },
@@ -160,15 +293,13 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       }
       observer.disconnect();
     };
-  }, [displayCount, error, leaderboardData.length, loadMore, loading]);
-
-  useEffect(() => {
-    void fetchLeaderboardData();
-
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, [fetchLeaderboardData]);
+  }, [
+    displayCount,
+    errorMessage,
+    leaderboardData.length,
+    leaderboardQuery.isPending,
+    loadMore,
+  ]);
 
   const displayedData = useMemo(
     () => leaderboardData.slice(0, displayCount),
@@ -194,19 +325,20 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
       }
     }
 
-    setCurrentMonth(`${newYear}-${newMonth.toString().padStart(2, "0")}`);
+    const nextMonth = `${newYear}-${newMonth.toString().padStart(2, "0")}`;
+    setCurrentMonth(clampMonthYearToLaunch(nextMonth));
   };
 
-  if (loading) {
+  if (leaderboardQuery.isPending && leaderboardData.length === 0) {
     return <LoadingState />;
   }
 
-  if (error) {
+  if (errorMessage && leaderboardData.length === 0) {
     return (
       <ErrorState
-        message={error}
+        message={errorMessage}
         onRetry={() => {
-          void fetchLeaderboardData();
+          void leaderboardQuery.refetch();
         }}
       />
     );
@@ -220,6 +352,11 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
           <p className="text-xs leading-5 text-muted-foreground">
             Sharper rankings, lighter typography, and cleaner monthly or all-time snapshots.
           </p>
+          {isRefreshingCurrentUser ? (
+            <p className="text-[11px] text-muted-foreground">
+              Syncing your latest GitHub month so Aura stays honest.
+            </p>
+          ) : null}
         </div>
         <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
           <ViewToggle view={view} onViewChange={setView} />
@@ -254,7 +391,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
           <EmptyState view={view} />
         ) : (
           <>
-            <AnimatePresence initial={false}>
+            <div key={`${view}-${currentMonth}`} className="space-y-3">
               {displayedData.map((entry, index) => (
                 <LeaderboardEntryComponent
                   key={`${entry.user.id}-${view}-${currentMonth}`}
@@ -265,7 +402,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
                   currentPage={1}
                 />
               ))}
-            </AnimatePresence>
+            </div>
 
             {displayCount < leaderboardData.length ? (
               <div

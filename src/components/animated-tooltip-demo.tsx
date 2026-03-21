@@ -1,5 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Zap, Github, RefreshCw } from "lucide-react";
@@ -7,7 +9,6 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { formatNumber } from "@/lib/utils2";
 
-// Types for the API response
 interface TopUser {
   id: number;
   name: string;
@@ -31,72 +32,57 @@ interface ApiResponse {
   fallback?: boolean;
 }
 
-// Fallback data for when API fails or no data is available
-const fallbackUsers: TopUser[] = [
-  {
-    id: 1,
-    name: "Loading...",
-    designation: "Aura Score: ---",
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=1",
-    rank: 1,
-    totalAura: 0,
-    contributions: 0,
-    currentStreak: 0,
-  },
-  {
-    id: 2,
-    name: "Loading...",
-    designation: "Aura Score: ---",
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=2",
-    rank: 2,
-    totalAura: 0,
-    contributions: 0,
-    currentStreak: 0,
-  },
-  {
-    id: 3,
-    name: "Loading...",
-    designation: "Aura Score: ---",
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=3",
-    rank: 3,
-    totalAura: 0,
-    contributions: 0,
-    currentStreak: 0,
-  },
-  {
-    id: 4,
-    name: "Loading...",
-    designation: "Aura Score: ---",
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=4",
-    rank: 4,
-    totalAura: 0,
-    contributions: 0,
-    currentStreak: 0,
-  },
-  {
-    id: 5,
-    name: "Loading...",
-    designation: "Aura Score: ---",
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=5",
-    rank: 5,
-    totalAura: 0,
-    contributions: 0,
-    currentStreak: 0,
-  },
-];
+const fallbackUsers: TopUser[] = [1, 2, 3, 4, 5].map((id) => ({
+  id,
+  name: "Loading...",
+  designation: "Aura Score: ---",
+  image: `https://api.dicebear.com/7.x/avatars/svg?seed=${id}`,
+  rank: id,
+  totalAura: 0,
+  contributions: 0,
+  currentStreak: 0,
+}));
+
+async function fetchTopUsers(): Promise<ApiResponse> {
+  const response = await fetch("/api/leaderboard/top-monthly");
+  if (!response.ok) {
+    throw new Error("Failed to fetch top users");
+  }
+
+  const data = (await response.json()) as ApiResponse;
+  if (data.fallback) {
+    throw new Error("No data available");
+  }
+
+  return data;
+}
 
 export default function TopAuraUsers() {
   const { isSignedIn, user } = useUser();
   const router = useRouter();
-  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
-  const [stats, setStats] = useState({
+
+  const topUsersQuery = useQuery({
+    queryKey: ["top-monthly-users"],
+    queryFn: fetchTopUsers,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const topUsers =
+    topUsersQuery.data?.topUsers && topUsersQuery.data.topUsers.length > 0
+      ? topUsersQuery.data.topUsers
+      : topUsersQuery.isLoading
+        ? fallbackUsers
+        : [];
+
+  const stats = topUsersQuery.data?.stats ?? {
     totalAuraPoints: 0,
     totalContributions: 0,
     totalParticipants: 0,
-  });
-  const [monthYear, setMonthYear] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  };
+
+  const monthYear = topUsersQuery.data?.monthYear ?? "";
+  const error =
+    topUsersQuery.error instanceof Error ? topUsersQuery.error.message : null;
 
   const handleGoToProfile = () => {
     if (user?.externalAccounts) {
@@ -111,88 +97,44 @@ export default function TopAuraUsers() {
     router.push("/profile");
   };
 
-  const fetchTopUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setTopUsers(fallbackUsers); // Show loading state immediately
-
-      const response = await fetch("/api/leaderboard/top-monthly");
-      if (!response.ok) {
-        throw new Error("Failed to fetch top users");
-      }
-
-      const data: ApiResponse = await response.json();
-
-      if (data.fallback) {
-        throw new Error("No data available");
-      }
-
-      if (data.topUsers && data.topUsers.length > 0) {
-        setTopUsers(data.topUsers);
-        setStats(data.stats);
-        setMonthYear(data.monthYear);
-      } else {
-        setTopUsers([]);
-        setStats({
-          totalAuraPoints: 0,
-          totalContributions: 0,
-          totalParticipants: 0,
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching top users:", err);
-      setError(err instanceof Error ? err.message : "Failed to load data");
-      setTopUsers([]); // Clear loading state on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTopUsers();
-  }, []);
-
-  // Get current month name for display
-  const getMonthName = (monthYear: string) => {
-    if (!monthYear) return "This Month";
-    const [year, month] = monthYear.split("-");
+  const getMonthName = (value: string) => {
+    if (!value) return "This Month";
+    const [year, month] = value.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
-  // Render stats section
   const renderStats = () => {
-    if (loading) return null;
+    if (topUsersQuery.isLoading) return null;
     if (error || !stats.totalParticipants) return null;
 
     return (
-      <div className="flex flex-wrap justify-center gap-4 sm:gap-8 mb-8">
+      <div className="mb-8 flex flex-wrap justify-center gap-4 sm:gap-8">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-primary" />
+          <Zap className="h-4 w-4 text-primary" />
           <span className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">
               {formatNumber(stats.totalAuraPoints)}
             </span>{" "}
-            Total Aura
+            total aura
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Github className="w-4 h-4 text-primary" />
+          <Github className="h-4 w-4 text-primary" />
           <span className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">
               {formatNumber(stats.totalContributions)}
             </span>{" "}
-            Contributions
+            commits in motion
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-primary" />
+          <Trophy className="h-4 w-4 text-primary" />
           <span className="text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">
               {formatNumber(stats.totalParticipants)}
             </span>{" "}
-            Participants
+            people in the mix
           </span>
         </div>
       </div>
@@ -201,61 +143,51 @@ export default function TopAuraUsers() {
 
   return (
     <section className="px-4 py-12 sm:px-6 sm:py-20">
-      <div className="container relative z-10 mx-auto rounded-[2rem] border border-border bg-card px-4 py-8 text-center shadow-[0_24px_80px_-42px_rgba(0,0,0,0.38)] sm:px-6 sm:py-10">
+      <div className="container relative z-10 mx-auto rounded-[2.2rem] border border-border bg-card/95 px-4 py-8 text-center shadow-[0_24px_80px_-42px_rgba(0,0,0,0.2)] sm:px-6 sm:py-10">
         <div className="mx-auto mb-8 max-w-3xl sm:mb-12">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
-            <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+            <Trophy className="h-3 w-3 text-primary sm:h-4 sm:w-4" />
             <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Hall of Fame
+              This month&apos;s room
             </span>
           </div>
 
-          <h2 className="mb-4 text-2xl font-semibold leading-tight tracking-[-0.04em] sm:text-4xl">
-            {getMonthName(monthYear)}’s top contributors.
+          <h2 className="mb-4 text-2xl font-semibold leading-tight tracking-[-0.045em] text-foreground sm:text-4xl">
+            {getMonthName(monthYear)} is looking stacked.
           </h2>
 
           <p className="mx-auto mb-6 max-w-2xl px-4 text-sm leading-6 text-muted-foreground">
-            {loading ? (
-              "Loading the month's top performers..."
+            {topUsersQuery.isLoading ? (
+              "Pulling the current top names..."
             ) : error ? (
-              "Unable to load top performers. Please try again later."
+              "The room is being weird right now. Try again in a sec."
             ) : topUsers.length === 0 ? (
-              <>
-                No winners have landed yet this month. The first strong profile
-                can set the tone.
-              </>
+              "No one has claimed the spotlight yet. First big month can set the whole tone."
             ) : (
-              <>
-                A compact snapshot of the strongest GitAura profiles right now.
-                Hover to inspect rank, aura, and current momentum.
-              </>
+              "A quick look at the profiles moving the hardest this month. Hover around and catch the vibe."
             )}
           </p>
 
-          {/* Stats Section */}
           {renderStats()}
         </div>
 
-        {/* Animated Tooltip Component */}
         <div className="mb-8 flex min-h-[60px] w-full flex-row items-center justify-center sm:mb-10 sm:min-h-[80px]">
-          {loading ? (
+          {topUsersQuery.isLoading ? (
             <div className="flex items-center gap-3 sm:gap-4">
-              <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 animate-spin text-primary" />
-              <span className="text-sm sm:text-base text-muted-foreground">
-                Loading top performers...
+              <RefreshCw className="h-4 w-4 animate-spin text-primary sm:h-6 sm:w-6" />
+              <span className="text-sm text-muted-foreground sm:text-base">
+                Loading the current lineup...
               </span>
             </div>
           ) : error ? (
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                {error}
-              </p>
+              <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           ) : topUsers.length === 0 ? (
             <div className="text-center">
-              <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🚀</div>
+              <div className="mb-3 text-4xl sm:mb-4 sm:text-6xl">🚀</div>
               <p className="text-sm text-muted-foreground">
-                No champions yet this month.
+                No one owns the month yet.
               </p>
             </div>
           ) : (
@@ -263,16 +195,15 @@ export default function TopAuraUsers() {
           )}
         </div>
 
-        {/* Call to Action */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           {isSignedIn ? (
             <Badge
-                variant="outline"
-                className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
-                onClick={handleGoToProfile}
-              >
-              <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              View Your Aura Dashboard
+              variant="outline"
+              className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
+              onClick={handleGoToProfile}
+            >
+              <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Open your quiet flex
             </Badge>
           ) : (
             <SignInButton mode="modal">
@@ -280,8 +211,8 @@ export default function TopAuraUsers() {
                 variant="outline"
                 className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
               >
-                <Github className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                Connect GitHub & Start Competing
+                <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Connect GitHub and get in the mix
               </Badge>
             </SignInButton>
           )}
