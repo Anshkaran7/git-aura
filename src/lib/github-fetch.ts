@@ -55,12 +55,13 @@ export async function fetchGitHubProfile(
     .replace(/\s+/g, "")
     .split("/")[0];
 
-  const hasToken = Boolean(process.env.GITHUB_TOKEN);
+  const token = process.env.GITHUB_TOKEN;
+  const hasToken = !!token;
 
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
-    ...(hasToken ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
+    ...(hasToken ? { Authorization: `Bearer ${token}` } : {}),
     "User-Agent": "GitAura-App",
   };
 

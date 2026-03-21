@@ -19,18 +19,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Check if GitHub token is available
-  if (!process.env.GITHUB_TOKEN) {
-    console.warn("GitHub token not found in environment variables");
-    return NextResponse.json(
-      {
-        error:
-          "GitHub token not configured. Please set GITHUB_TOKEN environment variable.",
-      },
-      { status: 500 }
-    );
-  }
-
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -75,7 +63,6 @@ export async function GET(request: NextRequest) {
                 }
               }
               repositories(privacy: PUBLIC, isFork: false) { totalCount }
-              gists(privacy: PUBLIC) { totalCount }
               createdAt
             }
           }`,
@@ -164,7 +151,7 @@ export async function GET(request: NextRequest) {
     const totalIssues = userData.issues?.totalCount ?? 0;
     const totalPullRequests = userData.pullRequests?.totalCount ?? 0;
     const totalRepositories = userData.repositories?.totalCount ?? 0;
-    const totalGists = userData.gists?.totalCount ?? 0;
+    const totalGists = profileData?.public_gists ?? 0;
     const totalFollowers = userData.followers?.totalCount ?? 0;
     const totalFollowing = userData.following?.totalCount ?? 0;
     // Account age in years

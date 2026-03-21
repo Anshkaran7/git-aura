@@ -33,14 +33,6 @@ export async function fetchGitHubContributions(
     };
   }
 
-  if (!process.env.GITHUB_TOKEN) {
-    console.warn("GitHub token not found in environment variables");
-    return {
-      success: false,
-      error: "GitHub token not configured",
-    };
-  }
-
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -89,7 +81,6 @@ export async function fetchGitHubContributions(
             totalCount
             nodes { stargazerCount }
           }
-          gists(privacy: PUBLIC) { totalCount }
           bio
           websiteUrl
           avatarUrl
@@ -196,7 +187,7 @@ export async function fetchGitHubContributions(
     // Optionally, you can also extract the PR nodes for more detailed display if needed:
     const pullRequestNodes = userData.pullRequests?.nodes || [];
     const totalRepositories = userData.repositories?.totalCount ?? 0;
-    const totalGists = userData.gists?.totalCount ?? 0;
+    const totalGists = 0; // Gists removed from query due to Fine-Grained PAT limitations
     const totalFollowers = userData.followers?.totalCount ?? 0;
     const totalFollowing = userData.following?.totalCount ?? 0;
     // Account age in years

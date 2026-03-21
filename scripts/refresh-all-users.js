@@ -29,7 +29,7 @@ const CONFIG = {
   specificUsers: null,
   skipRanks: false,
   verbose: false,
-  baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  baseUrl: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_BASE_URL : 'http://localhost:3000'
 };
 
 // Parse command line arguments

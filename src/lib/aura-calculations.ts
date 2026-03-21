@@ -341,81 +341,74 @@ async function updateLeaderboards(
   contributionDays: ContributionDay[]
 ) {
   try {
-    // Get current month data
     const now = new Date();
     const currentMonthYear = `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Calculate monthly contributions
-    const monthlyContributions = contributionDays.filter((day) => {
-      const dayDate = new Date(day.date);
-      return dayDate >= monthStart && dayDate <= monthEnd;
+    // Group all contribution days by YYYY-MM
+    const groupedByMonth: Record<string, ContributionDay[]> = {};
+    contributionDays.forEach((day) => {
+      const monthYear = day.date.substring(0, 7); // Extracts 'YYYY-MM'
+      if (!groupedByMonth[monthYear]) groupedByMonth[monthYear] = [];
+      groupedByMonth[monthYear].push(day);
     });
 
-    const monthlyContributionsCount = monthlyContributions.reduce(
-      (sum, day) => sum + day.contributionCount,
-      0
-    );
+    // We process each month found in the GitHub payload
+    for (const [monthYear, monthlyContributions] of Object.entries(groupedByMonth)) {
+      const [yearStr, monthStr] = monthYear.split("-");
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
 
-    const activeDays = monthlyContributions.filter(
-      (day) => day.contributionCount > 0
-    ).length;
-    const daysInMonth = monthEnd.getDate();
-    const monthlyAura = calculateMonthlyAura(
-      monthlyContributionsCount,
-      activeDays,
-      daysInMonth
-    );
+      const monthEnd = new Date(year, month, 0); // Last day of that specific month
+      const daysInMonth = monthEnd.getDate();
 
-    console.log(
-      `📊 [updateLeaderboards] Monthly calculation for ${currentMonthYear}:`,
-      {
-        userId,
-        monthlyContributionsCount,
-        activeDays,
-        daysInMonth,
-        baseAura: calculateBaseAura(monthlyContributionsCount),
-        consistencyBonus: calculateConsistencyBonus(activeDays, daysInMonth),
-        finalMonthlyAura: monthlyAura,
-        totalAura,
-      }
-    );
-
-    // Check if monthly leaderboard entry was recently updated (within last 30 seconds)
-    // This prevents overwriting data from save-monthly-aura endpoint
-    const existingMonthlyEntry = await prisma.monthlyLeaderboard.findUnique({
-      where: {
-        userId_monthYear: {
-          userId: userId,
-          monthYear: currentMonthYear,
-        },
-      },
-    });
-
-    const shouldUpdateMonthly =
-      !existingMonthlyEntry ||
-      new Date().getTime() - existingMonthlyEntry.createdAt.getTime() > 30000; // 30 seconds
-
-    if (shouldUpdateMonthly) {
-      console.log(
-        `🔄 [updateLeaderboards] Updating monthly leaderboard for ${currentMonthYear}:`,
-        { monthlyAura, monthlyContributionsCount, activeDays, daysInMonth }
+      const monthlyContributionsCount = monthlyContributions.reduce(
+        (sum, day) => sum + day.contributionCount,
+        0
       );
 
-      // Update monthly leaderboard
+      const activeDays = monthlyContributions.filter(
+        (day) => day.contributionCount > 0
+      ).length;
+
+      const monthlyAura = calculateMonthlyAura(
+        monthlyContributionsCount,
+        activeDays,
+        daysInMonth
+      );
+
+      if (monthYear === currentMonthYear) {
+        // Special rate-limit check for the current month
+        const existingMonthlyEntry = await prisma.monthlyLeaderboard.findUnique({
+          where: {
+            userId_monthYear: {
+              userId: userId,
+              monthYear: currentMonthYear,
+            },
+          },
+        });
+
+        const shouldUpdateMonthly =
+          !existingMonthlyEntry ||
+          new Date().getTime() - existingMonthlyEntry.createdAt.getTime() > 30000;
+
+        if (!shouldUpdateMonthly) {
+          continue; // Skip if recently updated
+        }
+      }
+
+      // Upsert the monthly leaderboard record
       await prisma.monthlyLeaderboard.upsert({
         where: {
           userId_monthYear: {
             userId: userId,
-            monthYear: currentMonthYear,
+            monthYear: monthYear,
           },
         },
         create: {
           userId: userId,
-          monthYear: currentMonthYear,
+          monthYear: monthYear,
           totalAura: monthlyAura,
           contributionsCount: monthlyContributionsCount,
           rank: 999999, // Will be recalculated
@@ -425,10 +418,6 @@ async function updateLeaderboards(
           contributionsCount: monthlyContributionsCount,
         },
       });
-    } else {
-      console.log(
-        `⏭️ [updateLeaderboards] Skipping monthly leaderboard update (recently updated by save-monthly-aura)`
-      );
     }
 
     // Update global leaderboard

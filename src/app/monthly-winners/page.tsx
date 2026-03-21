@@ -72,7 +72,7 @@ const RANK_TOKENS = {
     haloTo: "to-amber-500/10",
     icon: "text-yellow-400",
     gradientText:
-      "bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent",
+      "bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent drop-shadow-sm",
   },
   2: {
     badge: "/badge/2nd.png",
@@ -83,7 +83,7 @@ const RANK_TOKENS = {
     haloTo: "to-slate-500/10",
     icon: "text-zinc-300",
     gradientText:
-      "bg-gradient-to-r from-zinc-200 to-slate-300 bg-clip-text text-transparent",
+      "bg-gradient-to-r from-zinc-200 to-slate-300 bg-clip-text text-transparent drop-shadow-sm",
   },
   3: {
     badge: "/badge/3rd.png",
@@ -94,7 +94,7 @@ const RANK_TOKENS = {
     haloTo: "to-orange-500/10",
     icon: "text-amber-300",
     gradientText:
-      "bg-gradient-to-r from-amber-200 to-orange-300 bg-clip-text text-transparent",
+      "bg-gradient-to-r from-amber-200 to-orange-300 bg-clip-text text-transparent drop-shadow-sm",
   },
 };
 
@@ -214,21 +214,21 @@ const WinnerCard = ({
       ref={cardRef}
       initial={{ opacity: 0, y: 18, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -4 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className={`relative ${podium} w-full max-w-[300px]`}
+      className={`relative ${podium} w-full max-w-[300px] group`}
     >
       {/* soft halo */}
       <div
-        className={`pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-b ${t.haloFrom} ${t.haloTo} blur-2xl opacity-60`}
+        className={`pointer-events-none absolute -inset-6 rounded-3xl bg-gradient-to-b ${t.haloFrom} ${t.haloTo} blur-2xl opacity-60 group-hover:opacity-100 transition-opacity duration-500`}
         aria-hidden
       />
 
       <div
         className={[
-          "relative rounded-3xl border backdrop-blur-xl",
+          "relative rounded-3xl border backdrop-blur-xl transition-all duration-300",
           "bg-gradient-to-b from-white/5 to-white/[0.03] dark:from-white/3 dark:to-white/[0.04]",
-          "shadow-[0_8px_40px_-8px_rgba(0,0,0,0.45)]",
+          "shadow-[0_8px_40px_-8px_rgba(0,0,0,0.45)] group-hover:shadow-[0_12px_50px_-8px_rgba(0,0,0,0.6)]",
           t.border,
         ].join(" ")}
       >
@@ -263,14 +263,14 @@ const WinnerCard = ({
         {/* header / avatar */}
         <div className="px-6 pb-6 pt-10">
           <div className="flex flex-col items-center">
-            <div className="relative mb-4">
+            <div className="relative mb-4 group-hover:scale-[1.03] transition-transform duration-300">
               <div
-                className={`absolute -inset-3 rounded-full ring-8 ${t.ring}`}
+                className={`absolute -inset-3 rounded-full ring-8 ${t.ring} transition-opacity`}
               />
               <div className="relative h-28 w-28 overflow-hidden rounded-full border border-white/10 shadow-2xl">
                 <Image
-                  src={winner.user.avatarUrl}
-                  alt={`${winner.user.displayName} avatar`}
+                  src={winner.user.avatarUrl || "https://github.com/ghost.png"}
+                  alt={`${winner.user.displayName || "User"} avatar`}
                   fill
                   className="object-cover"
                   sizes="112px"
@@ -282,14 +282,14 @@ const WinnerCard = ({
             <div className="text-center">
               <div className="mx-auto mb-1 inline-flex items-center gap-2">
                 <RankIcon rank={winner.rank} />
-                <span className={`text-xl font-semibold ${t.gradientText}`}>
+                <span className={`text-xl font-bold uppercase ${t.gradientText}`}>
                   #{winner.rank}
                 </span>
               </div>
               <h3 className="text-lg font-bold text-foreground leading-tight">
                 {winner.user.displayName}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm font-medium text-muted-foreground mt-0.5">
                 @{winner.user.githubUsername}
               </p>
             </div>
@@ -297,22 +297,22 @@ const WinnerCard = ({
             {/* metrics chips */}
             <div className="mt-5 grid w-full grid-cols-2 gap-3">
               <div
-                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip}`}
+                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip} transition-all duration-300`}
               >
                 <Zap className={`h-4 w-4 ${t.icon}`} />
-                <span className="tabular-nums">
+                <span className="tabular-nums font-semibold">
                   {winner.totalAura.toLocaleString()}
                 </span>
-                <span className="opacity-80">Aura</span>
+                <span className="opacity-80 font-medium">Aura</span>
               </div>
               <div
-                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip}`}
+                className={`flex items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm ${t.chip} transition-all duration-300`}
               >
                 <Users className={`h-4 w-4 ${t.icon}`} />
-                <span className="tabular-nums">
+                <span className="tabular-nums font-semibold">
                   {winner.contributionsCount}
                 </span>
-                <span className="opacity-80">Contribs</span>
+                <span className="opacity-80 font-medium">Contribs</span>
               </div>
             </div>
 
@@ -324,7 +324,7 @@ const WinnerCard = ({
                   "noopener"
                 )
               }
-              className="mt-5 rounded-full"
+              className="mt-6 rounded-full w-full shadow-md font-semibold transition-transform active:scale-95"
               variant="secondary"
             >
               View Profile

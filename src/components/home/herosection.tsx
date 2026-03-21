@@ -18,8 +18,14 @@ interface HeroStats {
 
 export const HeroSection = () => {
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const { isSignedIn, user } = useUser();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [stats, setStats] = useState<HeroStats>({
     totalDevelopers: 0,
     totalAuraPoints: 0,
@@ -94,7 +100,7 @@ export const HeroSection = () => {
   return (
     <section className="relative min-h-[100vh] flex items-center justify-center bg-background overflow-hidden py-8">
       <div className="absolute inset-0 w-full h-full dark:bg-black bg-white z-0" />
-      {resolvedTheme === "dark" && (
+      {mounted && resolvedTheme === "dark" && (
         <div className="absolute w-full bg-black h-full z-30 pointer-events-auto">
           <Squares
             speed={0.3}
