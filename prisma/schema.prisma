@@ -104,7 +104,7 @@ model MonthlyWinners {
   id                 String   @id @default(uuid())
   userId             String   @map("user_id")
   monthYear          String   @map("month_year")
-  rank               Int // 1, 2, or 3
+  rank               Int
   totalAura          Int      @default(0) @map("total_aura")
   contributionsCount Int      @default(0) @map("contributions_count")
   badgeAwarded       Boolean  @default(false) @map("badge_awarded")

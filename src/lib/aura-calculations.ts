@@ -141,6 +141,12 @@ export function calculateStreak(contributionDays: ContributionDay[]): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // We allow today to be 0 if yesterday was > 0
+  // But we don't start a streak at 1 if today is 0 and yesterday is also 0
+  
+  let expectedDiff = 0;
+  let skipToday = false;
+
   for (const day of sortedDays) {
     const dayDate = new Date(day.date);
     dayDate.setHours(0, 0, 0, 0);
@@ -149,17 +155,32 @@ export function calculateStreak(contributionDays: ContributionDay[]): number {
       (today.getTime() - dayDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (dayDiff === streak && day.contributionCount > 0) {
-      streak++;
-    } else if (dayDiff === streak && day.contributionCount === 0) {
-      // If today has no contributions, check yesterday
-      if (streak === 0) {
-        streak = 1; // Skip today and continue checking
+    if (day.contributionCount > 0) {
+      if (dayDiff === expectedDiff) {
+        streak++;
+        expectedDiff++;
+      } else if (dayDiff === 1 && expectedDiff === 0) {
+        // Today was 0, but yesterday had contributions
+        streak = 1;
+        expectedDiff = 2; // Next expected contribution should be 2 days ago
       } else {
+        // Gap in streak
         break;
       }
     } else {
-      break;
+      // Current day has 0 contributions
+      if (dayDiff === expectedDiff) {
+        if (dayDiff === 0) {
+          // Today has 0, that's fine, we'll check yesterday next
+          expectedDiff = 1;
+        } else {
+          // A middle day has 0, streak broken
+          break;
+        }
+      } else if (dayDiff > expectedDiff) {
+        // We already processed this day or skipped it
+        continue;
+      }
     }
   }
 

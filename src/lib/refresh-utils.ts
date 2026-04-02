@@ -20,6 +20,32 @@ export async function shouldRefreshUserData(userId: string): Promise<{
     }
 
     const now = new Date();
+    const currentMonthYear = `${now.getFullYear()}-${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    // Check if we have data for the current month
+    const currentMonthEntry = await prisma.monthlyLeaderboard.findUnique({
+      where: {
+        userId_monthYear: {
+          userId: userId,
+          monthYear: currentMonthYear,
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+
+    // If no entry for current month, refresh!
+    if (!currentMonthEntry) {
+      return {
+        shouldRefresh: true,
+        reason: "New month started, no data for current month yet",
+        lastRefresh: user.updatedAt,
+      };
+    }
+
     const lastContribution = user.lastContributionDate;
     const lastUpdate = user.updatedAt;
 

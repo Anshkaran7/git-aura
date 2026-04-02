@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
       0
     );
 
+    const currentMonthAura = auraResult.success ? (updatedUser?.monthlyLeaderboard.find(e => e.monthYear === currentMonthYear)?.totalAura || 0) : 0;
+
     return NextResponse.json({
       success: true,
       username,
@@ -120,6 +122,7 @@ export async function POST(request: NextRequest) {
         contributions: currentMonthContributions,
         activeDays: currentMonthDays.filter((day) => day.contributionCount > 0)
           .length,
+        aura: currentMonthAura,
       },
       before: {
         totalAura: user.totalAura,
