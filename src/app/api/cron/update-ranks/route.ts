@@ -11,9 +11,12 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
-    const currentMonthYear = `${now.getFullYear()}-${String(
+    const body = await request.json().catch(() => ({}));
+    const monthYear = body.monthYear || `${now.getFullYear()}-${String(
       now.getMonth() + 1
     ).padStart(2, "0")}`;
+
+    const currentMonthYear = monthYear; // Keep original variable name to minimize diff
 
     // Update monthly ranks
     const monthlyEntries = await prisma.monthlyLeaderboard.findMany({
