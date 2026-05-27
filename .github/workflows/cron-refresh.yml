@@ -1,7 +1,9 @@
 name: Refresh User Data
 
 on:
-  workflow_dispatch: # Manual emergency refresh; scheduled refresh lives in cron-jobs.yml/Vercel Cron
+  schedule:
+    - cron: "0 */2 * * *" # Every 2 hours via GitHub Actions, avoiding Vercel Hobby cron limits
+  workflow_dispatch: # Manual emergency refresh
 
 jobs:
   refresh-users:
