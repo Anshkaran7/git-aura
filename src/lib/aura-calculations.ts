@@ -314,16 +314,12 @@ export async function calculateAndStoreUserAura(
     const githubResult = await fetchGitHubProfile(githubUsername);
     const githubProfile = githubResult.success ? githubResult.data : undefined;
 
-    console.log("githubProfile", githubProfile);
     // Calculate total aura
     const totalAura = calculateTotalAura(contributionDays);
     const currentStreak = calculateStreak(contributionDays);
-    console.log("currentStreak", currentStreak);
-    console.log("totalAura", totalAura);
     // Get the longest streak (for now, use current streak, but this could be enhanced)
     const longestStreak = currentStreak;
 
-    console.log("contributionDays", contributionDays);
     // Get the last contribution date
     const lastContributionDate = contributionDays
       .filter((day) => day.contributionCount > 0)
@@ -331,7 +327,6 @@ export async function calculateAndStoreUserAura(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       )[0]?.date;
 
-    console.log("lastContributionDate", lastContributionDate);
     // Update user's total aura and streak
     await prisma.user.update({
       where: { id: userId },
@@ -345,7 +340,6 @@ export async function calculateAndStoreUserAura(
       },
     });
 
-    console.log("userId", userId);
     // Create aura calculation for today (most recent)
     const today = new Date();
     await createAuraCalculation(userId, today, contributionDays, githubProfile);

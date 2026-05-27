@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# Set your app URL and CRON secret
-APP_URL="https://git-aura.karandev.in"  # Replace with your actual URL
-CRON_SECRET="Yvs+JMxI/Xyip3ZcVh4GiECXowz+4FNBB7chjpIN2lE="
+# Set APP_URL and CRON_SECRET in your shell before running this script.
+APP_URL="${APP_URL:-https://git-aura.karandev.in}"
+
+if [ -z "$CRON_SECRET" ]; then
+  echo "CRON_SECRET is required"
+  exit 1
+fi
 
 echo "🚀 Triggering daily tasks (refresh users + update ranks)..."
 curl -X POST "$APP_URL/api/cron/daily-tasks" \

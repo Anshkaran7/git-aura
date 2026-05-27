@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
+async function runDailyTasks(request: NextRequest) {
   try {
     // Verify cron secret to ensure this is called by Vercel cron
     const authHeader = request.headers.get("authorization");
@@ -25,8 +28,10 @@ export async function POST(request: NextRequest) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          batchSize: 10,
+          batchSize: 5,
+          limit: 40,
           delay: 2000,
+          skipRankUpdate: true,
         }),
       }
     );
@@ -45,12 +50,6 @@ export async function POST(request: NextRequest) {
 
     const refreshResult = await refreshResponse.json();
     console.log("[Daily Tasks] User refresh completed:", refreshResult.message);
-
-    // Step 2: Wait a bit, then update ranks
-    console.log(
-      "[Daily Tasks] Step 2: Waiting 30 seconds before updating ranks..."
-    );
-    await new Promise((resolve) => setTimeout(resolve, 30000)); // 30 seconds
 
     console.log("[Daily Tasks] Step 2: Updating ranks...");
     const ranksResponse = await fetch(`${baseUrl}/api/cron/update-ranks`, {
@@ -88,4 +87,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return runDailyTasks(request);
+}
+
+export async function POST(request: NextRequest) {
+  return runDailyTasks(request);
 }

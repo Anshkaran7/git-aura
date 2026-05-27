@@ -26,12 +26,16 @@ model User {
   bannedAt             DateTime?            @map("banned_at")
   bannedBy             String?              @map("banned_by")
   isBanned             Boolean              @default(false) @map("is_banned")
+  lastAuraRefreshAt    DateTime?            @map("last_aura_refresh_at")
+  refreshError         String?              @map("refresh_error")
+  refreshAttempts      Int                  @default(0) @map("refresh_attempts")
   auraCalculations     AuraCalculation[]
   userBadges           UserBadge[]
   globalLeaderboard    GlobalLeaderboard?
   monthlyLeaderboard   MonthlyLeaderboard[]
   monthlyWinners       MonthlyWinners[]
 
+  @@index([lastAuraRefreshAt])
   @@map("users")
 }
 

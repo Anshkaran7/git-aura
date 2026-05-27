@@ -7,6 +7,8 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "db:backup": "node scripts/backup-db.js",
+    "db:restore": "node scripts/restore-db.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -33,6 +33,13 @@ export async function fetchGitHubContributions(
     };
   }
 
+  if (!process.env.GITHUB_TOKEN) {
+    return {
+      success: false,
+      error: "GitHub token is not configured",
+    };
+  }
+
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",

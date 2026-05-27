@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
+async function saveMonthlyWinners(request: NextRequest) {
   try {
     // Verify cron secret for security
     const authHeader = request.headers.get("authorization");
@@ -14,10 +17,12 @@ export async function POST(request: NextRequest) {
     );
 
     // Call the save monthly winners API
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      "http://localhost:3000";
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      }/api/save-monthly-winners`,
+      `${baseUrl}/api/save-monthly-winners`,
       {
         method: "POST",
         headers: {
@@ -57,14 +62,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({
-    message: "Monthly Winners Cron Job",
-    description:
-      "This endpoint is called automatically at month end (30th/31st) at 11:50 PM",
-    schedule: "50 23 L * *", // Last day of month at 11:50 PM
-    action: "Captures top 3 users from monthly leaderboard and awards badges",
-    usage:
-      "Should be configured in your cron service (Vercel Cron, GitHub Actions, etc.)",
-  });
+export async function GET(request: NextRequest) {
+  return saveMonthlyWinners(request);
+}
+
+export async function POST(request: NextRequest) {
+  return saveMonthlyWinners(request);
 }

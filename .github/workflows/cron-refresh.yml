@@ -1,9 +1,7 @@
 name: Refresh User Data
 
 on:
-  schedule:
-    - cron: "0 */2 * * *" # Every 2 hours
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch: # Manual emergency refresh; scheduled refresh lives in cron-jobs.yml/Vercel Cron
 
 jobs:
   refresh-users:

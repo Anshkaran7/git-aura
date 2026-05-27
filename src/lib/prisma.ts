@@ -4,9 +4,8 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Allow a temporary sqlite fallback if developer hasn't set Postgres yet.
-// If schema is Postgres but url starts with file:, Prisma will throw; we intercept to provide clearer guidance.
-const url = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_fTPdqJ2h8glB@ep-polished-bar-adezczbv-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+// Keep the database explicit so local/dev/prod never accidentally use a stale fallback.
+const url = process.env.DATABASE_URL;
 if (!url) {
   console.warn("DATABASE_URL missing. Set a Postgres connection string before deploying.");
 }

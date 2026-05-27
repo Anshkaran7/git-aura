@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 
-export async function POST(request: NextRequest) {
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
+async function updateRanks(request: NextRequest) {
   try {
     // Verify cron secret to ensure this is called by the cron job
     const authHeader = request.headers.get("authorization");
@@ -93,4 +96,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return updateRanks(request);
+}
+
+export async function POST(request: NextRequest) {
+  return updateRanks(request);
 }
