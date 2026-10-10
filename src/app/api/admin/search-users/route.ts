@@ -1,67 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { authorizeAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
-// Helper function to check if user is admin (same as ban-user route)
-async function isAdmin(userId: string): Promise<boolean> {
-  try {
-    const user = await currentUser();
-    if (!user) return false;
-
-    const adminEmails =
-      process.env.ADMIN_EMAILS?.split(",").map((email) =>
-        email.trim().toLowerCase()
-      ) || [];
-    const adminUsernames =
-      process.env.ADMIN_GITHUB_USERNAMES?.split(",").map((username) =>
-        username.trim().toLowerCase()
-      ) || [];
-
-    const primaryEmail = user.emailAddresses
-      ?.find((email) => email.id === user.primaryEmailAddressId)
-      ?.emailAddress?.toLowerCase();
-
-    if (primaryEmail && adminEmails.includes(primaryEmail)) {
-      return true;
-    }
-
-    const githubAccount = user.externalAccounts?.find(
-      (account) => account.provider === "github"
-    );
-
-    if (
-      githubAccount?.username &&
-      adminUsernames.includes(githubAccount.username.toLowerCase())
-    ) {
-      return true;
-    }
-
-    if (user.username && adminUsernames.includes(user.username.toLowerCase())) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if current user is admin
-    if (!(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
+    const authResult = await authorizeAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q")?.trim();

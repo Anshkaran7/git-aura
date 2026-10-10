@@ -6,9 +6,12 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Flame,
   GitBranch,
   RefreshCw,
+  Sparkles,
   TrendingUp,
+  Trophy,
   Users,
   Zap,
 } from "lucide-react";
@@ -24,12 +27,64 @@ import {
 } from "@/lib/utils2";
 import { GitHubContributions, Theme } from "./types";
 
+export interface AllTimeBadge {
+  name: string;
+  icon: string;
+  rarity?: string;
+  month_year?: string;
+  rank?: number;
+}
+
+export interface AllTimeEntry {
+  rank: number | null;
+  badges: AllTimeBadge[];
+}
+
+// One request per username per page session, shared by AuraPanel and the
+// shareable profile card.
+const allTimeEntryCache = new Map<string, Promise<AllTimeEntry | null>>();
+
+export function fetchAllTimeEntry(username: string) {
+  const key = username.toLowerCase();
+  let pending = allTimeEntryCache.get(key);
+  if (!pending) {
+    pending = fetch(
+      `/api/leaderboard/alltime?username=${encodeURIComponent(username)}&limit=1`
+    )
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) =>
+        data
+          ? {
+              rank: data.userRank ?? null,
+              badges: (data.userEntry?.badges ?? []) as AllTimeBadge[],
+            }
+          : null
+      )
+      .catch(() => {
+        allTimeEntryCache.delete(key);
+        return null;
+      });
+    allTimeEntryCache.set(key, pending);
+  }
+  return pending;
+}
+
+/** Remove leading/trailing emoji (and variation selectors) from a message. */
+export function stripEmoji(text: string) {
+  return text
+    .replace(/^[\s\p{Extended_Pictographic}\uFE0F\u200D]+/u, "")
+    .replace(/[\s\p{Extended_Pictographic}\uFE0F\u200D]+$/u, "")
+    .trim();
+}
+
 interface AuraPanelProps {
   selectedTheme: Theme;
   userAura: number;
   currentStreak: number;
   contributions: GitHubContributions;
   isCalculatingAura: boolean;
+  /** GitHub username — used to look up the all-time leaderboard rank. */
+  username?: string;
 }
 
 function calculateMonthlySnapshot(
@@ -90,12 +145,30 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   currentStreak,
   contributions,
   isCalculatingAura,
+  username,
 }) => {
   void selectedTheme;
 
   const { isSignedIn, user } = useUser();
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [isSyncingManually, setIsSyncingManually] = useState(false);
+  const [rank, setRank] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!username) {
+      setRank(null);
+      return;
+    }
+
+    let cancelled = false;
+    fetchAllTimeEntry(username).then((entry) => {
+      if (!cancelled) setRank(entry?.rank ?? null);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
 
   const fallbackTotalAura = useMemo(
     () =>
@@ -266,31 +339,22 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
   }, [currentMonth]);
 
   return (
-    <section className="mt-6 rounded-[28px] border border-border bg-card/85 p-4 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)] sm:p-6">
-      <div className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Aura analysis
-          </p>
-          <h3 className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-[-0.03em] text-foreground">
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            Performance overview
-          </h3>
-        </div>
-
+    <section className="gh-box">
+      <div className="gh-box-header">
+        <h2 className="text-sm font-semibold text-foreground">Aura overview</h2>
         <div className="flex items-center gap-2">
           {isCalculatingAura && (
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
-              <div className="h-3 w-3 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-foreground/20 border-t-foreground" />
               Calculating
-            </div>
+            </span>
           )}
-
           {isSignedIn && user && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleManualSync}
               disabled={isSyncingManually || isCalculatingAura}
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${
@@ -298,32 +362,73 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
                 }`}
               />
               {isSyncingManually ? "Syncing" : "Sync"}
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          Monthly breakdown
+      {/* Overall stats */}
+      <div className="grid grid-cols-2 gap-px bg-border-muted sm:grid-cols-4">
+        <StatCell
+          icon={<Zap className="h-3.5 w-3.5" />}
+          label="Total aura"
+          value={formatNumber(fallbackTotalAura)}
+        />
+        <StatCell
+          icon={<Trophy className="h-3.5 w-3.5" />}
+          label="All-time rank"
+          value={rank ? `#${rank.toLocaleString()}` : "—"}
+        />
+        <StatCell
+          icon={<Flame className="h-3.5 w-3.5" />}
+          label="Current streak"
+          value={`${fallbackCurrentStreak} ${
+            fallbackCurrentStreak === 1 ? "day" : "days"
+          }`}
+        />
+        <StatCell
+          icon={<TrendingUp className="h-3.5 w-3.5" />}
+          label="Level"
+          value={auraStatus.level}
+        />
+      </div>
+
+      <div className="flex items-start gap-3 border-t border-border-muted bg-canvas-subtle px-4 py-3">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0">
+          <p className="text-sm text-foreground">
+            {stripEmoji(auraStatus.message)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {stripEmoji(streakStatus.message)}
+          </p>
+        </div>
+      </div>
+
+      {/* Monthly breakdown */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground">
+            Monthly aura
+          </h3>
+          <span className="gh-label">{monthlyAuraStatus.level}</span>
         </div>
 
-        <div className="inline-flex items-center gap-2 self-start rounded-full border border-border bg-background p-1">
+        <div className="inline-flex items-center rounded-md border border-border bg-canvas-subtle">
           <button
             onClick={() => navigateMonth("prev")}
-            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+            className="flex h-7 w-7 items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[132px] text-center text-xs font-medium text-foreground">
+          <span className="flex h-7 min-w-[120px] items-center justify-center border-x border-border bg-card px-2 text-xs font-medium text-foreground">
             {formatMonthYear(currentMonth)}
           </span>
           <button
             onClick={() => navigateMonth("next")}
             disabled={currentMonth >= getCurrentMonthYear()}
-            className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-card hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             aria-label="Next month"
           >
             <ChevronRight className="h-4 w-4" />
@@ -331,111 +436,69 @@ const AuraPanel: React.FC<AuraPanelProps> = ({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[1.15fr_1fr]">
-        <div className="rounded-[24px] border border-border bg-background p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            {monthlyAuraStatus.level}
-          </p>
-          <h4 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-            {formatNumber(monthlyData.aura)}
-          </h4>
-          <p className={`mt-2 text-sm ${monthlyAuraStatus.tone}`}>
-            Monthly Aura for {formatMonthYear(currentMonth)}
-          </p>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <GitBranch className="h-3.5 w-3.5" />
-                Contributions
-              </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {monthlyData.contributions.toLocaleString()}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Users className="h-3.5 w-3.5" />
-                Active days
-              </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {monthlyData.activeDays}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[24px] border border-border bg-background p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Overall standing
-          </p>
-          <div className="mt-4 flex items-start gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card text-xl">
-              {auraStatus.emoji}
-            </div>
-            <div>
-              <h4 className={`text-lg font-semibold ${auraStatus.color}`}>
-                {auraStatus.level}
-              </h4>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                {auraStatus.message}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Zap className="h-3.5 w-3.5" />
-                Total Aura
-              </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {formatNumber(fallbackTotalAura)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <TrendingUp className="h-3.5 w-3.5" />
-                Streak
-              </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {fallbackCurrentStreak} days
-              </p>
-            </div>
-            <div className="rounded-2xl border border-border bg-card px-4 py-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" />
-                Consistency
-              </div>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {consistency}%
-              </p>
-            </div>
-          </div>
-
-          <p className={`mt-4 text-xs ${streakStatus.color}`}>
-            {streakStatus.emoji} {fallbackCurrentStreak}-day streak
-          </p>
-        </div>
+      <div className="grid grid-cols-2 gap-px border-t border-border-muted bg-border-muted sm:grid-cols-4">
+        <StatCell
+          icon={<Zap className="h-3.5 w-3.5" />}
+          label="Monthly aura"
+          value={formatNumber(monthlyData.aura)}
+        />
+        <StatCell
+          icon={<GitBranch className="h-3.5 w-3.5" />}
+          label="Contributions"
+          value={monthlyData.contributions.toLocaleString()}
+        />
+        <StatCell
+          icon={<Users className="h-3.5 w-3.5" />}
+          label="Active days"
+          value={`${monthlyData.activeDays} / ${monthlyData.daysInMonth}`}
+        />
+        <StatCell
+          icon={<Calendar className="h-3.5 w-3.5" />}
+          label="Consistency"
+          value={`${consistency}%`}
+        />
       </div>
 
       {!isSignedIn && (
-        <div className="mt-4 rounded-[24px] border border-dashed border-border bg-background p-5 text-center">
-          <p className="text-sm font-medium text-foreground">
-            Sign in to sync your Aura and monthly stats.
-          </p>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Logged-in users can persist rankings, badges, and up-to-date monthly
-            snapshots.
-          </p>
-          <div className="mt-4">
-            <SignInButton mode="modal">
-              <Button>Sign in to sync</Button>
-            </SignInButton>
+        <div className="flex flex-col items-start gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Sign in to sync your Aura and monthly stats
+            </p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Logged-in users can persist rankings, badges, and monthly
+              snapshots.
+            </p>
           </div>
+          <SignInButton mode="modal">
+            <Button size="sm">Sign in to sync</Button>
+          </SignInButton>
         </div>
       )}
     </section>
   );
 };
+
+function StatCell({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0 bg-card px-4 py-3">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <p className="mt-1 truncate text-xl font-semibold tabular-nums text-foreground">
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export default AuraPanel;

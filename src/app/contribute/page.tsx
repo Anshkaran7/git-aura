@@ -1,19 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Analytics01Icon,
-  ArrowRight01Icon,
   Award01Icon,
   GithubIcon,
   RankingIcon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import Contributors from "@/components/Contributors";
-import { Header } from "@/components/home";
-import { Badge } from "@/components/ui/badge";
+import { Header, Footer } from "@/components/home";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { HugeIcon } from "@/components/ui/huge-icon";
 
 const contributionAreas = [
@@ -92,219 +90,209 @@ const stack = [
   "GitHub API",
 ];
 
+const REPO_URL = "https://github.com/Anshkaran7/git-aura";
+
+function ExternalButton({
+  href,
+  variant,
+  children,
+}: {
+  href: string;
+  variant?: "default" | "outline" | "dark";
+  children: ReactNode;
+}) {
+  return (
+    <Button variant={variant} className="w-full sm:w-auto" asChild>
+      <Link href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </Link>
+    </Button>
+  );
+}
+
+function SectionHeading({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+      {description && (
+        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+      )}
+    </div>
+  );
+}
+
 export default function ContributePage() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
 
-      <main className="bg-background text-foreground">
-        <section className="border-b border-border/80">
-          <div className="mx-auto max-w-6xl px-4 pb-14 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center">
-              <Badge
-                variant="outline"
-                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-              >
-                Open Source
-              </Badge>
-              <h1 className="mt-5 text-3xl font-semibold tracking-[-0.04em] sm:text-5xl">
-                Help shape GitAura with calm, thoughtful contributions.
-              </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                GitAura is built in the open. If you care about better UI,
-                cleaner code, stronger edge-case handling, or steadier
-                performance, there is meaningful work here for you.
-              </p>
-              <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                <Link
-                  href="https://github.com/Anshkaran7/git-aura"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button className="w-full sm:w-auto">
-                    <HugeIcon icon={GithubIcon} size={16} />
-                    View repository
-                    <HugeIcon icon={ArrowRight01Icon} size={16} />
-                  </Button>
-                </Link>
-                <Link
-                  href="https://github.com/Anshkaran7/git-aura/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="secondary" className="w-full sm:w-auto">
-                    Browse issues
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {contributionAreas.map((area) => (
-                <Card
-                  key={area.title}
-                  className="rounded-[24px] border-border/80 bg-card/80 p-5 shadow-[0_20px_60px_-45px_rgba(15,23,42,0.32)]"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-background">
-                      <HugeIcon icon={area.icon} size={18} className="text-primary" />
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="rounded-full border-border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
-                    >
-                      {area.tag}
-                    </Badge>
-                  </div>
-                  <h2 className="mt-5 text-base font-semibold">{area.title}</h2>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
-                    {area.description}
-                  </p>
-                </Card>
-              ))}
-            </div>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        {/* Page head */}
+        <section className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <p className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <HugeIcon icon={GithubIcon} size={16} />
+              <Link href={REPO_URL} target="_blank" rel="noopener noreferrer" className="gh-link">
+                Anshkaran7/git-aura
+              </Link>
+              <span className="gh-label">Public</span>
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Contribute to GitAura
+            </h1>
+            <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+              GitAura is built in the open. If you care about better UI,
+              cleaner code, stronger edge-case handling, or steadier
+              performance, there is meaningful work here for you.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <ExternalButton href={REPO_URL}>
+              <HugeIcon icon={GithubIcon} size={16} />
+              View repository
+            </ExternalButton>
+            <ExternalButton href={`${REPO_URL}/issues`} variant="outline">
+              Browse issues
+            </ExternalButton>
           </div>
         </section>
 
-        <section className="border-b border-border/80">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mb-8 max-w-2xl">
-              <Badge
-                variant="outline"
-                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-              >
-                Workflow
-              </Badge>
-              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                A clean contribution path.
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                Keep the process simple, focused, and easy for maintainers to
-                review.
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {workflow.map((item) => (
-                <Card
-                  key={item.step}
-                  className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Step {item.step}
-                    </span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-semibold tracking-[-0.02em]">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground sm:text-[13px]">
-                    {item.description}
-                  </p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-border/80">
-          <div className="mx-auto grid max-w-6xl gap-4 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:px-8">
-            <Card className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6">
-              <h3 className="text-lg font-semibold">Tech stack</h3>
-              <div className="mt-5 grid gap-2">
-                {stack.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-background px-3 py-3 text-sm text-muted-foreground"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <Card className="rounded-[24px] border-border/80 bg-card/70 p-5 sm:p-6">
-              <h3 className="text-lg font-semibold">Contribution standards</h3>
-              <div className="mt-5 grid gap-2">
-                {standards.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-border bg-background px-3 py-3 text-sm leading-6 text-muted-foreground"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-        </section>
-
-        <section className="border-b border-border/80">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mb-8 max-w-2xl">
-              <Badge
-                variant="outline"
-                className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-              >
-                Contributors
-              </Badge>
-              <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                People building it forward.
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                GitAura is getting better because real people keep improving the
-                details.
-              </p>
-            </div>
-            <Contributors />
-          </div>
-        </section>
-
-        <section>
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-            <Card className="rounded-[28px] border-border/80 bg-card/80 p-6 sm:p-8">
-              <div className="max-w-2xl">
-                <Badge
-                  variant="outline"
-                  className="rounded-full border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-                >
-                  Ready to contribute
-                </Badge>
-                <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
-                  Start with one focused improvement.
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-[15px]">
-                  Small, well-executed changes are far more valuable than noisy,
-                  oversized pull requests.
-                </p>
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="https://github.com/Anshkaran7/git-aura/fork"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="w-full sm:w-auto">
-                      <HugeIcon icon={GithubIcon} size={16} />
-                      Fork repository
-                    </Button>
-                  </Link>
-                  <Link
-                    href="https://github.com/Anshkaran7/git-aura/issues/new"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="secondary" className="w-full sm:w-auto">
-                      Open an issue
-                    </Button>
-                  </Link>
+        {/* Areas */}
+        <section className="mt-8">
+          <SectionHeading
+            title="Where you can help"
+            description="Pick an area that matches what you enjoy working on."
+          />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {contributionAreas.map((area) => (
+              <div key={area.title} className="gh-box p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <HugeIcon
+                    icon={area.icon}
+                    size={16}
+                    className="text-muted-foreground"
+                  />
+                  <span className="gh-label">{area.tag}</span>
                 </div>
+                <h3 className="mt-3 text-sm font-semibold">{area.title}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {area.description}
+                </p>
               </div>
-            </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Workflow + sidebar */}
+        <section className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div>
+            <SectionHeading
+              title="Contribution workflow"
+              description="Keep the process simple, focused, and easy for maintainers to review."
+            />
+            <ol className="relative">
+              {workflow.map((item, index) => (
+                <li key={item.step} className="relative flex gap-4 pb-6 last:pb-0">
+                  {index < workflow.length - 1 && (
+                    <span
+                      aria-hidden
+                      className="absolute left-[15px] top-8 bottom-0 w-0.5 bg-border"
+                    />
+                  )}
+                  <span className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-canvas-subtle text-xs font-semibold tabular-nums text-foreground">
+                    {index + 1}
+                  </span>
+                  <div className="pt-1">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <aside className="space-y-6">
+            <div>
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
+                Tech stack
+              </h2>
+              <div className="flex flex-wrap gap-1.5">
+                {stack.map((item) => (
+                  <span
+                    key={item}
+                    className="gh-label border-transparent bg-accent-subtle text-link"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="border-t border-border pt-6">
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
+                Contribution standards
+              </h2>
+              <ul className="space-y-1.5">
+                {standards.map((item) => (
+                  <li
+                    key={item}
+                    className="flex gap-2 text-sm leading-5 text-muted-foreground"
+                  >
+                    <svg
+                      aria-hidden
+                      viewBox="0 0 16 16"
+                      className="mt-0.5 h-4 w-4 shrink-0 fill-current text-success"
+                    >
+                      <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+        </section>
+
+        {/* Contributors */}
+        <section className="mt-10">
+          <Contributors />
+        </section>
+
+        {/* CTA */}
+        <section className="mt-10">
+          <div className="gh-box flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                Start with one focused improvement
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Small, well-executed changes are far more valuable than noisy,
+                oversized pull requests.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+              <ExternalButton href={`${REPO_URL}/fork`}>
+                <HugeIcon icon={GithubIcon} size={16} />
+                Fork repository
+              </ExternalButton>
+              <ExternalButton href={`${REPO_URL}/issues/new`} variant="outline">
+                Open an issue
+              </ExternalButton>
+            </div>
           </div>
         </section>
       </main>
-    </>
+
+      <Footer />
+    </div>
   );
 }

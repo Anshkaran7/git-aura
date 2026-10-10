@@ -1,25 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { isUserAdmin } from "@/lib/utils";
 
-export async function POST(request: NextRequest) {
+// Admin status is decided only from the signed-in session — never from
+// client-supplied identifiers — so it can't be used to probe who the admins are.
+export async function POST() {
   try {
-    const { email, githubUsername } = await request.json();
-
-    if (!email && !githubUsername) {
-      return NextResponse.json(
-        { error: "Email or GitHub username is required" },
-        { status: 400 }
-      );
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json({ isAdmin: false });
     }
 
-    const isAdmin = isUserAdmin(email, githubUsername);
+    const primaryEmail = user.emailAddresses?.find(
+      (email) => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+    const githubUsername =
+      user.externalAccounts?.find((account) => account.provider === "github")
+        ?.username ?? user.username;
 
-    return NextResponse.json({ isAdmin });
+    return NextResponse.json({ isAdmin: isUserAdmin(primaryEmail, githubUsername) });
   } catch (error) {
     console.error("Error checking admin status:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ isAdmin: false });
   }
 }

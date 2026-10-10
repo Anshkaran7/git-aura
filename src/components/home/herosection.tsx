@@ -1,51 +1,31 @@
 "use client";
 
-import { useMemo } from "react";
+import Link from "next/link";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Analytics01Icon,
-  ArrowRight01Icon,
-  Award01Icon,
-  GithubIcon,
-  RankingIcon,
-  Share08Icon,
-  SparklesIcon,
-} from "@hugeicons/core-free-icons";
+  ArrowRight,
+  ArrowUpRight,
+  BookMarked,
+  CalendarDays,
+  ChevronRight,
+  Flame,
+  GitPullRequest,
+  Github,
+  MapPin,
+  Medal,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HugeIcon } from "@/components/ui/huge-icon";
 
 interface HeroStats {
   totalDevelopers: number;
   totalAuraPoints: number;
   totalBadges?: number;
-  monthYear?: string;
-  fallback?: boolean;
+  totalMonthlyContributions?: number;
 }
-
-const quickNotes = [
-  {
-    title: "Quiet flex energy",
-    text: "Your commits, streaks, and badges show up polished, not loud.",
-    icon: SparklesIcon,
-  },
-  {
-    title: "Leaderboard receipts",
-    text: "Monthly and all-time rankings that read fast and actually feel premium.",
-    icon: RankingIcon,
-  },
-  {
-    title: "Shareables that hit",
-    text: "Profile cards and battle exports that look clean enough to post without editing.",
-    icon: Share08Icon,
-  },
-  {
-    title: "Badges with aura",
-    text: "Top placements look earned, not randomly tossed onto the screen.",
-    icon: Award01Icon,
-  },
-];
 
 async function fetchHeroStats(): Promise<HeroStats> {
   const response = await fetch("/api/stats/hero", { cache: "no-store" });
@@ -55,6 +35,27 @@ async function fetchHeroStats(): Promise<HeroStats> {
 
   return response.json();
 }
+
+const formatNumber = (value: number) => {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return `${value}`;
+};
+
+// Deterministic pseudo-random contribution levels for the preview graph
+const PREVIEW_WEEKS = 52;
+const previewLevels = Array.from({ length: PREVIEW_WEEKS * 7 }, (_, i) => {
+  const n = Math.sin(i * 12.9898) * 43758.5453;
+  const r = n - Math.floor(n);
+  const week = Math.floor(i / 7);
+  const boost = week > 38 ? 0.18 : 0; // ramp up recent activity
+  const v = r + boost;
+  if (v < 0.35) return 0;
+  if (v < 0.6) return 1;
+  if (v < 0.8) return 2;
+  if (v < 0.93) return 3;
+  return 4;
+});
 
 export const HeroSection = () => {
   const { isSignedIn, user } = useUser();
@@ -66,206 +67,266 @@ export const HeroSection = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const stats = heroStatsQuery.data ?? {
-    totalDevelopers: 0,
-    totalAuraPoints: 0,
-    totalBadges: 0,
-  };
-
-  const formatNumber = (value: number) => {
-    if (value >= 1_000_000) {
-      return `${(value / 1_000_000).toFixed(1)}M`;
-    }
-
-    if (value >= 1_000) {
-      return `${(value / 1_000).toFixed(1)}K`;
-    }
-
-    return `${value}`;
-  };
+  const stats = heroStatsQuery.data;
 
   const handleGoToProfile = () => {
     const githubAccount = user?.externalAccounts?.find(
       (account) => account.provider === "github"
     );
 
-    if (githubAccount?.username) {
-      router.push(`/${githubAccount.username}`);
-      return;
-    }
-
-    router.push("/profile");
+    router.push(githubAccount?.username ? `/${githubAccount.username}` : "/sign-in");
   };
 
-  const statCards = useMemo(
-    () => [
-      {
-        label: "Developers",
-        value: heroStatsQuery.isLoading
-          ? "..."
-          : `${formatNumber(stats.totalDevelopers)}+`,
-      },
-      {
-        label: "Aura tracked",
-        value: heroStatsQuery.isLoading
-          ? "..."
-          : `${formatNumber(stats.totalAuraPoints)}+`,
-      },
-      {
-        label: "Badges dropped",
-        value: heroStatsQuery.isLoading
-          ? "..."
-          : `${formatNumber(stats.totalBadges || 0)}+`,
-      },
-    ],
-    [heroStatsQuery.isLoading, stats.totalAuraPoints, stats.totalBadges, stats.totalDevelopers]
-  );
-
   return (
-    <section className="relative overflow-hidden px-4 pb-14 pt-28 sm:px-6 sm:pb-20 sm:pt-36">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(161,161,170,0.18),transparent_28%),radial-gradient(circle_at_82%_12%,rgba(212,212,216,0.18),transparent_24%),radial-gradient(circle_at_50%_0%,rgba(10,10,10,0.07),transparent_38%)] dark:bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_82%_12%,rgba(255,255,255,0.06),transparent_20%),radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.05),transparent_36%)]" />
-      <div className="absolute inset-x-6 top-28 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-      <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
-        <div className="max-w-3xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-1.5 shadow-sm backdrop-blur">
-            <HugeIcon icon={SparklesIcon} size={14} className="text-primary" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Clean flex for GitHub people
+    <section className="border-b border-border px-4 pb-16 pt-14 sm:px-6 sm:pt-20">
+      <div className="mx-auto max-w-6xl">
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <Link
+            href="/monthly-winners"
+            className="group inline-flex items-center gap-2 rounded-full border border-border bg-background py-1 pl-1 pr-3 text-xs text-muted-foreground transition-colors hover:border-border-strong"
+          >
+            <span className="rounded-full bg-accent-subtle px-2 py-0.5 font-medium text-link">
+              New
             </span>
-          </div>
+            Monthly winners are in
+            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
 
-          <h1 className="max-w-3xl text-[2.45rem] font-semibold leading-[0.94] tracking-[-0.065em] text-foreground sm:text-[3.6rem] lg:text-[5rem]">
-            Turn your GitHub into a quiet flex.
+          <h1 className="mt-6 text-4xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-6xl">
+            Your GitHub activity,
+            <br className="hidden sm:block" /> scored and ranked.
           </h1>
 
-          <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[15px]">
-            GitAura gives your commits, streaks, badges, and rank movement main
-            character energy without doing too much. It feels sharp, calm, and
-            lowkey expensive.
+          <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+            GitAura turns your contributions into an aura score, streaks and
+            badges — then puts you on a global leaderboard with everyone else.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
             {isSignedIn ? (
-              <Button
-                size="lg"
-                onClick={handleGoToProfile}
-                className="h-11 rounded-full px-5 text-sm font-semibold"
-              >
-                <HugeIcon icon={GithubIcon} size={16} />
-                Open my aura
-                <HugeIcon icon={ArrowRight01Icon} size={16} />
+              <Button size="lg" onClick={handleGoToProfile}>
+                <Github />
+                Open your profile
+                <ArrowRight />
               </Button>
             ) : (
               <SignInButton mode="modal">
-                <Button
-                  size="lg"
-                  className="h-11 rounded-full px-5 text-sm font-semibold"
-                >
-                  <HugeIcon icon={GithubIcon} size={16} />
-                  Plug in GitHub
-                  <HugeIcon icon={ArrowRight01Icon} size={16} />
+                <Button size="lg">
+                  <Github />
+                  Sign in with GitHub
+                  <ArrowRight />
                 </Button>
               </SignInButton>
             )}
 
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => router.push("/leaderboard")}
-              className="h-11 rounded-full px-5 text-sm font-semibold"
-            >
-              <HugeIcon icon={RankingIcon} size={16} />
-              See who’s up
+            <Button size="lg" variant="outline" asChild>
+              <Link href="/leaderboard">
+                <Trophy />
+                View leaderboard
+              </Link>
             </Button>
           </div>
 
-          <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-            {statCards.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[1.35rem] border border-border bg-card/90 px-4 py-3 shadow-sm backdrop-blur"
-              >
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  {item.label}
-                </div>
-                <div className="mt-2 text-lg font-semibold tracking-[-0.03em] text-foreground">
-                  {item.value}
-                </div>
+          <dl className="mt-10 grid w-full max-w-lg grid-cols-3 divide-x divide-border rounded-md border border-border">
+            {[
+              { label: "Developers", value: stats?.totalDevelopers },
+              { label: "Aura earned", value: stats?.totalAuraPoints },
+              { label: "Badges awarded", value: stats?.totalBadges },
+            ].map((item) => (
+              <div key={item.label} className="px-3 py-3">
+                <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                <dd className="mt-0.5 text-lg font-semibold tabular-nums text-foreground">
+                  {typeof item.value === "number" ? (
+                    formatNumber(item.value)
+                  ) : (
+                    <span className="mx-auto block h-6 w-12 animate-pulse rounded bg-accent" />
+                  )}
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
 
-        <div className="relative">
-          <div className="absolute inset-0 rounded-[2.4rem] bg-gradient-to-b from-foreground/6 to-transparent blur-3xl" />
-          <div className="relative overflow-hidden rounded-[2.2rem] border border-border bg-card/95 p-4 shadow-[0_30px_90px_-36px_rgba(0,0,0,0.24)] backdrop-blur sm:p-5">
-            <div className="mb-5 flex items-center justify-between border-b border-border pb-4">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Live preview
-                </p>
-                <h2 className="mt-1 text-base font-semibold tracking-[-0.03em] text-foreground">
-                  Not loud. Just dangerously clean.
-                </h2>
+        <ProfilePreview />
+      </div>
+    </section>
+  );
+};
+
+const MONTHS = ["Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+
+function ProfilePreview() {
+  return (
+    <div className="relative mx-auto mt-14 max-w-5xl" aria-hidden="true">
+      <div className="overflow-hidden rounded-md border border-border bg-background gh-shadow">
+        {/* Window chrome */}
+        <div className="flex items-center gap-2 border-b border-border bg-canvas-subtle px-4 py-2.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-border" />
+          <span className="h-2.5 w-2.5 rounded-full bg-border" />
+          <span className="h-2.5 w-2.5 rounded-full bg-border" />
+          <span className="ml-3 min-w-0 truncate rounded-md border border-border bg-background px-3 py-0.5 font-mono text-[11px] text-muted-foreground">
+            git-aura.karandev.in/octocat
+          </span>
+        </div>
+
+        {/* Profile tabs */}
+        <div className="flex gap-1 overflow-hidden border-b border-border px-4 text-sm md:pl-[236px]">
+          {[
+            { label: "Overview", icon: BookMarked, active: true },
+            { label: "Aura", icon: Zap, count: "4.9K" },
+            { label: "Badges", icon: Medal, count: "6" },
+            { label: "Battles", icon: GitPullRequest, count: "12" },
+          ].map(({ label, icon: Icon, active, count }) => (
+            <span
+              key={label}
+              className={`relative flex shrink-0 items-center gap-2 px-2 py-3 ${
+                active
+                  ? "font-semibold text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:rounded-full after:bg-[#fd8c73]"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4 text-muted-foreground" />
+              {label}
+              {count && <span className="gh-counter">{count}</span>}
+            </span>
+          ))}
+        </div>
+
+        <div className="grid gap-6 p-4 text-left sm:p-6 md:grid-cols-[200px_1fr]">
+          {/* Profile column */}
+          <div className="flex items-start gap-4 md:-mt-14 md:flex-col md:gap-0">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border bg-canvas-subtle md:h-[200px] md:w-[200px]">
+              <Github className="h-8 w-8 text-foreground md:h-24 md:w-24" strokeWidth={1.25} />
+            </div>
+            <div className="min-w-0 md:mt-4">
+              <p className="text-xl font-semibold leading-tight text-foreground">The Octocat</p>
+              <p className="text-lg font-light leading-tight text-muted-foreground">octocat</p>
+              <div className="mt-3 hidden h-8 items-center justify-center rounded-md border border-border bg-canvas-subtle text-sm font-medium text-foreground md:flex">
+                Share profile
               </div>
-              <div className="flex items-center gap-2 rounded-full border border-border bg-background/90 px-3 py-1.5">
-                <HugeIcon
-                  icon={Analytics01Icon}
-                  size={14}
-                  className="text-primary"
-                />
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {stats.monthYear || "Live data"}
-                </span>
+              <ul className="mt-3 hidden space-y-1 text-sm text-muted-foreground md:block">
+                <li className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> San Francisco
+                </li>
+                <li className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4" /> Joined 2011
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Main column */}
+          <div className="min-w-0 space-y-4">
+            <div className="grid grid-cols-2 overflow-hidden rounded-md border border-border sm:grid-cols-4">
+              <PreviewStat label="Aura" value="4,892" />
+              <PreviewStat
+                label="Global rank"
+                value={
+                  <span className="inline-flex items-center gap-1.5">
+                    #24
+                    <span className="inline-flex items-center text-xs font-medium text-success">
+                      <ArrowUpRight className="h-3.5 w-3.5" />6
+                    </span>
+                  </span>
+                }
+              />
+              <PreviewStat
+                label="Streak"
+                value={
+                  <span className="inline-flex items-center gap-1">
+                    18
+                    <span className="text-sm font-normal text-muted-foreground">days</span>
+                    <Flame className="h-4 w-4 text-bronze" />
+                  </span>
+                }
+              />
+              <PreviewStat label="This month" value="+346" />
+            </div>
+
+            <div>
+              <p className="mb-2 text-base text-foreground">
+                1,284 contributions in the last year
+              </p>
+              <div className="rounded-md border border-border p-3 sm:p-4">
+                <div className="flex justify-end overflow-hidden">
+                  <div className="w-max">
+                    <div className="mb-1 grid grid-cols-12 text-[10px] text-muted-foreground">
+                      {MONTHS.map((m) => (
+                        <span key={m}>{m}</span>
+                      ))}
+                    </div>
+                    <div
+                      className="grid grid-flow-col gap-[3px]"
+                      style={{ gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}
+                    >
+                      {previewLevels.map((level, i) => (
+                        <span
+                          key={i}
+                          className="h-[10px] w-[10px] rounded-[2px] outline outline-1 -outline-offset-1 outline-foreground/5"
+                          style={{ backgroundColor: `var(--contribution-level-${level})` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span className="hidden sm:inline">Learn how we count aura</span>
+                  <span className="ml-auto flex items-center gap-1">
+                    Less
+                    {[0, 1, 2, 3, 4].map((l) => (
+                      <span
+                        key={l}
+                        className="h-[10px] w-[10px] rounded-[2px] outline outline-1 -outline-offset-1 outline-foreground/5"
+                        style={{ backgroundColor: `var(--contribution-level-${l})` }}
+                      />
+                    ))}
+                    More
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="grid gap-3">
-              {quickNotes.map((note, index) => (
-                <div
-                  key={note.title}
-                  className={`rounded-[1.45rem] border border-border bg-background/90 px-4 py-3 ${
-                    index === 0
-                      ? "bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(245,245,245,0.88))] dark:bg-[linear-gradient(135deg,rgba(23,23,23,0.92),rgba(10,10,10,0.88))]"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-foreground">
-                      <HugeIcon icon={note.icon} size={16} />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold tracking-[-0.02em] text-foreground">
-                        {note.title}
-                      </h3>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                        {note.text}
-                      </p>
-                    </div>
-                  </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-md border border-border p-4">
+                <p className="text-sm font-semibold text-foreground">Badges</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="gh-label border-gold/40 text-gold">
+                    <Trophy className="h-3 w-3" /> 1st · September
+                  </span>
+                  <span className="gh-label border-silver/40 text-silver">
+                    <Medal className="h-3 w-3" /> 2nd · July
+                  </span>
+                  <span className="gh-label">
+                    <Flame className="h-3 w-3 text-bronze" /> 30-day streak
+                  </span>
                 </div>
-              ))}
-
-              <div className="rounded-[1.6rem] border border-border bg-[linear-gradient(135deg,rgba(255,255,255,0.92),rgba(245,245,245,0.82))] px-4 py-4 dark:bg-[linear-gradient(135deg,rgba(23,23,23,0.92),rgba(10,10,10,0.9))]">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Signature vibe
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-foreground">
-                      Looks premium. Still feels effortless.
-                    </p>
-                  </div>
-                  <div className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-muted-foreground">
-                    zero template energy
-                  </div>
-                </div>
+              </div>
+              <div className="rounded-md border border-border p-4">
+                <p className="text-sm font-semibold text-foreground">Recent activity</p>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-success" />
+                    Climbed to <span className="font-medium text-foreground">#24</span> globally
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-done" />
+                    Won a battle against <span className="font-medium text-foreground">@hubot</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
-};
+}
+
+function PreviewStat({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="-mb-px -mr-px border-b border-r border-border px-3 py-3 sm:px-4">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums text-foreground sm:text-xl">{value}</p>
+    </div>
+  );
+}

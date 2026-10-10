@@ -40,192 +40,260 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-canvas-subtle: var(--canvas-subtle);
+  --color-canvas-inset: var(--canvas-inset);
+  --color-border-muted: var(--border-muted);
+  --color-link: var(--link);
+  --color-success: var(--success);
+  --color-success-emphasis: var(--success-emphasis);
+  --color-attention: var(--attention);
+  --color-done: var(--done);
+  --color-danger: var(--danger);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success-subtle: var(--success-subtle);
+  --color-attention-subtle: var(--attention-subtle);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-done-subtle: var(--done-subtle);
+  --color-neutral-muted: var(--neutral-muted);
+  --color-gold: var(--gold);
+  --color-silver: var(--silver);
+  --color-bronze: var(--bronze);
+  --color-btn-primary-hover: var(--btn-primary-hover);
+  --color-border-strong: var(--border-strong);
+  --font-sans: var(--font-mona), -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 :root {
-  --radius: 0.625rem;
+  /* GitHub Primer (light) inspired palette */
+  --radius: 0.375rem;
   --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #fafafa;
-  --card-foreground: #171717;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --card-foreground: #1f2328;
   --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #171717;
-  --primary-foreground: #fafafa;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #262626;
-  --muted: #f5f5f5;
-  --muted-foreground: #525252;
-  --accent: #e5e5e5;
-  --accent-foreground: #171717;
-  --destructive: oklch(0.57 0.24 27);
-  --border: #e5e5e5;
-  --input: #f5f5f5;
-  --ring: #737373;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: #fafafa;
-  --sidebar-foreground: #171717;
-  --sidebar-primary: #171717;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #f5f5f5;
-  --sidebar-accent-foreground: #262626;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #737373;
-  --contribution-level-0: #f5f5f5;
-  --contribution-level-1: oklch(0.85 0.1 140);  /* Pale Green */
-  --contribution-level-2: oklch(0.75 0.15 140);  /* Light Green */
-  --contribution-level-3: oklch(0.65 0.2 140);  /* Medium Green */
-  --contribution-level-4: oklch(0.55 0.25 140);  /* Dark Green */
+  --popover-foreground: #1f2328;
+  --primary: #1f2328;
+  --primary-foreground: #ffffff;
+  --secondary: #f6f8fa;
+  --secondary-foreground: #1f2328;
+  --muted: #f6f8fa;
+  --muted-foreground: #59636e;
+  --accent: #eff2f5;
+  --accent-foreground: #1f2328;
+  --destructive: #d1242f;
+  --border: #d1d9e0;
+  --border-muted: #e5eaef;
+  --input: #ffffff;
+  --ring: #0969da;
+
+  --canvas-subtle: #f6f8fa;
+  --canvas-inset: #f6f8fa;
+  --link: #0969da;
+  --success: #1a7f37;
+  --success-emphasis: #1f883d;
+  --attention: #9a6700;
+  --done: #8250df;
+  --danger: #d1242f;
+  --accent-subtle: #ddf4ff;
+  --success-subtle: #dafbe1;
+  --attention-subtle: #fff8c5;
+  --danger-subtle: #ffebe9;
+  --done-subtle: #fbefff;
+  --neutral-muted: #818b981f;
+  --gold: #bf8700;
+  --silver: #6e7781;
+  --bronze: #bc4c00;
+  --btn-primary-hover: #1c8139;
+  --border-strong: #afb8c1;
+  --shadow-overlay: 0 8px 24px rgba(140, 149, 159, 0.2);
+
+  --chart-1: #1f883d;
+  --chart-2: #0969da;
+  --chart-3: #8250df;
+  --chart-4: #bf8700;
+  --chart-5: #cf222e;
+  --sidebar: #f6f8fa;
+  --sidebar-foreground: #1f2328;
+  --sidebar-primary: #1f2328;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eff2f5;
+  --sidebar-accent-foreground: #1f2328;
+  --sidebar-border: #d1d9e0;
+  --sidebar-ring: #0969da;
+
+  /* GitHub contribution graph greens */
+  --contribution-level-0: #eff2f5;
+  --contribution-level-1: #aceebb;
+  --contribution-level-2: #4ac26b;
+  --contribution-level-3: #2da44e;
+  --contribution-level-4: #116329;
 }
 
+/* GitHub Primer (dark) — default theme */
 .dark {
-  --background: #000000;
-  --foreground: #fafafa;
-  --card: #0a0a0a;
-  --card-foreground: #f5f5f5;
-  --popover: #0a0a0a;
-  --popover-foreground: #fafafa;
-  --primary: #f5f5f5;
-  --primary-foreground: #0a0a0a;
-  --secondary: #171717;
-  --secondary-foreground: #d4d4d4;
-  --muted: #171717;
-  --muted-foreground: #a3a3a3;
-  --accent: #262626;
-  --accent-foreground: #e5e5e5;
-  --destructive: oklch(0.6 0.2 15); /* Red for destructive */
-  --border: #262626;
-  --input: #171717;
-  --ring: #737373;
-  --chart-1: oklch(0.7 0 0);
-  --chart-2: oklch(0.6 0 0);
-  --chart-3: oklch(0.5 0 0);
-  --chart-4: oklch(0.8 0 0);
-  --chart-5: oklch(0.75 0 0);
-  --sidebar: #0a0a0a;
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-primary: #f5f5f5;
-  --sidebar-primary-foreground: #0a0a0a;
-  --sidebar-accent: #171717;
-  --sidebar-accent-foreground: #e5e5e5;
-  --sidebar-border: #262626;
-  --sidebar-ring: #737373;
-  --contribution-level-0: #0a0a0a;
-  --contribution-level-1: oklch(0.2 0.05 140); /* Darkest Green */
-  --contribution-level-2: oklch(0.3 0.1 140);  /* Dark Green */
-  --contribution-level-3: oklch(0.4 0.15 140);  /* Medium Green */
-  --contribution-level-4: oklch(0.5 0.2 140);  /* Brightest Green */
+  color-scheme: dark;
+  --background: #0d1117;
+  --foreground: #f0f6fc;
+  --card: #0d1117;
+  --card-foreground: #f0f6fc;
+  --popover: #151b23;
+  --popover-foreground: #f0f6fc;
+  --primary: #f0f6fc;
+  --primary-foreground: #0d1117;
+  --secondary: #151b23;
+  --secondary-foreground: #f0f6fc;
+  --muted: #151b23;
+  --muted-foreground: #9198a1;
+  --accent: #262c36;
+  --accent-foreground: #f0f6fc;
+  --destructive: #f85149;
+  --border: #3d444d;
+  --border-muted: #3d444db3;
+  --input: #0d1117;
+  --ring: #1f6feb;
+
+  --canvas-subtle: #151b23;
+  --canvas-inset: #010409;
+  --link: #4493f8;
+  --success: #3fb950;
+  --success-emphasis: #238636;
+  --attention: #d29922;
+  --done: #ab7df8;
+  --danger: #f85149;
+  --accent-subtle: #388bfd1a;
+  --success-subtle: #2ea04326;
+  --attention-subtle: #bb800926;
+  --danger-subtle: #f851491a;
+  --done-subtle: #ab7df826;
+  --neutral-muted: #656c7633;
+  --gold: #e3b341;
+  --silver: #9198a1;
+  --bronze: #f0883e;
+  --btn-primary-hover: #29903b;
+  --border-strong: #656c76;
+  --shadow-overlay: 0 8px 24px rgba(1, 4, 9, 0.75);
+
+  --chart-1: #3fb950;
+  --chart-2: #4493f8;
+  --chart-3: #ab7df8;
+  --chart-4: #d29922;
+  --chart-5: #f85149;
+  --sidebar: #010409;
+  --sidebar-foreground: #f0f6fc;
+  --sidebar-primary: #f0f6fc;
+  --sidebar-primary-foreground: #0d1117;
+  --sidebar-accent: #262c36;
+  --sidebar-accent-foreground: #f0f6fc;
+  --sidebar-border: #3d444d;
+  --sidebar-ring: #1f6feb;
+
+  --contribution-level-0: #151b23;
+  --contribution-level-1: #033a16;
+  --contribution-level-2: #196c2e;
+  --contribution-level-3: #2ea043;
+  --contribution-level-4: #56d364;
 }
 
 @layer base {
-  :root {
-    --font-sans: "Montserrat";
-  }
-
   html {
-    font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background:
-      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 14%, transparent), transparent 34%),
-      var(--background);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   * {
     @apply border-border outline-ring/50;
   }
-  
+
   body {
-    background:
-      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 10%, transparent), transparent 32%),
-      linear-gradient(180deg, color-mix(in oklab, var(--background) 96%, white 4%), var(--background)) !important;
-    @apply text-foreground;
-    font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
     min-height: 100vh;
   }
 
-  .dark body {
-    background:
-      radial-gradient(circle at top, color-mix(in oklab, var(--primary) 14%, transparent), transparent 28%),
-      linear-gradient(180deg, color-mix(in oklab, var(--background) 92%, black 8%), var(--background)) !important;
+  a {
+    color: inherit;
   }
 
-  /* Style for Light Mode */
+  ::selection {
+    background: color-mix(in srgb, var(--link) 22%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -1px;
+  }
+
   .cl-formButtonPrimary {
-    background-color: var(--primary) !important;
-    color: var(--primary-foreground) !important;
-    opacity: 1 !important;
-    border: 1px solid var(--border) !important; 
+    background-color: var(--success-emphasis) !important;
+    color: #fff !important;
   }
 
   .cl-formButtonPrimary:hover {
-    opacity: 0.9 !important;
+    opacity: 0.92 !important;
   }
 
-  .dark .cl-formButtonPrimary {
-    background-color: var(--primary) !important;
-    color: var(--primary-foreground) !important;
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
   }
-  
-  /* Custom dark theme utilities */
-  .text-highlight {
-    @apply text-white font-bold;
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
-  
-  .slide-up {
-    animation: slideUp 0.8s ease-out;
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+    border: 2px solid var(--background);
   }
-  
-  .floating {
-    animation: floating 3s ease-in-out infinite;
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-strong);
   }
-  
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+}
+
+@layer components {
+  /* GitHub "Box" — bordered container with optional header row */
+  .gh-box {
+    @apply rounded-md border border-border bg-card;
   }
-  
-  @keyframes floating {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+  .gh-box-header {
+    @apply flex items-center justify-between gap-3 rounded-t-md border-b border-border bg-canvas-subtle px-4 py-3;
   }
-  
-  /* Enhanced dark theme overrides */
-  .dark {
-    color-scheme: dark;
+  .gh-box-row {
+    @apply border-t border-border-muted px-4 py-3 first:border-t-0;
   }
-  
-  .dark .bg-gradient-to-br {
-    background: linear-gradient(to bottom right, oklch(0.05 0 0), oklch(0.12 0 0));
+
+  /* GitHub "Label" — small rounded pill */
+  .gh-label {
+    @apply inline-flex items-center gap-1 rounded-full border border-border px-2 text-xs leading-[18px] font-medium text-muted-foreground whitespace-nowrap;
   }
-  
-  /* Better scrollbar for dark theme */
-  .dark ::-webkit-scrollbar {
-    width: 8px;
+
+  /* GitHub "Counter" */
+  .gh-counter {
+    @apply inline-flex min-w-5 items-center justify-center rounded-full bg-neutral-muted px-1.5 text-xs leading-[18px] font-medium text-foreground;
   }
-  
-  .dark ::-webkit-scrollbar-track {
-    background: oklch(0.1 0 0);
+
+  .gh-link {
+    @apply text-link hover:underline underline-offset-2;
   }
-  
-  .dark ::-webkit-scrollbar-thumb {
-    background: oklch(0.3 0 0);
-    border-radius: 4px;
+
+  /* Section eyebrow / heading helpers for marketing pages */
+  .gh-shadow {
+    box-shadow: var(--shadow-overlay);
   }
-  
-  .dark ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.4 0 0);
+
+  .gh-eyebrow {
+    @apply text-sm font-medium text-muted-foreground;
   }
+}
+
+/* Mona Sans' tabular figures use a slashed zero; keep its default figures instead */
+html .tabular-nums {
+  font-variant-numeric: normal !important;
 }

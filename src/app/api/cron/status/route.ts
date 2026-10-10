@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
 function requireCronAuth(request: NextRequest) {
-  return request.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`;
+  return authorizeCronOrAdmin(request).ok;
 }
 
 export async function GET(request: NextRequest) {

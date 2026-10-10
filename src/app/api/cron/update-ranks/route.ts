@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 
@@ -7,11 +8,8 @@ export const maxDuration = 300;
 
 async function updateRanks(request: NextRequest) {
   try {
-    // Verify cron secret to ensure this is called by the cron job
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = authorizeCronOrAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     const now = new Date();
     const body = await request.json().catch(() => ({}));

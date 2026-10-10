@@ -273,14 +273,6 @@ export default async function UsernameLayout({
     <>
       <StructuredData username={username} userData={userData} />
       {children}
-
-      {/* <Header
-        selectedTheme={selectedTheme}
-        setSelectedTheme={setSelectedTheme}
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        userAura={userAura}
-      /> */}
     </>
   );
 }

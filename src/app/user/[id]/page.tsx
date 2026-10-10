@@ -5,12 +5,15 @@ import { useUser, SignInButton } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { calculateTotalAura, saveUserAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
-import { Header } from "@/components/home";
+import { Lock } from "lucide-react";
+import { Header, Footer } from "@/components/home";
 import { Button } from "@/components/ui/button";
 import MontlyContribution from "@/components/MontlyContribution";
 import ProfileCard from "@/components/ProfileCard";
 import AuraPanel from "@/components/AuraPanel";
 import EmptyState from "@/components/EmptyState";
+import BadgeDisplay from "@/components/BadgeDisplay";
+import { ProfileSkeleton } from "@/components/GitHubProfileCard";
 import { themes } from "@/components/themes";
 
 import {
@@ -50,6 +53,9 @@ function UserPage() {
     null
   );
   const [checkingRegistration, setCheckingRegistration] = useState(true);
+  const [registeredUserId, setRegisteredUserId] = useState<string | null>(
+    null
+  );
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Get OG image from URL parameters
@@ -78,6 +84,7 @@ function UserPage() {
 
       if (data.isRegistered && data.user) {
         setIsUserRegistered(true);
+        setRegisteredUserId(data.user.id ?? null);
         // Only fetch profile if user is registered, use the actual stored username for consistency
         await fetchUserProfile(data.user.githubUsername);
       } else {
@@ -207,7 +214,7 @@ function UserPage() {
       setIsGenerating(true);
       const dataUrl = await toPng(profileRef.current, {
         cacheBust: true,
-        backgroundColor: undefined,
+        backgroundColor: getComputedStyle(profileRef.current).backgroundColor,
         pixelRatio: 2,
         skipFonts: false,
       });
@@ -234,8 +241,9 @@ function UserPage() {
         try {
           const dataUrl = await toPng(profileRef.current, {
             cacheBust: true,
-            backgroundColor:
-              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            // Solid card background (no transparent/light edges)
+            backgroundColor: getComputedStyle(profileRef.current)
+              .backgroundColor,
             pixelRatio: 2,
             skipFonts: false,
           });
@@ -292,140 +300,123 @@ function UserPage() {
     }
   };
 
+  const shell = (content: React.ReactNode) => (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header leaderboard={false} profile={true} />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
+        {content}
+      </main>
+      <Footer />
+    </div>
+  );
+
   // Show loading while checking Clerk auth status or user registration
   if (!isLoaded || checkingRegistration) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="pt-20">
-          <Header leaderboard={false} profile={true} />
-          <div className="flex items-center justify-center px-4 py-20">
-            <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
-              <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
-              <p className="mt-4 text-sm text-muted-foreground">
-                Loading profile...
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return shell(<ProfileSkeleton />);
   }
 
   // Show auth required message if user is not registered
   if (isUserRegistered === false) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="pt-20">
-          <Header leaderboard={false} profile={true} />
-          <div className="mx-auto max-w-4xl px-4 py-20">
-            <div className="rounded-[28px] border border-border bg-card p-8 text-center shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)]">
-              <div className="mb-6">
-                <span className="text-6xl mb-4 block">🔒</span>
-                <h2 className="mb-4 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-                  User Not Found
-                </h2>
-                <p className="mb-6 text-sm leading-6 text-muted-foreground">
-                  The user <span className="font-mono text-foreground">@{userId}</span>{" "}
-                  is not registered on GitAura.
-                  {!isSignedIn && " You need to sign in to view user profiles."}
-                </p>
-              </div>
+    return shell(
+      <div className="gh-box mx-auto max-w-2xl px-6 py-12 text-center">
+        <Lock className="mx-auto h-6 w-6 text-muted-foreground" />
+        <h1 className="mt-3 text-xl font-semibold text-foreground">
+          User not found
+        </h1>
+        <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+          The user{" "}
+          <span className="font-mono text-foreground">@{userId}</span> is not
+          registered on GitAura.
+          {!isSignedIn && " You need to sign in to view user profiles."}
+        </p>
 
-              {!isSignedIn ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Sign in with GitHub to join our community and view profiles
-                  </p>
-                  <SignInButton mode="modal">
-                    <Button>
-                      Sign In to Continue
-                    </Button>
-                  </SignInButton>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Only registered users can be viewed on our platform
-                  </p>
-                  <Button variant="secondary" onClick={() => window.history.back()}>
-                    Go Back
-                  </Button>
-                </div>
-              )}
-            </div>
+        {!isSignedIn ? (
+          <div className="mt-6 space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Sign in with GitHub to join the community and view profiles
+            </p>
+            <SignInButton mode="modal">
+              <Button>Sign in to continue</Button>
+            </SignInButton>
           </div>
-        </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Only registered users can be viewed on GitAura
+            </p>
+            <Button variant="outline" onClick={() => window.history.back()}>
+              Go back
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
 
-  return (
+  return shell(
     <>
-      <div className="min-h-screen bg-background">
-        <div className="pt-20">
-          <Header leaderboard={false} profile={true} />
-
-          {/* Error Message */}
-          {error && (
-            <div className="mx-auto mb-6 max-w-4xl px-4">
-              <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4">
-                <p className="text-sm text-red-100">{error}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mx-auto max-w-6xl px-4 pb-8">
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
-                  <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Loading profile...
-                  </p>
-                </div>
-              </div>
-            ) : profile ? (
-              <div className="space-y-6">
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
-                  handleShareTwitter={() => handleShare("twitter")}
-                  handleShareLinkedin={() => handleShare("linkedin")}
-                  handleDownload={handleExportImage}
-                  isGenerating={isGenerating}
-                />
-                <MontlyContribution
-                  selectedTheme={selectedTheme}
-                  contributions={contributions}
-                />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </div>
-            ) : (
-              !error && (
-                <div className="mx-auto max-w-4xl">
-                  <EmptyState
-                    selectedTheme={selectedTheme}
-                    onLoadProfile={(username) => {
-                      if (username !== userId && !loading) {
-                        window.location.href = `/user/${username}`;
-                      }
-                    }}
-                  />
-                </div>
-              )
-            )}
-          </div>
+      {/* Error Message */}
+      {error && (
+        <div
+          role="alert"
+          className="mb-6 rounded-md border border-danger/40 bg-danger-subtle px-4 py-3 text-sm text-foreground"
+        >
+          <span className="font-semibold text-danger">Error: </span>
+          {error}
         </div>
-      </div>
+      )}
+
+      {/* Loading State */}
+      {loading ? (
+        <ProfileSkeleton />
+      ) : profile ? (
+        <ProfileCard
+          profile={profile}
+          contributions={contributions}
+          selectedTheme={selectedTheme}
+          profileRef={profileRef}
+          handleShareTwitter={() => handleShare("twitter")}
+          handleShareLinkedin={() => handleShare("linkedin")}
+          handleDownload={handleExportImage}
+          isGenerating={isGenerating}
+          aura={userAura}
+          streak={currentStreak}
+          overview={
+            <AuraPanel
+              selectedTheme={selectedTheme}
+              userAura={userAura}
+              currentStreak={currentStreak}
+              contributions={contributions}
+              isCalculatingAura={isCalculatingAura}
+              username={profile.login}
+            />
+          }
+        >
+          {registeredUserId && (
+            <BadgeDisplay
+              userId={registeredUserId}
+              selectedTheme={selectedTheme}
+            />
+          )}
+          <MontlyContribution
+            selectedTheme={selectedTheme}
+            contributions={contributions}
+          />
+        </ProfileCard>
+      ) : (
+        !error && (
+          <div className="mx-auto max-w-4xl">
+            <EmptyState
+              selectedTheme={selectedTheme}
+              onLoadProfile={(username) => {
+                if (username !== userId && !loading) {
+                  window.location.href = `/user/${username}`;
+                }
+              }}
+            />
+          </div>
+        )
+      )}
     </>
   );
 }

@@ -1,29 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   keepPreviousData,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { toPng } from "html-to-image";
-import Image from "next/image";
-import {
-  Award,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Crown,
-  Medal,
-  Share2,
-  Trophy,
-  Zap,
-} from "lucide-react";
-import { Header } from "@/components/home";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Share2, Trophy } from "lucide-react";
+import { Header, Footer } from "@/components/home";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface BadgeType {
@@ -74,25 +61,19 @@ interface MonthlyWinnersResponse {
 
 const rankStyles = {
   1: {
-    badge: "/badge/1st.png",
-    label: "First place",
-    icon: Crown,
-    border: "border-foreground/15",
-    surface: "bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]",
+    label: "1st place",
+    text: "text-gold",
+    mark: "bg-gold/15 text-gold border-gold/40",
   },
   2: {
-    badge: "/badge/2nd.png",
-    label: "Second place",
-    icon: Medal,
-    border: "border-border",
-    surface: "bg-background",
+    label: "2nd place",
+    text: "text-silver",
+    mark: "bg-silver/15 text-silver border-silver/40",
   },
   3: {
-    badge: "/badge/3rd.png",
-    label: "Third place",
-    icon: Award,
-    border: "border-border",
-    surface: "bg-background",
+    label: "3rd place",
+    text: "text-bronze",
+    mark: "bg-bronze/15 text-bronze border-bronze/40",
   },
 } as const;
 
@@ -114,32 +95,26 @@ function formatMonthYear(monthYear: string) {
   });
 }
 
-function RankIcon({ rank }: { rank: 1 | 2 | 3 }) {
-  const Icon = rankStyles[rank].icon;
-  return <Icon className="h-4 w-4 text-foreground" />;
+function sortByRank(winners: MonthlyWinner[]) {
+  return [...winners].sort((a, b) => a.rank - b.rank);
 }
 
-function WinnerCard({
-  winner,
-  monthYear,
-}: {
-  winner: MonthlyWinner;
-  monthYear: string;
-}) {
-  const cardRef = useRef<HTMLDivElement>(null);
+/** Generates a PNG of the given node, uploads it and opens a tweet intent. */
+function useWinnerShare(winner: MonthlyWinner, monthYear: string) {
+  const ref = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const styles = rankStyles[winner.rank];
 
-  const handleShare = useCallback(async () => {
-    if (!cardRef.current) {
+  const share = useCallback(async () => {
+    if (!ref.current) {
       return;
     }
 
     try {
       setIsGenerating(true);
-      const dataUrl = await toPng(cardRef.current, {
+      const dataUrl = await toPng(ref.current, {
         cacheBust: true,
-        backgroundColor: "#0a0a0a",
+        backgroundColor:
+          getComputedStyle(document.body).backgroundColor || "#0d1117",
         pixelRatio: 2,
         skipFonts: false,
       });
@@ -181,123 +156,172 @@ function WinnerCard({
     }
   }, [monthYear, winner.rank, winner.totalAura, winner.user.githubUsername]);
 
+  return { ref, share, isGenerating };
+}
+
+function RankMark({
+  rank,
+  size = "sm",
+}: {
+  rank: 1 | 2 | 3;
+  size?: "sm" | "lg";
+}) {
   return (
-    <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28 }}
-      className={`group relative overflow-hidden rounded-[30px] border ${styles.border} ${styles.surface} p-5 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.45)] transition-transform duration-300 hover:-translate-y-1`}
+    <span
+      aria-label={rankStyles[rank].label}
+      title={rankStyles[rank].label}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full border font-semibold tabular-nums ${
+        rankStyles[rank].mark
+      } ${size === "lg" ? "h-7 w-7 text-sm" : "h-5 w-5 text-[11px]"}`}
     >
-      <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_70%)]" />
+      {rank}
+    </span>
+  );
+}
 
-      <div className="absolute right-4 top-4">
-        <Image
-          src={styles.badge}
-          alt={styles.label}
-          width={54}
-          height={54}
-          className="h-12 w-12 object-contain"
-          unoptimized
-        />
-      </div>
+function ShareButton({
+  onClick,
+  isGenerating,
+  className = "",
+}: {
+  onClick: () => void;
+  isGenerating: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isGenerating}
+      aria-label="Share winner"
+      title="Share"
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    >
+      {isGenerating ? (
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border border-muted-foreground/30 border-t-muted-foreground" />
+      ) : (
+        <Share2 className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+}
 
-      <button
-        onClick={() => void handleShare()}
-        disabled={isGenerating}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background/90 text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-        aria-label="Share winner"
-      >
-        {isGenerating ? (
-          <div className="h-4 w-4 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
-        ) : (
-          <Share2 className="h-4 w-4" />
-        )}
-      </button>
+/* ----------------------------- Featured podium ---------------------------- */
 
-      <div className="mt-5 flex flex-col items-center text-center">
+const podiumOrder = {
+  1: "order-1 col-span-2 sm:order-2 sm:col-span-1",
+  2: "order-2 sm:order-1",
+  3: "order-3 sm:order-3",
+} as const;
+
+function PodiumCard({
+  winner,
+  monthYear,
+}: {
+  winner: MonthlyWinner;
+  monthYear: string;
+}) {
+  const { ref, share, isGenerating } = useWinnerShare(winner, monthYear);
+  const isFirst = winner.rank === 1;
+
+  return (
+    <div
+      ref={ref}
+      className={`gh-box relative flex flex-col items-center px-4 text-center ${
+        podiumOrder[winner.rank]
+      } ${
+        isFirst
+          ? "border-gold/50 pb-5 pt-6 sm:pb-6 sm:pt-8"
+          : "min-w-0 px-3 pb-4 pt-5 sm:mt-6 sm:px-4 sm:pb-5 sm:pt-6"
+      }`}
+    >
+      <ShareButton
+        onClick={() => void share()}
+        isGenerating={isGenerating}
+        className="absolute right-2 top-2"
+      />
+
+      <div className="relative">
         <UserAvatar
           src={winner.user.avatarUrl}
           githubUsername={winner.user.githubUsername}
           displayName={winner.user.displayName}
           alt={winner.user.displayName || winner.user.githubUsername}
-          className="h-24 w-24 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]"
-          initialsClassName="text-lg tracking-[0.08em]"
+          className={isFirst ? "h-20 w-20 sm:h-24 sm:w-24" : "h-14 w-14 sm:h-16 sm:w-16"}
+          initialsClassName="text-base tracking-normal"
           size={192}
         />
-
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <RankIcon rank={winner.rank} />
-          #{winner.rank}
-        </div>
-
-        <h3 className="mt-5 text-[1.65rem] font-semibold tracking-[-0.045em] text-foreground">
-          {winner.user.displayName}
-        </h3>
-        <p className="mt-1 text-[15px] text-muted-foreground">
-          @{winner.user.githubUsername}
-        </p>
-
-        <div className="mt-5 grid w-full grid-cols-2 gap-3">
-          <div className="rounded-[24px] border border-border bg-background px-4 py-3.5 text-left">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <Zap className="h-3.5 w-3.5" />
-              Aura
-            </div>
-            <p className="mt-2 text-lg font-semibold text-foreground">
-              {winner.totalAura.toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-border bg-background px-4 py-3.5 text-left">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5" />
-              Contributions
-            </div>
-            <p className="mt-2 text-lg font-semibold text-foreground">
-              {winner.contributionsCount.toLocaleString()}
-            </p>
-          </div>
-        </div>
-
-        <Button
-          variant="secondary"
-          className="mt-6 w-full"
-          onClick={() =>
-            window.open(`/user/${winner.user.githubUsername}`, "_blank", "noopener")
-          }
-        >
-          View profile
-        </Button>
+        <span className="absolute -bottom-1 -right-1 rounded-full bg-background p-0.5">
+          <RankMark rank={winner.rank} size="lg" />
+        </span>
       </div>
-    </motion.div>
+
+      <p className={`mt-3 text-xs font-medium ${rankStyles[winner.rank].text}`}>
+        {rankStyles[winner.rank].label}
+      </p>
+      <h3
+        className={`mt-0.5 max-w-full truncate font-semibold text-foreground ${
+          isFirst ? "text-lg sm:text-xl" : "text-base"
+        }`}
+      >
+        {winner.user.displayName || winner.user.githubUsername}
+      </h3>
+      <p className="max-w-full truncate text-sm text-muted-foreground">
+        @{winner.user.githubUsername}
+      </p>
+
+      <dl className="mt-4 grid w-full grid-cols-2 divide-x divide-border-muted rounded-md border border-border-muted bg-canvas-subtle py-2">
+        <div>
+          <dt className="text-xs text-muted-foreground">Aura</dt>
+          <dd
+            className={`font-semibold tabular-nums text-foreground ${
+              isFirst ? "text-lg" : "text-sm sm:text-base"
+            }`}
+          >
+            {winner.totalAura.toLocaleString()}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted-foreground">
+            <span className={isFirst ? "" : "sm:hidden"}>
+              {isFirst ? "Contributions" : "Contrib."}
+            </span>
+            {!isFirst && <span className="hidden sm:inline">Contributions</span>}
+          </dt>
+          <dd
+            className={`font-semibold tabular-nums text-foreground ${
+              isFirst ? "text-lg" : "text-sm sm:text-base"
+            }`}
+          >
+            {winner.contributionsCount.toLocaleString()}
+          </dd>
+        </div>
+      </dl>
+
+      <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
+        <Link href={`/user/${winner.user.githubUsername}`}>View profile</Link>
+      </Button>
+    </div>
   );
 }
 
-function WinnersGrid({ monthData }: { monthData: MonthlyWinnersData }) {
-  const ordered = [...monthData.winners].sort((a, b) => a.rank - b.rank);
+function FeaturedMonth({ monthData }: { monthData: MonthlyWinnersData }) {
+  const ordered = sortByRank(monthData.winners);
 
   return (
-    <section className="space-y-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Hall of fame
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">
-            {formatMonthYear(monthData.monthYear)}
-          </h2>
-        </div>
-        <Badge
-          variant="outline"
-          className="w-fit rounded-full border-border bg-card px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+    <section aria-labelledby="featured-month">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        <h2
+          id="featured-month"
+          className="text-base font-semibold text-foreground"
         >
-          Top 3 archived
-        </Badge>
+          {formatMonthYear(monthData.monthYear)}
+        </h2>
+        <span className="gh-label">Latest podium</span>
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:items-start">
         {ordered.map((winner) => (
-          <WinnerCard
+          <PodiumCard
             key={winner.id}
             winner={winner}
             monthYear={monthData.monthYear}
@@ -306,6 +330,104 @@ function WinnersGrid({ monthData }: { monthData: MonthlyWinnersData }) {
       </div>
     </section>
   );
+}
+
+/* --------------------------------- Archive -------------------------------- */
+
+function ArchiveWinnerCell({
+  winner,
+  monthYear,
+}: {
+  winner: MonthlyWinner;
+  monthYear: string;
+}) {
+  const { ref, share, isGenerating } = useWinnerShare(winner, monthYear);
+
+  return (
+    <div
+      ref={ref}
+      className="flex min-w-0 items-center gap-3 bg-background px-4 py-3"
+    >
+      <RankMark rank={winner.rank} />
+      <UserAvatar
+        src={winner.user.avatarUrl}
+        githubUsername={winner.user.githubUsername}
+        displayName={winner.user.displayName}
+        alt={winner.user.displayName || winner.user.githubUsername}
+        className="h-9 w-9"
+        initialsClassName="text-[11px] tracking-normal"
+        size={72}
+      />
+      <div className="min-w-0 flex-1">
+        <Link
+          href={`/user/${winner.user.githubUsername}`}
+          className="block truncate text-sm font-semibold text-foreground hover:text-link"
+        >
+          {winner.user.displayName || winner.user.githubUsername}
+        </Link>
+        <p className="truncate text-xs text-muted-foreground">
+          @{winner.user.githubUsername}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <span className="font-semibold tabular-nums text-foreground">
+            {winner.totalAura.toLocaleString()}
+          </span>{" "}
+          aura ·{" "}
+          <span className="font-semibold tabular-nums text-foreground">
+            {winner.contributionsCount.toLocaleString()}
+          </span>{" "}
+          contributions
+        </p>
+      </div>
+      <ShareButton onClick={() => void share()} isGenerating={isGenerating} />
+    </div>
+  );
+}
+
+function ArchiveMonth({ monthData }: { monthData: MonthlyWinnersData }) {
+  const ordered = sortByRank(monthData.winners);
+
+  return (
+    <section className="gh-box overflow-hidden">
+      <div className="gh-box-header py-2.5">
+        <h3 className="text-sm font-semibold text-foreground">
+          {formatMonthYear(monthData.monthYear)}
+        </h3>
+        <span className="gh-label">Top 3</span>
+      </div>
+      <div className="grid gap-px bg-border-muted md:grid-cols-3">
+        {ordered.map((winner) => (
+          <ArchiveWinnerCell
+            key={winner.id}
+            winner={winner}
+            monthYear={monthData.monthYear}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------- Pagination ------------------------------- */
+
+function getPageItems(current: number, total: number): (number | "gap")[] {
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index + 1);
+  }
+
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  const sorted = [...pages]
+    .filter((page) => page >= 1 && page <= total)
+    .sort((a, b) => a - b);
+
+  const items: (number | "gap")[] = [];
+  sorted.forEach((page, index) => {
+    if (index > 0 && page - sorted[index - 1] > 1) {
+      items.push("gap");
+    }
+    items.push(page);
+  });
+  return items;
 }
 
 function Pagination({
@@ -319,30 +441,83 @@ function Pagination({
     return null;
   }
 
+  const items = getPageItems(pagination.currentPage, pagination.totalPages);
+  const navButton =
+    "inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-sm font-medium text-link transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent";
+
   return (
-    <nav className="mt-10 flex items-center justify-center gap-3">
-      <Button
-        variant="outline"
+    <nav
+      aria-label="Pagination"
+      className="mt-6 flex items-center justify-center gap-1"
+    >
+      <button
+        type="button"
+        className={navButton}
         disabled={!pagination.hasPrevPage}
         onClick={() => onPageChange(pagination.currentPage - 1)}
       >
         <ChevronLeft className="h-4 w-4" />
-        Prev
-      </Button>
+        Previous
+      </button>
 
-      <div className="rounded-full border border-border bg-card px-4 py-2 text-xs text-muted-foreground">
-        Page {pagination.currentPage} of {pagination.totalPages}
-      </div>
+      {items.map((item, index) =>
+        item === "gap" ? (
+          <span
+            key={`gap-${index}`}
+            className="px-1 text-sm text-muted-foreground"
+          >
+            …
+          </span>
+        ) : (
+          <button
+            key={item}
+            type="button"
+            aria-current={item === pagination.currentPage ? "page" : undefined}
+            onClick={() => onPageChange(item)}
+            className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm tabular-nums transition-colors ${
+              item === pagination.currentPage
+                ? "bg-link font-semibold text-background"
+                : "text-foreground hover:bg-accent"
+            }`}
+          >
+            {item}
+          </button>
+        )
+      )}
 
-      <Button
-        variant="outline"
+      <button
+        type="button"
+        className={navButton}
         disabled={!pagination.hasNextPage}
         onClick={() => onPageChange(pagination.currentPage + 1)}
       >
         Next
         <ChevronRight className="h-4 w-4" />
-      </Button>
+      </button>
     </nav>
+  );
+}
+
+/* ---------------------------------- Page ---------------------------------- */
+
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header leaderboard={false} dashboard={false} />
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <section className="border-b border-border pb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            Monthly winners
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            The top three developers by Aura and contributions, archived each
+            month.
+          </p>
+        </section>
+        <div className="mt-6">{children}</div>
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -369,7 +544,8 @@ export default function MonthlyWinnersPage() {
   const visibleWinnersData = useMemo(
     () =>
       (winnersQuery.data?.data || []).filter(
-        (month) => month.monthYear !== currentMonthYear
+        (month) =>
+          month.monthYear !== currentMonthYear && month.winners.length > 0
       ),
     [currentMonthYear, winnersQuery.data?.data]
   );
@@ -398,6 +574,7 @@ export default function MonthlyWinnersPage() {
     (page: number) => {
       if (page >= 1 && page <= pagination.totalPages) {
         setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [pagination.totalPages]
@@ -405,94 +582,101 @@ export default function MonthlyWinnersPage() {
 
   if (winnersQuery.isLoading && !winnersQuery.data) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header leaderboard={false} dashboard={false} />
-        <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
-          <Card className="rounded-[28px] border-border bg-card p-10 text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
-            <p className="mt-4 text-sm text-muted-foreground">
-              Loading monthly winners...
-            </p>
-          </Card>
-        </main>
-      </div>
+      <PageShell>
+        <div className="grid gap-3 sm:grid-cols-3" aria-busy="true">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="gh-box flex flex-col items-center gap-3 px-4 py-6"
+            >
+              <div className="h-16 w-16 animate-pulse rounded-full bg-accent" />
+              <div className="h-4 w-28 animate-pulse rounded bg-accent" />
+              <div className="h-3 w-20 animate-pulse rounded bg-accent" />
+              <div className="h-12 w-full animate-pulse rounded bg-accent" />
+            </div>
+          ))}
+        </div>
+        <div className="gh-box mt-8">
+          <div className="gh-box-header">
+            <div className="h-4 w-32 animate-pulse rounded bg-accent" />
+          </div>
+          <div className="h-16" />
+        </div>
+      </PageShell>
     );
   }
 
   if (winnersQuery.isError) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header leaderboard={false} dashboard={false} />
-        <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
-          <Card className="rounded-[28px] border-red-500/20 bg-red-500/10 text-center">
-            <CardContent className="py-10">
-              <h2 className="text-lg font-semibold text-foreground">
-                Unable to load monthly winners
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {winnersQuery.error instanceof Error
-                  ? winnersQuery.error.message
-                  : "Unknown error."}
-              </p>
-              <Button className="mt-5" onClick={() => void winnersQuery.refetch()}>
-                Retry
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+      <PageShell>
+        <div className="gh-box px-4 py-10 text-center">
+          <Trophy className="mx-auto h-6 w-6 text-muted-foreground" />
+          <h2 className="mt-3 text-base font-semibold text-foreground">
+            Unable to load monthly winners
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {winnersQuery.error instanceof Error
+              ? winnersQuery.error.message
+              : "Unknown error."}
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => void winnersQuery.refetch()}
+          >
+            Retry
+          </Button>
+        </div>
+      </PageShell>
     );
   }
 
+  const showFeatured = currentPage === 1 && visibleWinnersData.length > 0;
+  const featured = showFeatured ? visibleWinnersData[0] : null;
+  const archive = showFeatured ? visibleWinnersData.slice(1) : visibleWinnersData;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header leaderboard={false} dashboard={false} />
-
-      <main className="mx-auto max-w-6xl px-4 pb-10 pt-28 sm:px-6">
-        <section className="mb-10 max-w-3xl">
-          <Badge
-            variant="outline"
-            className="rounded-full border-border bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground"
-          >
-            Monthly winners
-          </Badge>
-          <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-5xl">
-            Archived podium finishes, month by month.
-          </h1>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground sm:text-[15px]">
-            A quieter hall of fame for the developers who led GitAura in Aura
-            and contribution output each month.
+    <PageShell>
+      {visibleWinnersData.length === 0 ? (
+        <div className="gh-box px-4 py-12 text-center">
+          <Trophy className="mx-auto h-6 w-6 text-muted-foreground" />
+          <h2 className="mt-3 text-base font-semibold text-foreground">
+            No winners archived yet
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Monthly winners appear here once the first leaderboard snapshot
+            is saved.
           </p>
-          {winnersQuery.isFetching && winnersQuery.data && (
-            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-foreground/60" />
-              Updating archive
-            </div>
-          )}
-        </section>
+        </div>
+      ) : (
+        <div
+          className={`transition-opacity ${
+            winnersQuery.isFetching && winnersQuery.data ? "opacity-60" : ""
+          }`}
+        >
+          {featured && <FeaturedMonth monthData={featured} />}
 
-        {visibleWinnersData.length === 0 ? (
-          <Card className="rounded-[28px] border-border bg-card/80">
-            <CardContent className="py-16 text-center">
-              <Trophy className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h2 className="mt-4 text-xl font-semibold text-foreground">
-                No winners archived yet
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Monthly winners will appear here once the first leaderboard
-                snapshots are saved.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-10">
-            {visibleWinnersData.map((monthData) => (
-              <WinnersGrid key={monthData.monthYear} monthData={monthData} />
-            ))}
-            <Pagination pagination={pagination} onPageChange={handlePageChange} />
-          </div>
-        )}
-      </main>
-    </div>
+          {archive.length > 0 && (
+            <section className={featured ? "mt-10" : ""}>
+              <div className="mb-3 flex items-center gap-2">
+                <h2 className="text-base font-semibold text-foreground">
+                  {featured ? "Previous months" : "Archive"}
+                </h2>
+                {pagination.totalMonths > 0 && (
+                  <span className="gh-counter">{pagination.totalMonths}</span>
+                )}
+              </div>
+              <div className="space-y-3">
+                {archive.map((monthData) => (
+                  <ArchiveMonth key={monthData.monthYear} monthData={monthData} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <Pagination pagination={pagination} onPageChange={handlePageChange} />
+        </div>
+      )}
+    </PageShell>
   );
 }

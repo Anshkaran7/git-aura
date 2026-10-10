@@ -1,15 +1,21 @@
 export function LoadingState() {
   return (
-    <div className="flex min-h-[240px] items-center justify-center">
-      <div className="rounded-3xl border border-border/70 bg-background/85 p-6 text-center shadow-[0_18px_60px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:p-8">
-        <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary sm:h-12 sm:w-12"></div>
-        <h3 className="text-sm font-semibold text-foreground sm:text-base">
-          Loading Leaderboard
-        </h3>
-        <p className="mt-2 text-xs leading-5 text-muted-foreground">
-          Fetching latest rankings...
-        </p>
+    <div className="gh-box" aria-busy="true" aria-label="Loading leaderboard">
+      <div className="gh-box-header">
+        <div className="h-4 w-40 animate-pulse rounded bg-accent" />
+        <div className="h-4 w-16 animate-pulse rounded bg-accent" />
       </div>
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="gh-box-row flex items-center gap-3">
+          <div className="h-4 w-6 animate-pulse rounded bg-accent" />
+          <div className="h-8 w-8 animate-pulse rounded-full bg-accent" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3.5 w-32 animate-pulse rounded bg-accent" />
+            <div className="h-3 w-20 animate-pulse rounded bg-accent" />
+          </div>
+          <div className="h-4 w-14 animate-pulse rounded bg-accent" />
+        </div>
+      ))}
     </div>
   );
 }

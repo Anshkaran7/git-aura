@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs";
 import { toPng } from "html-to-image";
 import { saveUserAura, calculateTotalAura } from "@/lib/aura";
 import { calculateStreak } from "@/lib/utils2";
-import Leaderboard from "./Leaderboard";
 import BadgeDisplay from "./BadgeDisplay";
 import ProfileCard from "./ProfileCard";
 import EmptyState from "./EmptyState";
@@ -111,11 +110,11 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     }
   }, [isSignedIn, user, searchParams]);
 
-  const fetchProfile = async (username: string) => {
+  const fetchProfile = async (username: string, force = false) => {
     if (!username.trim()) return;
 
     // Prevent duplicate calls for the same username or if already loading
-    if (loading || searchedUsername === username.trim()) {
+    if (loading || (!force && searchedUsername === username.trim())) {
       return;
     }
 
@@ -266,7 +265,7 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
       setIsGenerating(true);
       const dataUrl = await toPng(profileRef.current, {
         cacheBust: true,
-        backgroundColor: undefined,
+        backgroundColor: getComputedStyle(profileRef.current).backgroundColor,
         pixelRatio: 2,
         skipFonts: false,
       });
@@ -297,8 +296,9 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
         try {
           const dataUrl = await toPng(profileRef.current, {
             cacheBust: true,
-            backgroundColor:
-              selectedTheme.name === "Light" ? "#f9fafb" : "#0d1117",
+            // Solid card background (no transparent/light edges)
+            backgroundColor: getComputedStyle(profileRef.current)
+              .backgroundColor,
             pixelRatio: 2,
             skipFonts: false,
           });
@@ -357,6 +357,21 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     setIsShareModalOpen(true);
   };
 
+  const handleRefresh = () => {
+    if (searchedUsername) {
+      fetchProfile(searchedUsername, true);
+    }
+  };
+
+  const currentUserGithubUsername = user?.externalAccounts?.find(
+    (account) => account.provider === "github"
+  )?.username;
+  const isOwnProfile =
+    !!isSignedIn &&
+    !!profile &&
+    !!currentUserGithubUsername &&
+    currentUserGithubUsername.toLowerCase() === profile.login.toLowerCase();
+
   // If directProfile is provided (battle mode), render a simple card
   if (directProfile) {
     const joinedYear = new Date(directProfile.created_at).getFullYear();
@@ -366,69 +381,74 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     ).toFixed(1);
     return (
       <div
-        className={`relative w-full max-w-[340px] rounded-[28px] border ${
-          highlight
-            ? "border-foreground/20 shadow-[0_30px_80px_-45px_rgba(15,23,42,0.6)]"
-            : "border-border shadow-[0_25px_70px_-45px_rgba(15,23,42,0.35)]"
-        } bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] p-5 flex flex-col gap-4`}
+        className={`relative flex w-full max-w-[340px] flex-col gap-4 rounded-md border bg-card p-4 ${
+          highlight ? "border-success-emphasis" : "border-border"
+        }`}
       >
-        <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.07),transparent_70%)]" />
         {/* Winner badge */}
         {highlight && (
-          <span className="absolute -top-3 left-4 rounded-full border border-border bg-foreground px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-background shadow-[0_10px_30px_-18px_rgba(255,255,255,0.45)]">
-            WINNER
+          <span className="gh-label absolute -top-2.5 left-4 border-success-emphasis bg-success-emphasis text-white">
+            Winner
           </span>
         )}
         {/* Header */}
-        <div className="relative flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <UserAvatar
             src={directProfile.avatar_url}
             githubUsername={directProfile.login}
             displayName={directProfile.name || directProfile.login}
             alt={directProfile.login}
-            className="h-16 w-16 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]"
+            className="h-16 w-16 border border-border"
             initialsClassName="text-sm"
             size={128}
           />
-          <div className="flex flex-col min-w-0">
-            <h2 className="truncate text-[1.45rem] font-semibold tracking-[-0.04em] text-foreground">
+          <div className="flex min-w-0 flex-col">
+            <h2 className="truncate text-xl font-semibold leading-tight text-foreground">
               {directProfile.name || directProfile.login}
             </h2>
-            <p className="truncate text-[15px] text-muted-foreground">
+            <p className="truncate text-base font-light text-muted-foreground">
               @{directProfile.login}
             </p>
-            <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
-                {directProfile.public_repos} repos
-              </span>
-              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
-                {directProfile.followers} followers
-              </span>
-              <span className="rounded-full border border-border bg-background/90 px-2.5 py-1">
-                {directProfile.following} following
-              </span>
-            </div>
           </div>
         </div>
         {/* Bio */}
         {directProfile.bio && (
-          <p className="text-[12px] leading-6 text-muted-foreground line-clamp-4">
+          <p className="line-clamp-4 text-sm leading-6 text-foreground">
             {directProfile.bio}
           </p>
         )}
+        {/* Counts */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          <span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {directProfile.public_repos}
+            </span>{" "}
+            repos
+          </span>
+          <span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {directProfile.followers}
+            </span>{" "}
+            followers
+          </span>
+          <span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {directProfile.following}
+            </span>{" "}
+            following
+          </span>
+        </div>
         {/* Meta */}
-        <div className="grid grid-cols-2 gap-3 text-[11px]">
-          <div className="flex flex-col gap-1 rounded-[20px] border border-border bg-background/90 p-3.5">
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Joined
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border-muted text-sm">
+          <div className="flex flex-col gap-0.5 bg-card px-3 py-2">
+            <span className="text-xs text-muted-foreground">Joined</span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {joinedYear}
             </span>
-            <span className="text-foreground font-medium">{joinedYear}</span>
           </div>
-          <div className="flex flex-col gap-1 rounded-[20px] border border-border bg-background/90 p-3.5">
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Age
-            </span>
-            <span className="text-foreground font-medium">
+          <div className="flex flex-col gap-0.5 bg-card px-3 py-2">
+            <span className="text-xs text-muted-foreground">Account age</span>
+            <span className="font-semibold tabular-nums text-foreground">
               {accountAgeYears} yrs
             </span>
           </div>
@@ -437,52 +457,59 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     );
   }
   return (
-    <div className="min-h-screen bg-background font-mona-sans">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="bg-background">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* Error Message - Only show on profile view */}
         {currentView === "profile" && error && (
-          <div className="mb-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4">
-            <p className="flex flex-col gap-2 text-xs text-red-100 sm:text-sm">
-              <span className="text-sm font-semibold uppercase tracking-[0.18em] text-red-200">
-                Error
-              </span>
-              <span className="flex-1">{error}</span>
-            </p>
+          <div
+            role="alert"
+            className="mb-6 rounded-md border border-danger/40 bg-danger-subtle px-4 py-3 text-sm text-foreground"
+          >
+            <span className="font-semibold text-danger">Error: </span>
+            {error}
           </div>
         )}
 
         {/* Content based on current view */}
         {currentView === "profile" && (
-          <div className="space-y-4 sm:space-y-6 md:space-y-8">
+          <>
             {/* Loading State */}
             {loading ? (
-              <div className="flex w-full items-center justify-center py-16">
-                <div className="h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground"></div>
-              </div>
+              <ProfileSkeleton />
             ) : profile ? (
-              <>
-                <ProfileCard
-                  profile={profile}
-                  contributions={contributions}
-                  selectedTheme={selectedTheme}
-                  profileRef={profileRef}
-                  handleShareTwitter={openShareModal}
-                  handleShareLinkedin={openShareModal}
-                  handleDownload={handleExportImage}
-                  isGenerating={isGenerating}
-                />
+              <ProfileCard
+                profile={profile}
+                contributions={contributions}
+                selectedTheme={selectedTheme}
+                profileRef={profileRef}
+                handleShareTwitter={openShareModal}
+                handleShareLinkedin={openShareModal}
+                handleDownload={handleExportImage}
+                isGenerating={isGenerating}
+                aura={userAura}
+                streak={currentStreak}
+                onShare={openShareModal}
+                onRefresh={handleRefresh}
+                isRefreshing={loading}
+                overview={
+                  <AuraPanel
+                    selectedTheme={selectedTheme}
+                    userAura={userAura}
+                    currentStreak={currentStreak}
+                    contributions={contributions}
+                    isCalculatingAura={isCalculatingAura}
+                    username={profile.login}
+                  />
+                }
+              >
+                {isOwnProfile && user?.id && (
+                  <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
+                )}
                 <MontlyContribution
                   selectedTheme={selectedTheme}
                   contributions={contributions}
                 />
-                <AuraPanel
-                  selectedTheme={selectedTheme}
-                  userAura={userAura}
-                  currentStreak={currentStreak}
-                  contributions={contributions}
-                  isCalculatingAura={isCalculatingAura}
-                />
-              </>
+              </ProfileCard>
             ) : (
               !error && (
                 <EmptyState
@@ -496,44 +523,9 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
                 />
               )
             )}
-          </div>
+          </>
         )}
-
-        {/* Leaderboard View */}
-        {/* {currentView === "leaderboard" && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <Leaderboard
-              currentUserId={user?.id}
-              selectedTheme={selectedTheme}
-              contributions={contributions}
-            />
-          </div>
-        )} */}
-
-        {/* Badges View */}
-        {/* {currentView === "badges" && isSignedIn && user?.id && (
-          <div className="mt-4 sm:mt-6 md:mt-8">
-            <BadgeDisplay userId={user.id} selectedTheme={selectedTheme} />
-          </div>
-        )} */}
       </div>
-
-      {/* Footer - Hide on badges view */}
-      {currentView !== "badges" && (
-        <footer className="border-t border-border bg-background/90 px-4 py-4 backdrop-blur-sm">
-          <p className="mx-auto max-w-screen-xl text-center text-[11px] text-muted-foreground sm:text-xs">
-            Made with ❤️ by{" "}
-            <a
-              href="https://karandev.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground underline underline-offset-4 transition-colors hover:text-primary"
-            >
-              Karan
-            </a>
-          </p>
-        </footer>
-      )}
 
       {/* Share Modal */}
       <ShareModal
@@ -548,5 +540,26 @@ const GitHubProfileCard: React.FC<GitHubProfileCardProps> = ({
     </div>
   );
 };
+
+export function ProfileSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 md:flex-row" aria-busy="true">
+      <div className="w-full shrink-0 md:w-64 lg:w-[296px]">
+        <div className="flex items-center gap-4 md:block">
+          <div className="aspect-square h-16 w-16 animate-pulse rounded-full bg-accent md:h-auto md:w-full" />
+          <div className="flex-1 space-y-2 md:mt-4">
+            <div className="h-5 w-40 animate-pulse rounded bg-accent" />
+            <div className="h-4 w-28 animate-pulse rounded bg-accent" />
+          </div>
+        </div>
+        <div className="mt-4 h-8 w-full animate-pulse rounded-md bg-accent" />
+      </div>
+      <div className="min-w-0 flex-1 space-y-6">
+        <div className="h-36 animate-pulse rounded-md bg-accent" />
+        <div className="h-44 animate-pulse rounded-md bg-accent" />
+      </div>
+    </div>
+  );
+}
 
 export default GitHubProfileCard;

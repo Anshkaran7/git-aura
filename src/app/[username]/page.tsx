@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import GitHubProfileCard from "@/components/GitHubProfileCard";
+import GitHubProfileCard, {
+  ProfileSkeleton,
+} from "@/components/GitHubProfileCard";
 import { Header } from "@/components/home/header";
+import { Footer } from "@/components/home/footer";
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -36,24 +39,20 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="pt-20">
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header leaderboard={false} profile={true} />
+      <main className="flex-1">
         <Suspense
           fallback={
-            <div className="flex min-h-screen items-center justify-center bg-background px-4">
-              <div className="rounded-[28px] border border-border bg-card px-8 py-10 text-center">
-                <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border border-foreground/20 border-t-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Loading GitHub profile...
-                </p>
-              </div>
+            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+              <ProfileSkeleton />
             </div>
           }
         >
-          <Header leaderboard={false} profile={true} />
           <GitHubProfileCard initialUsername={username} />
         </Suspense>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -1,146 +1,124 @@
-"use client";
+import { LogoMark } from "@/components/ui/logo";
+import Link from "next/link";
+import { Github } from "lucide-react";
 
-import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  ArrowRight01Icon,
-  GithubIcon,
-  SparklesIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeIcon } from "@/components/ui/huge-icon";
+type FooterLink = { href: string; label: string; external?: boolean };
 
-interface HeroStats {
-  totalDevelopers: number;
-  totalAuraPoints: number;
-  totalBadges: number;
-}
+const columns: { title: string; links: FooterLink[] }[] = [
+  {
+    title: "Product",
+    links: [
+      { href: "/leaderboard", label: "Leaderboard" },
+      { href: "/monthly-winners", label: "Monthly winners" },
+      { href: "/battle", label: "Battle" },
+      { href: "/#features", label: "Features" },
+    ],
+  },
+  {
+    title: "Open source",
+    links: [
+      { href: "/contribute", label: "Contribute" },
+      { href: "https://github.com/anshkaran7/git-aura", label: "Source code", external: true },
+      { href: "https://github.com/anshkaran7/git-aura/issues", label: "Report an issue", external: true },
+    ],
+  },
+  {
+    title: "Connect",
+    links: [
+      { href: "https://x.com/itsmeekaran", label: "X / Twitter", external: true },
+      { href: "https://karandev.in", label: "Author", external: true },
+    ],
+  },
+];
 
-async function fetchStats(): Promise<HeroStats> {
-  const response = await fetch("/api/stats/hero", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error("Failed to fetch stats");
-  }
-
-  return response.json();
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
 }
 
 export const Footer = () => {
-  const router = useRouter();
-  const { isSignedIn } = useAuth();
-
-  const statsQuery = useQuery({
-    queryKey: ["footer-stats"],
-    queryFn: fetchStats,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const stats = statsQuery.data ?? null;
-
-  const formatNumber = (value: number) => {
-    if (value >= 1_000_000) {
-      return `${(value / 1_000_000).toFixed(1)}M`;
-    }
-
-    if (value >= 1_000) {
-      return `${(value / 1_000).toFixed(1)}K`;
-    }
-
-    return `${value}`;
-  };
-
   return (
-    <footer className="px-4 pb-10 pt-6 sm:px-6 sm:pb-14">
-      <div className="mx-auto max-w-7xl rounded-[2.2rem] border border-border bg-card/95 p-5 shadow-[0_22px_80px_-44px_rgba(0,0,0,0.22)] sm:p-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+    <footer className="mt-16 border-t border-border bg-canvas-subtle">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_2fr]">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-border bg-background p-2">
-                <Image
-                  src="/logo.png"
-                  alt="Git Aura"
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 rounded-xl"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  GitAura
-                </p>
-                <h2 className="mt-1 text-lg font-semibold tracking-[-0.03em] text-foreground">
-                  Built for a cleaner kind of flex.
-                </h2>
-              </div>
-            </div>
-
-            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-              Your GitHub already has the work. GitAura just gives it better
-              posture, better rhythm, and way less template energy.
+            <Link href="/" className="inline-flex items-center gap-2">
+              <LogoMark />
+              <span className="text-base font-semibold text-foreground">GitAura</span>
+            </Link>
+            <p className="mt-3 max-w-xs text-sm text-muted-foreground">
+              Your GitHub activity, scored and ranked. Free and open source,
+              built by the community.
             </p>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Badge
-                variant="outline"
-                className="rounded-full border-border px-3 py-1 text-[11px]"
-              >
-                {stats ? `${formatNumber(stats.totalDevelopers)}+ devs` : "Live leaderboard"}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="rounded-full border-border px-3 py-1 text-[11px]"
-              >
-                {stats ? `${formatNumber(stats.totalAuraPoints)}+ aura` : "Monthly receipts"}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="rounded-full border-border px-3 py-1 text-[11px]"
-              >
-                {stats ? `${formatNumber(stats.totalBadges)}+ badges` : "Battle mode"}
-              </Badge>
-            </div>
+            <a
+              href="https://github.com/anshkaran7/git-aura"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex h-8 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              <Github className="h-4 w-4" />
+              Star on GitHub
+            </a>
           </div>
 
-          <div className="rounded-[1.6rem] border border-border bg-background p-4 sm:p-5">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              <HugeIcon icon={SparklesIcon} size={14} />
-              Ready to make it look expensive?
-            </div>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-foreground">
-              Open your profile, check your rank, and let the clean flex do its
-              thing.
-            </p>
-            <Button
-              onClick={() => router.push(isSignedIn ? "/leaderboard" : "/sign-in")}
-              className="mt-4 h-10 rounded-full px-4 text-sm font-semibold"
-            >
-              <HugeIcon icon={GithubIcon} size={16} />
-              {isSignedIn ? "Open leaderboard" : "Sign in to GitAura"}
-              <HugeIcon icon={ArrowRight01Icon} size={16} />
-            </Button>
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {columns.map((column) => (
+              <div key={column.title}>
+                <h3 className="text-sm font-semibold text-foreground">{column.title}</h3>
+                <ul className="mt-3 space-y-2.5">
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      {link.external ? (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground transition-colors hover:text-link hover:underline"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={link.href}
+                          className="text-sm text-muted-foreground transition-colors hover:text-link hover:underline"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 border-t border-border pt-5 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2025 GitAura. Quiet flexes only.</span>
+        <div className="mt-12 flex flex-col-reverse gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} GitAura · Not affiliated with GitHub, Inc.
+          </p>
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => router.push("https://github.com/anshkaran7/git-aura")}
+            <a
+              href="https://github.com/anshkaran7/git-aura"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitAura on GitHub"
               className="transition-colors hover:text-foreground"
             >
-              GitHub
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("https://x.com/itsmeekaran")}
+              <Github className="h-4 w-4" />
+            </a>
+            <a
+              href="https://x.com/itsmeekaran"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitAura on X"
               className="transition-colors hover:text-foreground"
             >
-              X
-            </button>
+              <XIcon className="h-3.5 w-3.5" />
+            </a>
           </div>
         </div>
       </div>

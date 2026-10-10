@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  authorizeCronOrAdmin,
+  internalCronHeaders,
+  safeEqual,
+} from "@/lib/admin-auth";
+
+function isAuthorized(req: NextRequest) {
+  if (authorizeCronOrAdmin(req).ok) return true;
+  // Optional legacy key — only honoured when explicitly configured.
+  const legacyKey = process.env.BADGE_ADMIN_KEY;
+  const header = req.headers.get("authorization");
+  return Boolean(legacyKey && header && safeEqual(header, `Bearer ${legacyKey}`));
+}
 
 export async function POST(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    // Simple authentication check - only allow if API key is provided
-    const authHeader = req.headers.get("authorization");
-    const expectedKey = process.env.BADGE_ADMIN_KEY || "admin-key-123";
-
-    if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
-      return NextResponse.json(
-        { error: "Unauthorized - Invalid API key" },
-        { status: 401 }
-      );
-    }
-
-    // Call the badge awarding API
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/award-badges`, {
+    const response = await fetch(`${new URL(req.url).origin}/api/award-badges`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: internalCronHeaders(),
     });
 
     if (response.ok) {
@@ -29,16 +31,13 @@ export async function POST(req: NextRequest) {
         message: "Manual badge awarding completed successfully",
         result,
       });
-    } else {
-      const errorText = await response.text();
-      return NextResponse.json(
-        {
-          error: "Failed to award badges",
-          details: errorText,
-        },
-        { status: 500 }
-      );
     }
+
+    const errorText = await response.text();
+    return NextResponse.json(
+      { error: "Failed to award badges", details: errorText },
+      { status: 500 }
+    );
   } catch (error) {
     return NextResponse.json(
       {
@@ -50,22 +49,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET endpoint to show instructions
-export async function GET(req: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     message: "Manual Badge Awarding API",
     instructions: [
-      "Use POST method with Authorization header",
-      "Header format: Authorization: Bearer YOUR_BADGE_ADMIN_KEY",
-      "Set BADGE_ADMIN_KEY environment variable for security",
-      "This will trigger badge awarding for current month's top 3 users",
+      "POST with Authorization: Bearer <CRON_SECRET> (or the admin-panel secret header)",
+      "Awards badges to the current month's top 3 users",
     ],
-    example: {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer YOUR_BADGE_ADMIN_KEY",
-        "Content-Type": "application/json",
-      },
-    },
   });
 }

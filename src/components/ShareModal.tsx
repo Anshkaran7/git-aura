@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { X, Twitter, Linkedin, Download } from "lucide-react";
+import { X, Linkedin, Download } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
@@ -40,116 +40,115 @@ const ShareModal: React.FC<ShareModalProps> = ({
 
   if (!isOpen) return null;
 
+  const spinner = (
+    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+  );
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-gradient-to-b from-[#161b21] to-[#0d1117] rounded-xl border border-gray-700 shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-md border border-border bg-background gh-shadow"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between bg-[#0d1117] p-4 border-b border-gray-700">
-          <h3 className="text-lg font-semibold text-white">Share Profile</h3>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h3
+            id="share-modal-title"
+            className="text-sm font-semibold text-foreground"
           >
-            <X className="w-5 h-5 text-gray-400" />
-          </button>
+            Share profile
+          </h3>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            aria-label="Close"
+            className="size-7 text-muted-foreground"
+          >
+            <X />
+          </Button>
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
+        <div className="space-y-4 p-4">
           {/* Custom Text Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">
-              Customize your message
+            <label
+              htmlFor="share-message"
+              className="mb-1.5 block text-sm font-semibold text-foreground"
+            >
+              Message
             </label>
             <Textarea
+              id="share-message"
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="Write your custom message..."
-              className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500 resize-none"
+              className="resize-none"
               rows={3}
               maxLength={280}
             />
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-xs text-gray-500">
-                {customText.length}/280 characters
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {customText.length}/280
               </span>
               <button
                 onClick={() => setCustomText(defaultText)}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                className="gh-link text-xs"
               >
                 Reset to default
               </button>
             </div>
           </div>
 
-          {/* Share Buttons */}
-          <div className="space-y-3">
-            <Button
-              onClick={() => handleShare("twitter")}
-              disabled={isGenerating || isSharing}
-              className="w-full bg-[#000000] hover:bg-[#181818] active:bg-[#272727]"
-            >
-              {isSharing ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Sharing...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-white">
-                  <img src="./twitter.png" alt="x logo" className="w-4 h-4" />
-                  <span>Share on X</span>
-                </div>
-              )}
-            </Button>
-
-            <Button
-              onClick={() => handleShare("linkedin")}
-              disabled={isGenerating || isSharing}
-              className="w-full bg-[#0A66C2] hover:bg-[#094da1] active:bg-[#083d86]"
-            >
-              {isSharing ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Sharing...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-white">
-                  <Linkedin className="w-4 h-4" />
-                  <span>Share on LinkedIn</span>
-                </div>
-              )}
-            </Button>
-
-            <Button
-              onClick={onExportImage}
-              disabled={isGenerating}
-              // variant="outline"
-              className="w-full bg-gray-950 hover:bg-gray-900 active:bg-blue-800"
-            >
-              {isGenerating ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                  <span>Generating...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-white">
-                  <Download className="w-4 h-4 " />
-                  <span>Download Image</span>
-                </div>
-              )}
-            </Button>
-          </div>
-
           {/* Preview */}
-          <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-            <h4 className="text-sm font-medium text-gray-300 mb-2">Preview</h4>
-            <p className="text-sm text-gray-400">
+          <div className="rounded-md border border-border bg-canvas-subtle px-3 py-2.5">
+            <p className="text-xs text-muted-foreground">Preview</p>
+            <p className="mt-1 whitespace-pre-line text-sm text-foreground">
               {customText || "Your message will appear here..."}
             </p>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="mt-1 text-xs text-muted-foreground">
               Shared profile: @{username}
             </p>
           </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 border-t border-border px-4 py-3 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={onExportImage}
+            disabled={isGenerating}
+          >
+            {isGenerating ? spinner : <Download />}
+            {isGenerating ? "Generating..." : "Download image"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleShare("linkedin")}
+            disabled={isGenerating || isSharing}
+          >
+            {isSharing ? spinner : <Linkedin className="text-link" />}
+            LinkedIn
+          </Button>
+          <Button
+            variant="dark"
+            onClick={() => handleShare("twitter")}
+            disabled={isGenerating || isSharing}
+          >
+            {isSharing ? (
+              spinner
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+            )}
+            {isSharing ? "Sharing..." : "Share on X"}
+          </Button>
         </div>
       </div>
     </div>

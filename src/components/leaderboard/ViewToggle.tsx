@@ -1,5 +1,3 @@
-import { Calendar03Icon, GlobeIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "@/components/ui/huge-icon";
 import { ViewType } from "./types";
 
 interface ViewToggleProps {
@@ -7,31 +5,37 @@ interface ViewToggleProps {
   onViewChange: (view: ViewType) => void;
 }
 
+const OPTIONS: { value: ViewType; label: string }[] = [
+  { value: "monthly", label: "Monthly" },
+  { value: "alltime", label: "All time" },
+];
+
+// GitHub Primer "SegmentedControl"
 export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   return (
-    <div className="grid w-full grid-cols-2 rounded-full border border-border/70 bg-background/70 p-1 shadow-sm sm:w-auto">
-      <button
-        onClick={() => onViewChange("monthly")}
-        className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold transition-all ${
-          view === "monthly"
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        <HugeIcon icon={Calendar03Icon} size={14} />
-        Monthly
-      </button>
-      <button
-        onClick={() => onViewChange("alltime")}
-        className={`flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[11px] font-semibold transition-all ${
-          view === "alltime"
-            ? "bg-primary text-primary-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        <HugeIcon icon={GlobeIcon} size={14} />
-        All Time
-      </button>
+    <div
+      role="group"
+      aria-label="Leaderboard period"
+      className="inline-flex h-8 w-full items-stretch rounded-md bg-accent p-0.5 sm:w-auto"
+    >
+      {OPTIONS.map((option) => {
+        const selected = view === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onViewChange(option.value)}
+            className={`flex-1 rounded-[5px] border px-3 text-sm whitespace-nowrap transition-colors sm:flex-none ${
+              selected
+                ? "border-border bg-background font-semibold text-foreground"
+                : "border-transparent text-muted-foreground hover:bg-neutral-muted hover:text-foreground"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { clampMonthYearToLaunch, LEADERBOARD_LAUNCH_MONTH } from "@/lib/leaderboard";
+import { clampMonthYearToLaunch } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 import { ViewType, LeaderboardEntry, LeaderboardResponse } from "./types";
 import { ViewToggle } from "./ViewToggle";
@@ -14,6 +14,8 @@ import { ErrorState } from "./ErrorState";
 
 interface CustomLeaderboardProps {
   username: string;
+  title?: string;
+  description?: string;
 }
 
 const MAX_ENTRIES = 100;
@@ -82,7 +84,11 @@ function normalizeLeaderboardEntries(
     .slice(0, MAX_ENTRIES);
 }
 
-export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
+export function CustomLeaderboard({
+  username,
+  title = "Leaderboard",
+  description,
+}: CustomLeaderboardProps) {
   const { isSignedIn, user } = useUser();
   const queryClient = useQueryClient();
   const [view, setView] = useState<ViewType>(username ? "monthly" : "alltime");
@@ -329,36 +335,107 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
     setCurrentMonth(clampMonthYearToLaunch(nextMonth));
   };
 
-  if (leaderboardQuery.isPending && leaderboardData.length === 0) {
-    return <LoadingState />;
-  }
+  const isInitialLoading =
+    leaderboardQuery.isPending && leaderboardData.length === 0;
+  const showError = Boolean(errorMessage) && leaderboardData.length === 0;
 
-  if (errorMessage && leaderboardData.length === 0) {
-    return (
+  let body: ReactNode;
+
+  if (isInitialLoading) {
+    body = <LoadingState />;
+  } else if (showError) {
+    body = (
       <ErrorState
-        message={errorMessage}
+        message={errorMessage as string}
         onRetry={() => {
           void leaderboardQuery.refetch();
         }}
       />
     );
+  } else {
+    body = (
+      <div className="space-y-4">
+        {currentUser ? (
+          <UserCard
+            currentUser={currentUser}
+            userOutOfTop100={userOutOfTop100}
+            username={username}
+          />
+        ) : null}
+
+        <div className="gh-box overflow-hidden">
+          <div className="gh-box-header py-2.5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground">
+                Top 100 developers
+              </h2>
+              <span className="gh-counter tabular-nums">
+                {leaderboardData.length}
+              </span>
+            </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {leaderboardQuery.isFetching ? (
+                <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-border border-t-muted-foreground align-[-2px]" />
+              ) : null}
+              Showing {displayedData.length} of {leaderboardData.length}
+            </span>
+          </div>
+
+          {leaderboardData.length === 0 ? (
+            <EmptyState view={view} />
+          ) : (
+            <div key={`${view}-${currentMonth}`}>
+              {displayedData.map((entry, index) => (
+                <LeaderboardEntryComponent
+                  key={`${entry.user.id}-${view}-${currentMonth}`}
+                  entry={entry}
+                  index={index}
+                  view={view}
+                  currentMonth={currentMonth}
+                  currentPage={1}
+                  highlighted={
+                    Boolean(highlightedUsername) &&
+                    entry.user.github_username.toLowerCase() ===
+                      highlightedUsername.toLowerCase()
+                  }
+                />
+              ))}
+            </div>
+          )}
+
+          {leaderboardData.length > 0 && displayCount < leaderboardData.length ? (
+            <div
+              ref={observerTarget}
+              className="flex h-12 items-center justify-center border-t border-border-muted"
+              aria-hidden="true"
+            >
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-muted-foreground" />
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col items-start justify-between gap-3 rounded-3xl border border-border/70 bg-background/75 p-4 shadow-[0_18px_60px_-32px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:flex-row sm:items-center">
-        <div className="space-y-1">
-          <h3 className="text-sm font-semibold text-foreground">Leaderboard pulse</h3>
-          <p className="text-xs leading-5 text-muted-foreground">
-            Sharper rankings, lighter typography, and cleaner monthly or all-time snapshots.
-          </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              {description}
+            </p>
+          ) : null}
           {isRefreshingCurrentUser ? (
-            <p className="text-[11px] text-muted-foreground">
-              Syncing your latest GitHub month so Aura stays honest.
+            <p className="mt-1 text-xs text-muted-foreground">
+              Syncing your latest GitHub activity…
             </p>
           ) : null}
         </div>
-        <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center md:w-auto">
           <ViewToggle view={view} onViewChange={setView} />
           {view === "monthly" ? (
             <MonthNavigation
@@ -369,53 +446,7 @@ export function CustomLeaderboard({ username }: CustomLeaderboardProps) {
         </div>
       </div>
 
-      {currentUser ? (
-        <UserCard
-          currentUser={currentUser}
-          userOutOfTop100={userOutOfTop100}
-          username={username}
-        />
-      ) : null}
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Top 100 Developers
-          </h3>
-          <p className="text-[11px] text-muted-foreground">
-            Showing {displayedData.length} of {leaderboardData.length}
-          </p>
-        </div>
-
-        {leaderboardData.length === 0 ? (
-          <EmptyState view={view} />
-        ) : (
-          <>
-            <div key={`${view}-${currentMonth}`} className="space-y-3">
-              {displayedData.map((entry, index) => (
-                <LeaderboardEntryComponent
-                  key={`${entry.user.id}-${view}-${currentMonth}`}
-                  entry={entry}
-                  index={index}
-                  view={view}
-                  currentMonth={currentMonth}
-                  currentPage={1}
-                />
-              ))}
-            </div>
-
-            {displayCount < leaderboardData.length ? (
-              <div
-                ref={observerTarget}
-                className="flex h-10 items-center justify-center"
-                aria-hidden="true"
-              >
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
-              </div>
-            ) : null}
-          </>
-        )}
-      </div>
+      {body}
     </div>
   );
 }

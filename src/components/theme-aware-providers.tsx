@@ -21,7 +21,7 @@ export function ThemeAwareProviders({ children }: { children: React.ReactNode })
         appearance={{
           baseTheme: resolvedTheme === 'dark' ? dark : undefined,
           variables: {
-            colorBackground: resolvedTheme === "dark" ? "#1f1f1f" : "#ffffff",
+            colorBackground: resolvedTheme === "dark" ? "#151b23" : "#ffffff",
             colorPrimary: "var(--primary)",
             colorText: "var(--foreground)",
             colorInputBackground: "var(--background)",

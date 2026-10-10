@@ -1,27 +1,17 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Trophy,
-  Crown,
-  Medal,
-  Star,
-  Calendar,
-  Globe,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  X,
-  AlertCircle,
-  HeartHandshake,
-} from "lucide-react";
-import { formatNumber, getBadgeColor, getCurrentMonthYear } from "@/lib/utils2";
+import { Trophy, Search, X, AlertCircle } from "lucide-react";
+import { getCurrentMonthYear } from "@/lib/utils2";
 import { calculateMonthlyAuraBreakdown } from "@/lib/aura-calculations";
 import { GitHubContributions } from "./types";
 import { ErrorState } from "./leaderboard/ErrorState";
-import { BadgeIcon } from "./badges/BadgeIcon";
-import { UserAvatar } from "./ui/user-avatar";
+import { ViewToggle } from "./leaderboard/ViewToggle";
+import { MonthNavigation } from "./leaderboard/MonthNavigation";
+import { Pagination } from "./leaderboard/Pagination";
+import { LoadingState } from "./leaderboard/LoadingState";
+import { LeaderboardEntry as LeaderboardEntryRow } from "./leaderboard/LeaderboardEntry";
+import { Input } from "./ui/input";
 
 interface User {
   id: string;
@@ -292,36 +282,6 @@ const Leaderboard = ({
     }
   };
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Crown className="w-6 h-6 text-yellow-500" />;
-      case 2:
-        return <Medal className="w-6 h-6 text-gray-400" />;
-      case 3:
-        return <Medal className="w-6 h-6 text-amber-600" />;
-      default:
-        return (
-          <span className="w-6 h-6 flex items-center justify-center text-sm font-bold text-gray-300">
-            {rank}
-          </span>
-        );
-    }
-  };
-
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return "from-yellow-400/20 to-yellow-600/20";
-      case 2:
-        return "from-gray-300/20 to-gray-500/20";
-      case 3:
-        return "from-amber-500/20 to-amber-700/20";
-      default:
-        return "from-gray-800/20 to-gray-900/20";
-    }
-  };
-
   const navigateMonth = (direction: "prev" | "next") => {
     const [year, month] = currentMonth.split("-").map(Number);
     const date = new Date(year, month - 1);
@@ -344,22 +304,12 @@ const Leaderboard = ({
     }
   };
 
-  const formatMonthYear = (monthYear: string) => {
-    const [year, month] = monthYear.split("-");
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  };
-
   const clearSearch = () => {
     setSearchQuery("");
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (error) {
@@ -374,344 +324,125 @@ const Leaderboard = ({
   }
 
   return (
-    <div className="bg-background/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 border border-gray-800/50 shadow-2xl mx-1 sm:mx-0">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500" />
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-              Leaderboard
-            </h2>
-          </div>
-
-          {/* View Toggle */}
-          <div className="flex bg-gray-900/60 backdrop-blur-sm rounded-lg p-1 w-full sm:w-auto border border-gray-700/50">
-            <button
-              onClick={() => setView("monthly")}
-              className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none touch-manipulation ${
-                view === "monthly"
-                  ? "bg-gray-700/80 text-foreground shadow-lg"
-                  : "text-gray-400 hover:text-gray-200 active:text-foreground hover:bg-gray-800/50"
-              }`}
-            >
-              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="truncate">Monthly</span>
-            </button>
-            <button
-              onClick={() => setView("alltime")}
-              className={`flex items-center justify-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none touch-manipulation ${
-                view === "alltime"
-                  ? "bg-gray-700/80 text-foreground shadow-lg"
-                  : "text-gray-400 hover:text-gray-200 active:text-foreground hover:bg-gray-800/50"
-              }`}
-            >
-              <Globe className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="truncate">All-Time</span>
-            </button>
-          </div>
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <ViewToggle view={view} onViewChange={setView} />
+          {view === "monthly" && (
+            <MonthNavigation
+              currentMonth={currentMonth}
+              onMonthChange={navigateMonth}
+            />
+          )}
         </div>
 
-        {/* Month Navigation (only for monthly view) */}
-        {view === "monthly" && (
-          <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-center sm:justify-end">
-            <button
-              onClick={() => navigateMonth("prev")}
-              className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-gray-800/50 active:bg-gray-700/50 transition-all backdrop-blur-sm"
-            >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
-            </button>
-            <span className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm font-medium text-foreground whitespace-nowrap bg-gray-900/40 backdrop-blur-sm rounded border border-gray-700/50">
-              {formatMonthYear(currentMonth)}
-            </span>
-            <button
-              onClick={() => navigateMonth("next")}
-              className="p-1.5 sm:p-2 rounded-md touch-manipulation hover:bg-gray-800/50 active:bg-gray-700/50 transition-all backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={currentMonth >= getCurrentMonthYear()}
-            >
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Search Bar */}
-      <div className="mb-6 relative">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-gray-300 transition-colors" />
-          </div>
-          <input
+        {/* Search */}
+        <div className="relative w-full sm:w-64">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
-            placeholder="Search developers..."
+            placeholder="Find a developer…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-12 py-3 bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-xl text-foreground placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all duration-200 hover:bg-gray-900/80"
+            className="pl-8 pr-8"
+            aria-label="Search developers"
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={clearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-foreground transition-colors z-10"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
-        {searchQuery && (
-          <div className="absolute right-0 top-full mt-2 text-xs text-gray-400 bg-gray-900/60 backdrop-blur-sm px-2 py-1 rounded border border-gray-700/50">
-            {filteredData.length} result{filteredData.length !== 1 ? "s" : ""}{" "}
-            found
-          </div>
-        )}
       </div>
 
       {/* Current User Rank or Status */}
-      {currentUserId && (
-        <div className="mb-3 sm:mb-4">
-          {userRank && userRank > 0 && userRank <= 100 ? (
-            <div className="p-2 sm:p-3 rounded-lg bg-gray-900/40 backdrop-blur-sm border border-gray-700/50 border-l-4 border-l-yellow-500">
-              <div className="flex items-center gap-2">
-                <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-500" />
-                <span className="text-xs sm:text-sm font-medium text-foreground">
-                  Your current rank: #{userRank}
-                </span>
-              </div>
-            </div>
-          ) : userOutOfTop100 ? (
-            <div className="p-3 sm:p-4 rounded-lg bg-gradient-to-r from-orange-900/20 to-red-900/20 backdrop-blur-sm border border-orange-700/50 border-l-4 border-l-orange-500">
-              <div className="flex items-start gap-3">
-                <HeartHandshake className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="text-sm sm:text-base font-semibold text-orange-200 mb-1">
-                    Time to Level Up! 💪
-                  </h3>
-                  <p className="text-xs sm:text-sm text-orange-300/90 leading-relaxed">
-                    You're currently ranked #{userRank}. The top 100 developers
-                    are crushing it! Start contributing more, maintain
-                    consistency, and climb your way up. Every commit counts
-                    toward your coding journey! 🚀
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : userNotInLeaderboard ? (
-            <div className="p-2 sm:p-3 rounded-lg bg-blue-900/20 backdrop-blur-sm border border-blue-700/50 border-l-4 border-l-blue-500">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" />
-                <span className="text-xs sm:text-sm font-medium text-blue-200">
-                  You haven't joined this {view === "monthly" ? "month's" : ""}{" "}
-                  leaderboard yet. Start contributing to get ranked!
-                </span>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
-
-      {/* Pagination Info */}
-      {!searchQuery && pagination.totalCount > 0 && (
-        <div className="flex items-center justify-between mb-4 text-xs sm:text-sm text-gray-400">
-          <span>
-            Showing {Math.min(pagination.limit, pagination.totalCount)} of top
-            100 developers
-          </span>
-          <span>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-        </div>
-      )}
+      {currentUserId &&
+        (userRank && userRank > 0 && userRank <= 100 ? (
+          <div className="rounded-md border border-link/30 bg-accent-subtle px-4 py-2.5 text-sm text-foreground">
+            Your current rank:{" "}
+            <span className="font-semibold tabular-nums">#{userRank}</span>
+          </div>
+        ) : userOutOfTop100 ? (
+          <div className="rounded-md border border-attention/40 bg-attention-subtle px-4 py-2.5 text-sm text-foreground">
+            You&apos;re currently ranked{" "}
+            <span className="font-semibold tabular-nums">#{userRank}</span>,
+            outside the top 100. Keep contributing consistently to climb up.
+          </div>
+        ) : userNotInLeaderboard ? (
+          <div className="flex items-center gap-2 rounded-md border border-link/30 bg-accent-subtle px-4 py-2.5 text-sm text-foreground">
+            <AlertCircle className="h-4 w-4 shrink-0 text-link" />
+            You haven&apos;t joined this {view === "monthly" ? "month's" : ""}{" "}
+            leaderboard yet. Start contributing to get ranked!
+          </div>
+        ) : null)}
 
       {/* Leaderboard List */}
-      <div className="space-y-3">
-        <AnimatePresence>
-          {filteredData.map((entry, index) => (
-            <motion.div
-              key={`${entry.user.id}-${view}-${currentMonth}-${currentPage}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className={`relative overflow-hidden rounded-xl border border-gray-700/50 ${
-                entry.user.id === currentUserId
-                  ? "ring-2 ring-yellow-500/50"
-                  : ""
-              }`}
-            >
-              {/* Gradient Background for Top 3 */}
-              {entry.rank <= 3 && (
-                <div
-                  className={`absolute inset-0 bg-gradient-to-r ${getRankColor(
-                    entry.rank
-                  )} backdrop-blur-sm`}
-                />
-              )}
+      <div className="gh-box overflow-hidden">
+        <div className="gh-box-header py-2.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              Top 100 developers
+            </h2>
+            {pagination.totalCount > 0 && (
+              <span className="gh-counter tabular-nums">
+                {pagination.totalCount}
+              </span>
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {searchQuery
+              ? `${filteredData.length} result${filteredData.length !== 1 ? "s" : ""}`
+              : `Page ${pagination.currentPage} of ${pagination.totalPages}`}
+          </span>
+        </div>
 
-              <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/40 backdrop-blur-xl">
-                <div className="flex sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex items-center gap-2 sm:gap-3 md:gap-4 w-full sm:w-auto">
-                    {/* Rank */}
-                    <div className="flex items-center justify-center shrink-0">
-                      {getRankIcon(entry.rank)}
-                    </div>
+        {filteredData.map((entry, index) => (
+          <LeaderboardEntryRow
+            key={`${entry.user.id}-${view}-${currentMonth}-${currentPage}`}
+            entry={entry}
+            index={index}
+            view={view}
+            currentMonth={currentMonth}
+            currentPage={currentPage}
+            highlighted={entry.user.id === currentUserId}
+          />
+        ))}
 
-                    {/* Avatar and Info */}
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-none">
-                      <a
-                        href={`/user/${entry.user.github_username}`}
-                        className="hover:opacity-80 transition-opacity shrink-0"
-                      >
-                        <UserAvatar
-                          src={entry.user.avatar_url}
-                          githubUsername={entry.user.github_username}
-                          displayName={entry.user.display_name}
-                          alt={entry.user.display_name}
-                          className="h-8 w-8 ring-2 ring-gray-600/50 sm:h-10 sm:w-10"
-                          initialsClassName="text-[10px]"
-                          size={80}
-                        />
-                      </a>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <a
-                          href={`/user/${entry.user.github_username}`}
-                          className="font-semibold text-sm sm:text-base text-foreground hover:underline truncate"
-                        >
-                          {entry.user.display_name}
-                        </a>
-                        <a
-                          href={`/user/${entry.user.github_username}`}
-                          className="text-xs sm:text-sm truncate text-gray-400 hover:text-gray-200"
-                        >
-                          @{entry.user.github_username}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 w-full sm:w-auto">
-                    {/* Badges */}
-                    <div className="flex items-center gap-1">
-                      {entry.badges.slice(0, 3).map((badge, index) => (
-                        <div
-                          key={`${entry.user.id}-${badge.id}-${
-                            badge.month_year || "no-month"
-                          }-${badge.rank || "no-rank"}-${index}`}
-                          className="relative group cursor-pointer"
-                          title={`${badge.name}: ${badge.description}`}
-                        >
-                          <div
-                            className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r ${getBadgeColor(
-                              badge.rarity
-                            )} flex items-center justify-center text-foreground text-xs sm:text-sm font-bold shadow-lg backdrop-blur-sm`}
-                          >
-                            <BadgeIcon
-                              icon={badge.icon}
-                              name={badge.name}
-                              className="h-4 w-4 sm:h-5 sm:w-5"
-                            />
-                          </div>
-                          {badge.rank && badge.rank <= 3 && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full flex items-center justify-center text-xs font-bold text-foreground">
-                              {badge.rank}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Stats */}
-                    <div className="text-right">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
-                        {formatNumber(entry.aura)} Aura
-                      </div>
-                      {entry.contributions !== undefined && (
-                        <div className="text-xs sm:text-sm text-gray-400">
-                          {formatNumber(entry.contributions)} contributions
-                        </div>
-                      )}
-                      <div className="text-xs sm:text-sm text-gray-400">
-                        🔥 {entry.user.current_streak} streak
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {filteredData.length === 0 && (
+          <div className="px-4 py-12 text-center">
+            <Trophy className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {searchQuery.trim()
+                ? `No developers found matching "${searchQuery}"`
+                : `No data available for this ${
+                    view === "monthly" ? "month" : "period"
+                  }.`}
+            </p>
+            {searchQuery.trim() && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="gh-link mt-2 text-sm"
+              >
+                Clear search
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Pagination Controls */}
       {!searchQuery && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-gray-700/50">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={!pagination.hasPrevPage}
-            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-center gap-1">
-            {Array.from(
-              { length: Math.min(5, pagination.totalPages) },
-              (_, i) => {
-                let pageNum;
-                if (pagination.totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= pagination.totalPages - 2) {
-                  pageNum = pagination.totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                      pageNum === currentPage
-                        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50"
-                        : "bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              }
-            )}
-          </div>
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={!pagination.hasNextPage}
-            className="p-2 rounded-md bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 text-gray-300 hover:text-foreground hover:bg-gray-800/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {filteredData.length === 0 && !loading && (
-        <div className="text-center py-6 sm:py-8">
-          <Trophy className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-gray-600" />
-          <p className="text-sm sm:text-base text-gray-400 px-4">
-            {searchQuery.trim()
-              ? `No developers found matching "${searchQuery}"`
-              : `No data available for this ${
-                  view === "monthly" ? "month" : "period"
-                }.`}
-          </p>
-          {searchQuery.trim() && (
-            <button
-              onClick={clearSearch}
-              className="mt-2 text-sm text-gray-500 hover:text-gray-300 underline"
-            >
-              Clear search
-            </button>
-          )}
-        </div>
+        <Pagination
+          pagination={{ ...pagination, currentPage }}
+          onPageChange={handlePageChange}
+        />
       )}
     </div>
   );

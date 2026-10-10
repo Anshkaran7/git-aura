@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Github, ExternalLink, Users, Heart } from "lucide-react";
-import Link from "next/link";
+import { Github, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface Contributor {
   id: number;
@@ -52,29 +50,43 @@ export default function Contributors() {
     }
   };
 
-  const getContributionBadge = (contributions: number) => {
-    if (contributions >= 100)
-      return { text: "🚀 Core", color: "bg-primary text-primary-foreground" };
-    if (contributions >= 50)
-      return { text: "⭐ Active", color: "bg-accent text-accent-foreground" };
-    if (contributions >= 10)
-      return {
-        text: "💡 Regular",
-        color: "bg-secondary text-secondary-foreground",
-      };
-    return { text: "🌱 New", color: "bg-muted text-muted-foreground" };
+  const getContributionLabel = (contributions: number) => {
+    if (contributions >= 100) return { text: "Core", className: "border-transparent bg-done-subtle text-done" };
+    if (contributions >= 50) return { text: "Active", className: "border-transparent bg-success-subtle text-success" };
+    if (contributions >= 10) return { text: "Regular", className: "border-transparent bg-accent-subtle text-link" };
+    return { text: "New", className: "" };
   };
 
-  const getInitials = (login: string) => {
-    return login.slice(0, 2).toUpperCase();
-  };
+  const header = (
+    <div className="gh-box-header">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        Contributors
+        {!loading && !error && (
+          <span className="gh-counter">{contributors.length}</span>
+        )}
+      </h2>
+      <a
+        href="https://github.com/Anshkaran7/git-aura/graphs/contributors"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="gh-link text-xs"
+      >
+        View on GitHub
+      </a>
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          <span>Loading our amazing contributors...</span>
+      <div className="gh-box" aria-busy="true">
+        {header}
+        <div className="grid grid-cols-4 gap-3 p-4 sm:grid-cols-8 md:grid-cols-10">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <div key={index} className="flex flex-col items-center gap-2">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-accent" />
+              <div className="h-2.5 w-12 animate-pulse rounded bg-accent" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -82,19 +94,17 @@ export default function Contributors() {
 
   if (error) {
     return (
-      <div className="text-center py-12 px-4">
-        <div className="max-w-md mx-auto">
-          <Github className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">
+      <div className="gh-box">
+        {header}
+        <div className="px-4 py-10 text-center">
+          <Github className="mx-auto h-6 w-6 text-muted-foreground" />
+          <h3 className="mt-3 text-sm font-semibold text-foreground">
             Unable to load contributors
           </h3>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <button
-            onClick={fetchContributors}
-            className="text-primary hover:text-primary/80 underline"
-          >
+          <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" className="mt-4" onClick={fetchContributors}>
             Try again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -102,14 +112,17 @@ export default function Contributors() {
 
   if (contributors.length === 0) {
     return (
-      <div className="text-center py-12 px-4">
-        <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          No contributors found
-        </h3>
-        <p className="text-muted-foreground">
-          Be the first to contribute to GitAura!
-        </p>
+      <div className="gh-box">
+        {header}
+        <div className="px-4 py-10 text-center">
+          <Users className="mx-auto h-6 w-6 text-muted-foreground" />
+          <h3 className="mt-3 text-sm font-semibold text-foreground">
+            No contributors found
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Be the first to contribute to GitAura!
+          </p>
+        </div>
       </div>
     );
   }
@@ -118,175 +131,90 @@ export default function Contributors() {
   const otherContributors = contributors.slice(2);
 
   return (
-    <div className="space-y-8 px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Heart className="w-6 h-6 text-red-500" />
-          <h3 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Our Amazing Contributors
-          </h3>
-          <Heart className="w-6 h-6 text-red-500" />
-        </div>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Thank you to all {contributors.length} contributors who make GitAura
-          possible!
-        </p>
+    <div className="gh-box overflow-hidden">
+      {header}
+
+      {/* Top contributors */}
+      <div className="grid gap-px bg-border-muted sm:grid-cols-2">
+        {topContributors.map((contributor, index) => {
+          const label = getContributionLabel(contributor.contributions);
+          return (
+            <a
+              key={contributor.id}
+              href={contributor.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 bg-background px-4 py-3 hover:bg-canvas-subtle"
+            >
+              <UserAvatar
+                src={contributor.avatar_url}
+                githubUsername={contributor.login}
+                className="h-10 w-10"
+                initialsClassName="text-xs tracking-normal"
+                size={80}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-2">
+                  <span className="truncate text-sm font-semibold text-foreground group-hover:text-link">
+                    {contributor.login}
+                  </span>
+                  <span className={`gh-label ${label.className}`}>{label.text}</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {contributor.contributions.toLocaleString()}
+                  </span>{" "}
+                  contribution{contributor.contributions !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                #{index + 1}
+              </span>
+            </a>
+          );
+        })}
       </div>
 
-      {/* Top Contributors Section */}
-      {topContributors.length > 0 && (
-        <div className="space-y-4">
-          <div className="text-center">
-            <h4 className="text-xl font-semibold text-foreground mb-2">
-              Git Aura's Top Contributors
-            </h4>
-            <p className="text-sm text-muted-foreground">
-              Leading the way in contributions
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            {topContributors.map((contributor, index) => {
-              const badge = getContributionBadge(contributor.contributions);
-
-              return (
-                <Card
-                  key={contributor.id}
-                  className={`group p-6 w-full max-w-sm sm:max-w-md hover:scale-105 transition-all duration-300 
-                    border-2 border-primary/20 bg-gradient-to-br from-card to-card/80 
-                    hover:shadow-xl hover:shadow-primary/10 hover:border-primary/40
-                    animate-in fade-in-50 slide-in-from-bottom-10
-                  `}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    {/* Avatar */}
-                    <div className="relative">
-                      <Avatar className="w-20 h-20 sm:w-24 sm:h-24 border-4 border-primary/20 group-hover:border-primary transition-colors">
-                        <AvatarImage
-                          src={contributor.avatar_url}
-                          alt={contributor.login}
-                          className="object-cover"
-                        />
-                        <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-lg">
-                          {getInitials(contributor.login)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      {/* Top contributor indicator */}
-                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-sm font-bold text-primary-foreground shadow-lg">
-                        {index + 1}
-                      </div>
-                    </div>
-
-                    {/* Username */}
-                    <div>
-                      <h4 className="text-lg sm:text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                        {contributor.login}
-                      </h4>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="space-y-3 w-full">
-                      <Badge className={`${badge.color} text-sm px-3 py-1`}>
-                        {badge.text}
-                      </Badge>
-
-                      <div className="text-base sm:text-lg text-muted-foreground">
-                        <span className="font-bold text-xl sm:text-2xl text-foreground">
-                          {contributor.contributions}
-                        </span>{" "}
-                        <span className="text-sm">
-                          contribution{contributor.contributions !== 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* View Profile Button */}
-                    <Link
-                      href={contributor.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full"
-                    >
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors font-medium group/btn">
-                        <Github className="w-4 h-4" />
-                        <span>View Profile</span>
-                        <ExternalLink className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
-                      </button>
-                    </Link>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* All Contributors Section */}
+      {/* Everyone else */}
       {otherContributors.length > 0 && (
-        <div className="space-y-4">
-          <div className="text-center">
-            <h4 className="text-xl font-semibold text-foreground mb-2">
-              All Contributors
-            </h4>
-            <p className="text-sm text-muted-foreground">
-            All those who are helping use to make Git Aura Better
-            </p>
-          </div>
-
-          <div className="w-max-7xl w-full flex flex-wrap justify-center items-center gap-10">
-            {otherContributors.map((contributor, index) => (
-              <Link
-                key={contributor.id}
-                href={contributor.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex w-min-content items-center"
-              >
-                <div className="flex w-min-content flex-col items-center justify-center text-center space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                  <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border border-border group-hover:border-primary transition-colors">
-                    <AvatarImage
-                      src={contributor.avatar_url}
-                      alt={contributor.login}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-xs">
-                      {getInitials(contributor.login)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="space-y-1">
-                    <h5 className="text-xs sm:text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate max-w-full">
-                      {contributor.login}
-                    </h5>
-                    <p className="text-xs text-muted-foreground">
-                      {contributor.contributions}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+        <div className="grid grid-cols-4 gap-x-2 gap-y-4 border-t border-border-muted p-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+          {otherContributors.map((contributor) => (
+            <a
+              key={contributor.id}
+              href={contributor.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${contributor.login} · ${contributor.contributions} contributions`}
+              className="group flex min-w-0 flex-col items-center gap-1.5 text-center"
+            >
+              <UserAvatar
+                src={contributor.avatar_url}
+                githubUsername={contributor.login}
+                className="h-10 w-10 transition-colors group-hover:border-border-strong"
+                initialsClassName="text-[11px] tracking-normal"
+                size={80}
+              />
+              <span className="w-full truncate text-xs text-foreground group-hover:text-link">
+                {contributor.login}
+              </span>
+              <span className="-mt-1 text-[11px] tabular-nums text-muted-foreground">
+                {contributor.contributions}
+              </span>
+            </a>
+          ))}
         </div>
       )}
 
-      {/* Call to Action */}
-      <div className="text-center pt-6">
-        <p className="text-muted-foreground mb-4 text-sm sm:text-base">
-          Want to see your face here?
-        </p>
-        <Link
+      <div className="flex flex-col items-start justify-between gap-2 border-t border-border-muted bg-canvas-subtle px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center">
+        <span>Want to see your face here?</span>
+        <a
           href="https://github.com/Anshkaran7/git-aura"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+          className="gh-link font-medium"
         >
-          <Github className="w-5 h-5" />
-          Start Contributing
-          <ExternalLink className="w-4 h-4" />
-        </Link>
+          Start contributing →
+        </a>
       </div>
     </div>
   );

@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeAwareProviders } from "@/components/theme-aware-providers";
 import { Analytics } from "@vercel/analytics/react";
 
-const montserrat = Montserrat({
+const monaSans = Mona_Sans({
   subsets: ["latin"],
   display: "swap",
-  preload: true,
-  adjustFontFallback: true,
-  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-sans",
+  variable: "--font-mona",
 });
 
 export const metadata: Metadata = {
@@ -89,18 +86,12 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico" },
+      { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-    other: [
-      {
-        rel: "mask-icon",
-        url: "/safari-pinned-tab.svg",
-        color: "#0d1117",
-      },
     ],
   },
   manifest: "/manifest.json",
@@ -110,9 +101,9 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "default",
     "apple-mobile-web-app-title": "GitAura",
     "application-name": "GitAura",
-    "msapplication-TileColor": "#0a0a0a",
+    "msapplication-TileColor": "#0d1117",
     "msapplication-config": "/browserconfig.xml",
-    "theme-color": "#0a0a0a",
+    "theme-color": "#0d1117",
     "color-scheme": "dark light",
   },
 };
@@ -163,7 +154,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`scroll-smooth ${montserrat.variable} ${montserrat.className}`}
+      className={`scroll-smooth ${monaSans.variable}`}
     >
       <head>
         {/* Preconnect to external domains for performance */}
@@ -214,7 +205,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
-          enableSystem
+          enableSystem={false}
           disableTransitionOnChange
         >
           <ThemeAwareProviders>{children}</ThemeAwareProviders>

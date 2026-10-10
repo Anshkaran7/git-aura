@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { RankMedal, medalRankFromIcon } from "./RankMedal";
 
 interface BadgeIconProps {
   icon: string;
@@ -21,6 +22,15 @@ export function BadgeIcon({
   imageClassName,
   fallbackClassName,
 }: BadgeIconProps) {
+  const medalRank = medalRankFromIcon(icon);
+  if (medalRank) {
+    return (
+      <span className={cn("inline-flex items-center justify-center", className)}>
+        <RankMedal rank={medalRank} title={name} className={cn("h-full w-full", imageClassName)} />
+      </span>
+    );
+  }
+
   if (isBadgeImage(icon)) {
     return (
       <span className={cn("inline-flex items-center justify-center", className)}>

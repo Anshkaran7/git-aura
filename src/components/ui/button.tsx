@@ -5,27 +5,31 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border text-sm font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-invalid:border-destructive",
   {
     variants: {
       variant: {
+        // GitHub "primary" (green)
         default:
-          "bg-primary text-primary-foreground shadow-[0_14px_32px_-20px_rgba(0,0,0,0.5)] hover:opacity-92",
+          "border-black/10 bg-success-emphasis text-white shadow-[0_1px_0_rgba(31,35,40,0.1)] hover:bg-btn-primary-hover dark:border-white/10",
+        // Dark emphasis button
+        dark: "border-transparent bg-foreground text-background hover:bg-foreground/90",
         destructive:
-          "bg-destructive text-foreground shadow-[0_14px_32px_-20px_rgba(127,29,29,0.5)] hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "border-border bg-canvas-subtle text-danger hover:border-danger hover:bg-danger hover:text-white",
+        // GitHub "default" (gray)
         outline:
-          "border border-border bg-background shadow-sm hover:bg-accent hover:text-accent-foreground dark:bg-input/50 dark:border-border dark:hover:bg-input/70",
+          "border-border bg-canvas-subtle text-foreground shadow-[0_1px_0_rgba(31,35,40,0.04)] hover:bg-accent hover:border-border-strong",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/90",
+          "border-border bg-canvas-subtle text-foreground shadow-[0_1px_0_rgba(31,35,40,0.04)] hover:bg-accent",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/70",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border-transparent text-foreground hover:bg-accent",
+        link: "border-transparent text-link underline-offset-4 hover:underline px-0 h-auto",
       },
       size: {
-        default: "h-10 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 gap-1.5 px-3 has-[>svg]:px-2.5 text-xs",
-        lg: "h-11 px-6 has-[>svg]:px-4 text-sm",
-        icon: "size-9",
+        default: "h-8 px-3",
+        sm: "h-7 gap-1.5 px-2.5 text-xs",
+        lg: "h-10 px-4 text-sm",
+        icon: "size-8",
       },
     },
     defaultVariants: {

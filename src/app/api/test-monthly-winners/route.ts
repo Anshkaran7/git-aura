@@ -1,29 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin, internalCronHeaders } from "@/lib/admin-auth";
 
+// Manually triggers the monthly winners capture (same as the monthly cron).
+// Requires CRON_SECRET bearer or the admin-panel secret: it overwrites the
+// winners stored for the month.
 export async function POST(request: NextRequest) {
-  try {
-    console.log("🧪 [TEST] Manually triggering monthly winners capture...");
+  const authResult = authorizeCronOrAdmin(request);
+  if (!authResult.ok) return authResult.response;
 
-    // Call the save monthly winners API
+  try {
+    const body = await request.json().catch(() => ({}));
     const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      }/api/save-monthly-winners`,
+      `${new URL(request.url).origin}/api/save-monthly-winners`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.CRON_SECRET}`,
-        },
+        headers: internalCronHeaders(),
+        body: JSON.stringify(
+          typeof body?.monthYear === "string" ? { monthYear: body.monthYear } : {}
+        ),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
-        "❌ [TEST] Failed to trigger monthly winners capture:",
-        errorText
-      );
       return NextResponse.json(
         {
           success: false,
@@ -35,16 +34,13 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json();
-    console.log("✅ [TEST] Monthly winners capture completed:", result.message);
-
     return NextResponse.json({
       success: true,
-      message: "Test monthly winners capture completed successfully",
+      message: "Monthly winners capture completed",
       timestamp: new Date().toISOString(),
-      result: result,
+      result,
     });
   } catch (error) {
-    console.error("❌ [TEST] Error in test monthly winners capture:", error);
     return NextResponse.json(
       {
         success: false,
@@ -60,20 +56,6 @@ export async function GET() {
   return NextResponse.json({
     message: "Test Monthly Winners Capture",
     description:
-      "POST to this endpoint to manually test the monthly winners capture system",
-    note: "This will capture the current month's top 3 users as winners",
-    usage: {
-      curl: "curl -X POST http://localhost:3000/api/test-monthly-winners",
-      requirements: [
-        "CRON_SECRET environment variable",
-        "Monthly leaderboard data",
-      ],
-    },
-    endpoints: {
-      save: "/api/save-monthly-winners",
-      cron: "/api/cron/save-monthly-winners",
-      fetch: "/api/monthly-winners",
-      test: "/api/test-monthly-winners (this endpoint)",
-    },
+      "POST (with CRON_SECRET bearer or admin-panel secret) to capture the current month's top 3 users as winners",
   });
 }

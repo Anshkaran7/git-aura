@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 async function runDailyTasks(request: NextRequest) {
   try {
-    // Verify cron secret to ensure this is called by Vercel cron
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = authorizeCronOrAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     console.log("[Daily Tasks] Starting daily maintenance tasks...");
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
+      new URL(request.url).origin; // call this same deployment
     const cronSecret = process.env.CRON_SECRET;
 
     // Step 1: Refresh all users

@@ -40,45 +40,30 @@ const Toast: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case "success":
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case "error":
-        return <XCircle className="w-5 h-5 text-red-400" />;
+        return <XCircle className="h-4 w-4 text-danger" />;
       case "warning":
-        return <AlertCircle className="w-5 h-5 text-yellow-400" />;
+        return <AlertCircle className="h-4 w-4 text-attention" />;
       case "info":
-        return <AlertCircle className="w-5 h-5 text-blue-400" />;
+        return <AlertCircle className="h-4 w-4 text-link" />;
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-400" />;
+        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
-  const getBorderColor = () => {
+  const getAccentColor = () => {
     switch (type) {
       case "success":
-        return "border-green-500/30 dark:border-green-500/20";
+        return "border-l-success-emphasis";
       case "error":
-        return "border-red-500/30 dark:border-red-500/20";
+        return "border-l-danger";
       case "warning":
-        return "border-yellow-500/30 dark:border-yellow-500/20";
+        return "border-l-attention";
       case "info":
-        return "border-blue-500/30 dark:border-blue-500/20";
+        return "border-l-link";
       default:
-        return "border-border dark:border-gray-500/20";
-    }
-  };
-
-  const getBgColor = () => {
-    switch (type) {
-      case "success":
-        return "bg-green-500/10 dark:bg-green-500/10";
-      case "error":
-        return "bg-red-500/10 dark:bg-red-500/10";
-      case "warning":
-        return "bg-yellow-500/10 dark:bg-yellow-500/10";
-      case "info":
-        return "bg-blue-500/10 dark:bg-blue-500/10";
-      default:
-        return "bg-muted/50 dark:bg-gray-500/10";
+        return "border-l-border";
     }
   };
 
@@ -89,20 +74,21 @@ const Toast: React.FC<ToastProps> = ({
       }`}
     >
       <div
-        className={`flex items-start gap-3 p-4 rounded-lg border ${getBorderColor()} ${getBgColor()} backdrop-blur-sm shadow-lg max-w-sm`}
+        className={`gh-shadow flex w-80 max-w-[calc(100vw-2rem)] items-start gap-3 rounded-md border border-l-4 border-border bg-background p-3 ${getAccentColor()}`}
       >
-        <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
+        <div className="mt-0.5 flex-shrink-0">{getIcon()}</div>
 
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-foreground">{title}</h4>
+          <h4 className="text-sm font-semibold text-foreground">{title}</h4>
           {message && (
-            <p className="text-sm text-muted-foreground mt-1">{message}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{message}</p>
           )}
         </div>
 
         <button
           onClick={handleClose}
-          className="flex-shrink-0 p-1 hover:bg-foreground/10 rounded transition-colors"
+          className="flex-shrink-0 rounded-md p-1 transition-colors hover:bg-accent"
+          aria-label="Dismiss"
         >
           <X className="w-4 h-4 text-muted-foreground" />
         </button>

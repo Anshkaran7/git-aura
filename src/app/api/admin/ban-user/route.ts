@@ -1,73 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { authorizeAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { removeBannedUserFromLeaderboards } from "@/lib/ban-middleware";
 
-// Helper function to check if user is admin
-async function isAdmin(userId: string): Promise<boolean> {
-  try {
-    const user = await currentUser();
-    if (!user) return false;
-
-    // Get admin emails and usernames from environment
-    const adminEmails =
-      process.env.ADMIN_EMAILS?.split(",").map((email) =>
-        email.trim().toLowerCase()
-      ) || [];
-    const adminUsernames =
-      process.env.ADMIN_GITHUB_USERNAMES?.split(",").map((username) =>
-        username.trim().toLowerCase()
-      ) || [];
-
-    // Check primary email
-    const primaryEmail = user.emailAddresses
-      ?.find((email) => email.id === user.primaryEmailAddressId)
-      ?.emailAddress?.toLowerCase();
-
-    if (primaryEmail && adminEmails.includes(primaryEmail)) {
-      return true;
-    }
-
-    // Check GitHub username from external accounts
-    const githubAccount = user.externalAccounts?.find(
-      (account) => account.provider === "github"
-    );
-
-    if (
-      githubAccount?.username &&
-      adminUsernames.includes(githubAccount.username.toLowerCase())
-    ) {
-      return true;
-    }
-
-    // Check Clerk username as fallback
-    if (user.username && adminUsernames.includes(user.username.toLowerCase())) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    const user = await currentUser();
-
-    if (!userId || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if current user is admin
-    if (!(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
+    const authResult = await authorizeAdmin(request);
+    if (!authResult.ok) return authResult.response;
+    const userId = authResult.actor;
 
     const body = await request.json();
     const { targetUserId, action, reason, expiresIn } = body;
@@ -106,6 +47,17 @@ export async function POST(request: NextRequest) {
       }
 
       let banExpiresAt = null;
+      if (
+        expiresIn !== undefined &&
+        expiresIn !== null &&
+        expiresIn !== "" &&
+        (!Number.isFinite(Number(expiresIn)) || Number(expiresIn) <= 0)
+      ) {
+        return NextResponse.json(
+          { error: "expiresIn must be a positive number of hours" },
+          { status: 400 }
+        );
+      }
       if (expiresIn) {
         // expiresIn should be in hours
         banExpiresAt = new Date(Date.now() + expiresIn * 60 * 60 * 1000);
@@ -183,19 +135,8 @@ export async function POST(request: NextRequest) {
 // GET endpoint to check ban status
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if current user is admin
-    if (!(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: "Forbidden - Admin access required" },
-        { status: 403 }
-      );
-    }
+    const authResult = await authorizeAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     const { searchParams } = new URL(request.url);
     const targetUserId = searchParams.get("userId");

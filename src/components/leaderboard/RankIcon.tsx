@@ -1,23 +1,44 @@
-import { MedalFirstPlaceIcon, MedalSecondPlaceIcon, MedalThirdPlaceIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "@/components/ui/huge-icon";
+import { cn } from "@/lib/utils";
 
 interface RankIconProps {
   rank: number;
+  className?: string;
 }
 
-export function RankIcon({ rank }: RankIconProps) {
-  switch (rank) {
-    case 1:
-      return <HugeIcon icon={MedalFirstPlaceIcon} size={16} className="text-amber-400" />;
-    case 2:
-      return <HugeIcon icon={MedalSecondPlaceIcon} size={16} className="text-slate-300" />;
-    case 3:
-      return <HugeIcon icon={MedalThirdPlaceIcon} size={16} className="text-orange-400" />;
-    default:
-      return (
-        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border/70 bg-background/80 text-[10px] font-semibold text-muted-foreground shadow-sm">
-          {rank}
-        </div>
-      );
+// Subtle gold / silver / bronze marks for the top 3, plain number otherwise.
+const TOP_RANK_STYLES: Record<number, string> = {
+  1: "border-gold/40 bg-gold/15 text-gold",
+  2: "border-silver/40 bg-silver/15 text-silver",
+  3: "border-bronze/40 bg-bronze/15 text-bronze",
+};
+
+export function RankIcon({ rank, className }: RankIconProps) {
+  const topStyle = TOP_RANK_STYLES[rank];
+
+  if (topStyle) {
+    return (
+      <span
+        className={cn(
+          "inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-1 text-xs font-semibold tabular-nums",
+          topStyle,
+          className
+        )}
+        aria-label={`Rank ${rank}`}
+      >
+        {rank}
+      </span>
+    );
   }
+
+  return (
+    <span
+      className={cn(
+        "inline-flex h-6 min-w-6 items-center justify-center text-sm font-medium tabular-nums text-muted-foreground",
+        className
+      )}
+      aria-label={`Rank ${rank}`}
+    >
+      {rank}
+    </span>
+  );
 }

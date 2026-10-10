@@ -1,37 +1,41 @@
+import { LogoMark } from "@/components/ui/logo";
+import Link from "next/link";
 import { GitHubSignIn } from "@/components/GitHubSignIn";
-import { GithubIcon, SparklesIcon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "@/components/ui/huge-icon";
 
 export default function SignInPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-md rounded-[2rem] border border-border bg-card p-6 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.4)] sm:p-8">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[1.4rem] border border-border bg-background text-foreground">
-            <HugeIcon icon={GithubIcon} size={22} />
-          </div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
-            <HugeIcon icon={SparklesIcon} size={14} className="text-primary" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Sign in
-            </span>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground">
-            Welcome to GitAura
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Connect GitHub to open your profile, badge system, and leaderboard
-            view.
-          </p>
-        </div>
+    <div className="flex min-h-screen flex-col items-center bg-background px-4 pb-12 pt-10 sm:pt-16">
+      <Link href="/" aria-label="GitAura home">
+        <LogoMark className="h-12 w-12" />
+      </Link>
 
-        <div className="mt-8 space-y-4">
-          <GitHubSignIn />
-          <p className="text-center text-[11px] leading-5 text-muted-foreground">
-            By continuing, you agree to the platform terms and privacy flow.
-          </p>
-        </div>
+      <h1 className="mt-6 text-2xl font-light tracking-tight text-foreground">
+        Sign in to GitAura
+      </h1>
+
+      <div className="mt-4 w-full max-w-[340px] rounded-md border border-border bg-canvas-subtle p-4">
+        <p className="mb-3 text-sm text-foreground">
+          Connect your GitHub account to view your profile, aura score, badges
+          and leaderboard rank.
+        </p>
+        <GitHubSignIn />
       </div>
+
+      <div className="mt-4 w-full max-w-[340px] rounded-md border border-border px-4 py-3 text-center text-sm text-foreground">
+        New to GitAura?{" "}
+        <span className="text-muted-foreground">
+          Signing in creates your account.
+        </span>
+      </div>
+
+      <p className="mt-6 max-w-[340px] text-center text-xs text-muted-foreground">
+        By continuing, you agree to the platform terms and privacy policy.
+        GitAura only reads your public GitHub data.
+      </p>
+
+      <Link href="/" className="gh-link mt-3 text-xs">
+        Back to home
+      </Link>
     </div>
   );
 }

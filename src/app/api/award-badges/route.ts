@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 
@@ -32,6 +33,10 @@ const TOP_3_BADGES = [
 ];
 
 export async function POST(req: NextRequest) {
+  // Mutates badges/user badges: only cron, internal calls or the admin panel.
+  const authResult = authorizeCronOrAdmin(req);
+  if (!authResult.ok) return authResult.response;
+
   try {
     const currentMonthYear = getCurrentMonthYear();
 

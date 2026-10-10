@@ -1,5 +1,4 @@
-import { ArrowLeft01Icon, ArrowRight01Icon, Calendar03Icon } from "@hugeicons/core-free-icons";
-import { HugeIcon } from "@/components/ui/huge-icon";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { LEADERBOARD_LAUNCH_MONTH } from "@/lib/leaderboard";
 import { getCurrentMonthYear } from "@/lib/utils2";
 
@@ -18,29 +17,32 @@ export function MonthNavigation({
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
+  const buttonClass =
+    "flex h-8 w-8 items-center justify-center bg-canvas-subtle text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-canvas-subtle";
+
+  // GitHub-style button group: [<] [Month Year] [>]
   return (
-    <div className="flex w-full items-center justify-center gap-2 sm:w-auto">
+    <div className="inline-flex h-8 w-full items-stretch overflow-hidden rounded-md border border-border sm:w-auto">
       <button
+        type="button"
         onClick={() => onMonthChange("prev")}
         disabled={currentMonth <= LEADERBOARD_LAUNCH_MONTH}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 transition-all hover:border-primary/30 hover:text-primary"
+        className={`${buttonClass} border-r border-border`}
         aria-label="Previous month"
       >
-        <HugeIcon icon={ArrowLeft01Icon} size={14} className="text-muted-foreground" />
+        <ChevronLeft className="h-4 w-4" />
       </button>
-      <div className="flex items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1.5 shadow-sm">
-        <HugeIcon icon={Calendar03Icon} size={14} className="text-primary" />
-        <span className="whitespace-nowrap text-[11px] font-semibold text-foreground">
-          {formatMonthYear(currentMonth)}
-        </span>
-      </div>
+      <span className="flex flex-1 items-center justify-center bg-background px-3 text-sm font-medium whitespace-nowrap text-foreground sm:min-w-36">
+        {formatMonthYear(currentMonth)}
+      </span>
       <button
+        type="button"
         onClick={() => onMonthChange("next")}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-border/70 bg-background/80 transition-all hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
         disabled={currentMonth >= getCurrentMonthYear()}
+        className={`${buttonClass} border-l border-border`}
         aria-label="Next month"
       >
-        <HugeIcon icon={ArrowRight01Icon} size={14} className="text-muted-foreground" />
+        <ChevronRight className="h-4 w-4" />
       </button>
     </div>
   );

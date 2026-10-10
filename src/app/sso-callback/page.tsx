@@ -2,10 +2,10 @@ import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 
 export default function SSOCallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
-        <p className="text-gray-400">Completing sign in...</p>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-foreground/20 border-t-foreground" />
+        Completing sign in...
       </div>
       <AuthenticateWithRedirectCallback />
     </div>

@@ -58,9 +58,9 @@ export default function BannedPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="rounded-[1.75rem] border border-border bg-card p-6 text-center shadow-[0_18px_60px_-42px_rgba(0,0,0,0.38)]">
-          <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-primary/15 border-t-primary" />
-          <p className="text-sm text-muted-foreground">Loading account status...</p>
+        <div className="gh-box flex items-center gap-2 px-5 py-4 text-sm text-muted-foreground">
+          <span className="h-4 w-4 animate-spin rounded-full border border-muted-foreground/30 border-t-muted-foreground" />
+          Loading account status...
         </div>
       </div>
     );
@@ -68,70 +68,53 @@ export default function BannedPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <div className="w-full max-w-2xl rounded-[2rem] border border-border bg-card p-6 shadow-[0_24px_80px_-42px_rgba(0,0,0,0.42)] sm:p-8">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-red-500/20 bg-red-500/8 text-red-300">
-            <HugeIcon icon={ShieldUserIcon} size={28} />
-          </div>
-          <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">
+      <div className="w-full max-w-lg">
+        <div className="mb-6 text-center">
+          <HugeIcon
+            icon={ShieldUserIcon}
+            size={32}
+            className="mx-auto text-danger"
+          />
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
             Account suspended
           </h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Access to GitAura is temporarily restricted for this account.
           </p>
         </div>
 
-        <div className="mt-8 space-y-3">
-          {banInfo?.reason ? (
-            <div className="rounded-[1.4rem] border border-border bg-background p-4">
-              <div className="flex items-start gap-3">
-                <HugeIcon icon={AlertCircleIcon} size={16} className="mt-0.5 text-red-300" />
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Reason
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-foreground">{banInfo.reason}</p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {banInfo?.bannedAt ? (
-            <div className="rounded-[1.4rem] border border-border bg-background p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Suspended on
-              </p>
-              <p className="mt-2 text-sm text-foreground">{formatDate(banInfo.bannedAt)}</p>
-            </div>
-          ) : null}
-
-          {banInfo?.expiresAt ? (
-            <div className="rounded-[1.4rem] border border-border bg-background p-4">
-              <div className="flex items-start gap-3">
-                <HugeIcon icon={ClockAlertIcon} size={16} className="mt-0.5 text-amber-300" />
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Temporary restriction
-                  </p>
-                  <p className="mt-2 text-sm text-foreground">{formatDate(banInfo.expiresAt)}</p>
-                </div>
-              </div>
-            </div>
-          ) : null}
+        <div className="flex items-start gap-2 rounded-md border border-danger/40 bg-danger-subtle px-4 py-3 text-sm text-foreground">
+          <HugeIcon icon={AlertCircleIcon} size={16} className="mt-0.5 shrink-0 text-danger" />
+          <p>
+            {banInfo?.reason
+              ? banInfo.reason
+              : "This account has been suspended by an administrator."}
+          </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button
-            onClick={() => window.location.reload()}
-            className="h-10 rounded-full px-4 text-sm font-semibold"
-          >
-            Check again
-          </Button>
-          <Button
-            onClick={() => router.push("/sign-in")}
-            variant="outline"
-            className="h-10 rounded-full px-4 text-sm font-semibold"
-          >
+        {(banInfo?.bannedAt || banInfo?.expiresAt) && (
+          <dl className="gh-box mt-4 text-sm">
+            {banInfo?.bannedAt ? (
+              <div className="gh-box-row flex items-center justify-between gap-4">
+                <dt className="text-muted-foreground">Suspended on</dt>
+                <dd className="text-right text-foreground">{formatDate(banInfo.bannedAt)}</dd>
+              </div>
+            ) : null}
+            {banInfo?.expiresAt ? (
+              <div className="gh-box-row flex items-center justify-between gap-4">
+                <dt className="flex items-center gap-1.5 text-muted-foreground">
+                  <HugeIcon icon={ClockAlertIcon} size={16} className="text-attention" />
+                  Restriction ends
+                </dt>
+                <dd className="text-right text-foreground">{formatDate(banInfo.expiresAt)}</dd>
+              </div>
+            ) : null}
+          </dl>
+        )}
+
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <Button onClick={() => window.location.reload()}>Check again</Button>
+          <Button onClick={() => router.push("/sign-in")} variant="outline">
             Return to sign in
           </Button>
         </div>

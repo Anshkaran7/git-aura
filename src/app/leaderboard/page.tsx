@@ -1,11 +1,54 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/home";
+import { Ban } from "lucide-react";
+import { Footer, Header } from "@/components/home";
 import { CustomLeaderboard } from "@/components/leaderboard/CustomLeaderboard";
 import { LoadingState } from "@/components/leaderboard/LoadingState";
+
+function BannedNotice({
+  reason,
+  expiresAt,
+}: {
+  reason?: string;
+  expiresAt?: string;
+}) {
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="border-b border-border pb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          Access restricted
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+          Your account has been suspended from accessing the leaderboard.
+        </p>
+      </div>
+      <div className="mt-6 rounded-md border border-danger/40 bg-danger-subtle px-4 py-3 text-sm text-foreground">
+        <div className="flex items-start gap-2">
+          <Ban className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
+          <div className="space-y-1">
+            {reason ? (
+              <p>
+                <span className="font-semibold">Reason:</span> {reason}
+              </p>
+            ) : null}
+            {expiresAt ? (
+              <p>
+                <span className="font-semibold">Ban expires:</span>{" "}
+                {new Date(expiresAt).toLocaleString()}
+              </p>
+            ) : null}
+            <p className="text-muted-foreground">
+              If you believe this is an error, please contact support.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LeaderboardPage() {
   const { userId } = useAuth();
@@ -22,7 +65,6 @@ export default function LeaderboardPage() {
       ?.username || "";
 
   useEffect(() => {
-    // ... (no changes needed in this useEffect hook) ...
     const checkBanStatus = async () => {
       if (!userId) {
         setLoading(false);
@@ -51,105 +93,44 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      // CHANGED: bg-black -> bg-background
-      <div className="min-h-screen bg-background transition-colors duration-300">
-        <Header leaderboard={false} dashboard={true} />
-        <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
-          <LoadingState />
-        </div>
-      </div>
+      <PageShell>
+        <LoadingState />
+      </PageShell>
     );
   }
 
   if (banStatus?.isBanned) {
     return (
-      // CHANGED: bg-black -> bg-background
-      <div className="min-h-screen bg-background transition-colors duration-300">
-        <Header leaderboard={false} dashboard={true} />
-        <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
-          <div className="text-center max-w-2xl mx-auto">
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg
-                  className="w-10 h-10 text-red-400" // Specific error color is fine
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
-                  />
-                </svg>
-              </div>
-              {/* CHANGED: text-white -> text-foreground */}
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-                Access Restricted
-              </h1>
-              {/* CHANGED: text-[#7d8590] -> text-muted-foreground */}
-              <p className="text-lg text-muted-foreground mb-6">
-                Your account has been suspended from accessing the leaderboard.
-              </p>
-            </div>
-            
-            {/* The rest of the ban-specific UI uses specific colors which is okay for an error state. */}
-            <div className="bg-gradient-to-r from-red-950/40 to-orange-950/20 border border-red-500/30 rounded-lg p-6 sm:p-8 backdrop-blur-sm">
-              <div className="space-y-4">
-                {banStatus.reason && (
-                  <div className="bg-red-900/20 rounded-lg p-4 border border-red-500/20">
-                    <p className="text-gray-400 text-sm mb-2">
-                      <strong>Reason:</strong>
-                    </p>
-                    <p className="text-red-200 font-medium">
-                      {banStatus.reason}
-                    </p>
-                  </div>
-                )}
-
-                {banStatus.expiresAt && (
-                  <div className="bg-orange-900/20 rounded-lg p-4 border border-orange-500/20">
-                    <p className="text-gray-400 text-sm mb-2">
-                      <strong>Ban Expires:</strong>
-                    </p>
-                    <p className="text-orange-200 font-medium">
-                      {new Date(banStatus.expiresAt).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-
-                <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700/50">
-                  <p className="text-gray-300 text-sm">
-                    If you believe this is an error, please contact support.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageShell>
+        <BannedNotice
+          reason={banStatus.reason}
+          expiresAt={banStatus.expiresAt}
+        />
+      </PageShell>
     );
   }
 
   return (
-    // CHANGED: bg-black -> bg-background
-    <div className="min-h-screen bg-background transition-colors duration-300">
-      <Header leaderboard={false} dashboard={true} />
-      <div className="max-w-[95vw] sm:max-w-[90vw] md:max-w-5xl lg:max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 sm:pt-24 md:pt-28 pb-8 sm:pb-10">
-        <div className="mb-6 text-center sm:mb-8">
-          <h1 className="mb-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-            Global Leaderboard
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Compete with developers worldwide and see your ranking
-          </p>
-        </div>
+    <PageShell>
+      <Suspense fallback={<LoadingState />}>
+        <CustomLeaderboard
+          username={githubUsername}
+          title="Leaderboard"
+          description="Compete with developers worldwide and see where you rank."
+        />
+      </Suspense>
+    </PageShell>
+  );
+}
 
-        <Suspense fallback={<LoadingState />}>
-          <CustomLeaderboard username={githubUsername} />
-        </Suspense>
-      </div>
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header leaderboard={false} dashboard={true} />
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        {children}
+      </main>
+      <Footer />
     </div>
   );
 }

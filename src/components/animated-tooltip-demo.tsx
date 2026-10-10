@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Trophy, Zap, Github, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Flame, Github } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { formatNumber } from "@/lib/utils2";
@@ -32,17 +32,6 @@ interface ApiResponse {
   fallback?: boolean;
 }
 
-const fallbackUsers: TopUser[] = [1, 2, 3, 4, 5].map((id) => ({
-  id,
-  name: "Loading...",
-  designation: "Aura Score: ---",
-  image: `https://api.dicebear.com/7.x/avatars/svg?seed=${id}`,
-  rank: id,
-  totalAura: 0,
-  contributions: 0,
-  currentStreak: 0,
-}));
-
 async function fetchTopUsers(): Promise<ApiResponse> {
   const response = await fetch("/api/leaderboard/top-monthly");
   if (!response.ok) {
@@ -67,12 +56,7 @@ export default function TopAuraUsers() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const topUsers =
-    topUsersQuery.data?.topUsers && topUsersQuery.data.topUsers.length > 0
-      ? topUsersQuery.data.topUsers
-      : topUsersQuery.isLoading
-        ? fallbackUsers
-        : [];
+  const topUsers = (topUsersQuery.data?.topUsers ?? []).slice(0, 5);
 
   const stats = topUsersQuery.data?.stats ?? {
     totalAuraPoints: 0,
@@ -85,135 +69,162 @@ export default function TopAuraUsers() {
     topUsersQuery.error instanceof Error ? topUsersQuery.error.message : null;
 
   const handleGoToProfile = () => {
-    if (user?.externalAccounts) {
-      const githubAccount = user.externalAccounts.find(
-        (account) => account.provider === "github"
-      );
-      if (githubAccount?.username) {
-        router.push(`/${githubAccount.username}`);
-        return;
-      }
-    }
-    router.push("/profile");
+    const githubAccount = user?.externalAccounts?.find(
+      (account) => account.provider === "github"
+    );
+    router.push(githubAccount?.username ? `/${githubAccount.username}` : "/sign-in");
   };
 
   const getMonthName = (value: string) => {
-    if (!value) return "This Month";
+    if (!value) return "This month";
     const [year, month] = value.split("-");
     const date = new Date(parseInt(year), parseInt(month) - 1);
     return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   };
 
-  const renderStats = () => {
-    if (topUsersQuery.isLoading) return null;
-    if (error || !stats.totalParticipants) return null;
-
-    return (
-      <div className="mb-8 flex flex-wrap justify-center gap-4 sm:gap-8">
-        <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              {formatNumber(stats.totalAuraPoints)}
-            </span>{" "}
-            total aura
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Github className="h-4 w-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              {formatNumber(stats.totalContributions)}
-            </span>{" "}
-            commits in motion
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              {formatNumber(stats.totalParticipants)}
-            </span>{" "}
-            people in the mix
-          </span>
-        </div>
-      </div>
-    );
-  };
+  const rankColor = (rank: number) =>
+    rank === 1
+      ? "text-gold"
+      : rank === 2
+        ? "text-silver"
+        : rank === 3
+          ? "text-bronze"
+          : "text-muted-foreground";
 
   return (
-    <section className="px-4 py-12 sm:px-6 sm:py-20">
-      <div className="container relative z-10 mx-auto rounded-[2.2rem] border border-border bg-card/95 px-4 py-8 text-center shadow-[0_24px_80px_-42px_rgba(0,0,0,0.2)] sm:px-6 sm:py-10">
-        <div className="mx-auto mb-8 max-w-3xl sm:mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5">
-            <Trophy className="h-3 w-3 text-primary sm:h-4 sm:w-4" />
-            <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              This month&apos;s room
-            </span>
-          </div>
-
-          <h2 className="mb-4 text-2xl font-semibold leading-tight tracking-[-0.045em] text-foreground sm:text-4xl">
-            {getMonthName(monthYear)} is looking stacked.
+    <section className="px-4 py-16 sm:px-6 sm:py-20">
+      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+        <div>
+          <p className="gh-eyebrow">Leaderboard</p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+            Who&apos;s leading this month.
           </h2>
-
-          <p className="mx-auto mb-6 max-w-2xl px-4 text-sm leading-6 text-muted-foreground">
-            {topUsersQuery.isLoading ? (
-              "Pulling the current top names..."
-            ) : error ? (
-              "The room is being weird right now. Try again in a sec."
-            ) : topUsers.length === 0 ? (
-              "No one has claimed the spotlight yet. First big month can set the whole tone."
-            ) : (
-              "A quick look at the profiles moving the hardest this month. Hover around and catch the vibe."
-            )}
+          <p className="mt-3 max-w-md text-base text-muted-foreground">
+            Rankings reset every month, so there&apos;s always a race to win.
+            The top three earn a permanent badge.
           </p>
 
-          {renderStats()}
-        </div>
-
-        <div className="mb-8 flex min-h-[60px] w-full flex-row items-center justify-center sm:mb-10 sm:min-h-[80px]">
-          {topUsersQuery.isLoading ? (
-            <div className="flex items-center gap-3 sm:gap-4">
-              <RefreshCw className="h-4 w-4 animate-spin text-primary sm:h-6 sm:w-6" />
-              <span className="text-sm text-muted-foreground sm:text-base">
-                Loading the current lineup...
-              </span>
-            </div>
-          ) : error ? (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">{error}</p>
-            </div>
-          ) : topUsers.length === 0 ? (
-            <div className="text-center">
-              <div className="mb-3 text-4xl sm:mb-4 sm:text-6xl">🚀</div>
-              <p className="text-sm text-muted-foreground">
-                No one owns the month yet.
-              </p>
-            </div>
-          ) : (
-            <AnimatedTooltip items={topUsers} />
+          {!error && stats.totalParticipants > 0 && (
+            <dl className="mt-6 grid max-w-md grid-cols-3 gap-4">
+              {[
+                { label: "Aura this month", value: stats.totalAuraPoints },
+                { label: "Contributions", value: stats.totalContributions },
+                { label: "Developers", value: stats.totalParticipants },
+              ].map((item) => (
+                <div key={item.label}>
+                  <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                  <dd className="mt-0.5 text-xl font-semibold tabular-nums text-foreground">
+                    {formatNumber(item.value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           )}
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="gh-box overflow-hidden">
+          <div className="gh-box-header">
+            <h3 className="text-sm font-semibold text-foreground">
+              Top developers · {getMonthName(monthYear)}
+            </h3>
+            <Link href="/leaderboard" className="gh-link text-xs">
+              View all
+            </Link>
+          </div>
+
+          {topUsersQuery.isLoading ? (
+            <ul>
+              {[0, 1, 2, 3, 4].map((i) => (
+                <li key={i} className="gh-box-row flex items-center gap-3">
+                  <span className="h-4 w-4 animate-pulse rounded bg-accent" />
+                  <span className="h-8 w-8 animate-pulse rounded-full bg-accent" />
+                  <span className="h-4 w-32 animate-pulse rounded bg-accent" />
+                  <span className="ml-auto h-4 w-12 animate-pulse rounded bg-accent" />
+                </li>
+              ))}
+            </ul>
+          ) : error || topUsers.length === 0 ? (
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">
+                {error ? "Leaderboard unavailable" : "No rankings yet"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {error
+                  ? "Please try again in a moment."
+                  : "No one has claimed the first spot this month."}
+              </p>
+            </div>
+          ) : (
+            <ul>
+              {topUsers.map((u) => (
+                <li key={u.id} className="gh-box-row flex items-center gap-3 hover:bg-canvas-subtle">
+                  <span className={`w-5 text-center text-sm font-semibold tabular-nums ${rankColor(u.rank)}`}>
+                    {u.rank}
+                  </span>
+                  <img
+                    src={u.image}
+                    alt=""
+                    loading="lazy"
+                    className="h-8 w-8 rounded-full border border-border bg-canvas-subtle"
+                  />
+                  <div className="min-w-0 flex-1">
+                    {u.githubUsername ? (
+                      <a
+                        href={`https://github.com/${u.githubUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block truncate text-sm font-semibold text-foreground hover:text-link hover:underline"
+                      >
+                        {u.name}
+                      </a>
+                    ) : (
+                      <span className="block truncate text-sm font-semibold text-foreground">{u.name}</span>
+                    )}
+                    {u.githubUsername && (
+                      <span className="block truncate text-xs text-muted-foreground">@{u.githubUsername}</span>
+                    )}
+                  </div>
+                  {u.currentStreak > 0 && (
+                    <span className="gh-label hidden sm:inline-flex">
+                      <Flame className="h-3 w-3 text-bronze" />
+                      {u.currentStreak}d
+                    </span>
+                  )}
+                  <span className="text-right text-sm font-semibold tabular-nums text-foreground">
+                    {formatNumber(u.totalAura)}
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">aura</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Closing CTA */}
+      <div className="mx-auto mt-20 max-w-6xl">
+        <div className="flex flex-col items-start justify-between gap-6 rounded-md border border-border bg-canvas-subtle p-8 sm:flex-row sm:items-center sm:p-10">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              See where you rank.
+            </h2>
+            <p className="mt-2 text-base text-muted-foreground">
+              Free, open source, and ready in under a minute.
+            </p>
+          </div>
           {isSignedIn ? (
-            <Badge
-              variant="outline"
-              className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
-              onClick={handleGoToProfile}
-            >
-              <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              Open your quiet flex
-            </Badge>
+            <Button size="lg" onClick={handleGoToProfile}>
+              <Github />
+              Open your profile
+              <ArrowRight />
+            </Button>
           ) : (
             <SignInButton mode="modal">
-              <Badge
-                variant="outline"
-                className="w-full cursor-pointer rounded-full border-primary px-4 py-2 text-xs text-primary transition-colors hover:bg-primary/10 sm:w-auto"
-              >
-                <Github className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                Connect GitHub and get in the mix
-              </Badge>
+              <Button size="lg">
+                <Github />
+                Sign in with GitHub
+                <ArrowRight />
+              </Button>
             </SignInButton>
           )}
         </div>

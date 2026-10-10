@@ -3,16 +3,17 @@ import { Theme } from "./types";
 export const themes: Theme[] = [
   {
     name: "Light",
-    background: "bg-gray-50",
-    cardBackground: "bg-white",
-    text: "text-gray-900",
-    border: "border-gray-200",
+    background: "bg-background",
+    cardBackground: "bg-card",
+    text: "text-foreground",
+    border: "border-border",
+    // GitHub contribution graph greens (see --contribution-level-* in globals.css)
     contribution: {
-      level0: "bg-gray-100",
-      level1: "bg-emerald-200",
-      level2: "bg-emerald-400",
-      level3: "bg-emerald-500",
-      level4: "bg-emerald-600",
+      level0: "bg-[var(--contribution-level-0)]",
+      level1: "bg-[var(--contribution-level-1)]",
+      level2: "bg-[var(--contribution-level-2)]",
+      level3: "bg-[var(--contribution-level-3)]",
+      level4: "bg-[var(--contribution-level-4)]",
     },
   },
   {

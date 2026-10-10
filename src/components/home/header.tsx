@@ -1,12 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "@/components/ui/logo";
 import { Github, Menu, User, LogOut, Shield, X } from "lucide-react";
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 // Navigation items configuration - now unified for consistency across all pages
@@ -24,7 +24,6 @@ export const Header = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Memoize GitHub account lookup
@@ -46,12 +45,11 @@ export const Header = ({
   const allNavItems = useMemo(
     () => {
       return [
-        { href: "/#features", label: "Why It Hits" },
-        { href: "/#how-it-works", label: "How It Works" },
-        { href: leaderboardUrl, label: "Leaderboard" },
-        { href: "/monthly-winners", label: "Hall of Fame" },
+        { href: "/#features", label: "Features" },
+        { href: "/#how-it-works", label: "How it works" },
+        { href: leaderboardUrl, label: "Ranks" },
+        { href: "/monthly-winners", label: "Winners" },
         { href: "/battle", label: "Battle" },
-        { href: "/contribute", label: "Build With Us" },
       ];
     },
     [leaderboardUrl]
@@ -59,7 +57,7 @@ export const Header = ({
 
   // Memoize user profile URL
   const userProfileUrl = useMemo(() => {
-    return githubAccount?.username ? `/${githubAccount.username}` : "/profile";
+    return githubAccount?.username ? `/${githubAccount.username}` : "/sign-in";
   }, [githubAccount?.username]);
 
   // Check if user is admin
@@ -95,17 +93,6 @@ export const Header = ({
 
     checkAdminStatus();
   }, [isSignedIn, user, githubAccount?.username]);
-
-  // Scroll handler for floating navbar effect
-  const handleScroll = useCallback(() => {
-    const scrollPosition = window.scrollY;
-    setIsScrolled(scrollPosition > 50);
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -155,26 +142,25 @@ export const Header = ({
 
 
 
-  // Memoize header classes with scroll animation
-  const headerClasses = useMemo(() => {
-    return `fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-background/78 
-    backdrop-blur-xl transition-all duration-500 ease-linear ${
-      isScrolled
-        ? "w-[92%] md:w-[90%] rounded-full mt-5 border border-border shadow-[0_18px_60px_-34px_rgba(0,0,0,0.42)]"
-        : "w-full border-b border-border/80"
-    }`;
-  }, [isScrolled]);
-
   // Helper function to check if a link is active
+  // The URL hash isn't known during SSR, so read it after mount (and on change)
+  // to keep server and client markup identical.
+  const [hash, setHash] = useState("");
+  useEffect(() => {
+    const syncHash = () => setHash(window.location.hash);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [pathname]);
+
   const isActiveLink = useCallback((href: string) => {
     if (href.startsWith('/#')) {
-      // For homepage sections, only active when on homepage
-      // Check if window is defined (client-side only) to avoid SSR errors
-      return pathname === "/" && typeof window !== 'undefined' && window.location.hash === href.slice(1);
+      // Homepage sections are only active on the homepage with a matching hash
+      return pathname === "/" && hash === href.slice(1);
     }
     // For other pages, exact match or starts with the path
     return pathname === href || (href !== "/" && pathname.startsWith(href));
-  }, [pathname]);
+  }, [pathname, hash]);
 
   // Handle navigation to homepage sections from other pages
   const handleNavClick = useCallback((href: string, e: React.MouseEvent) => {
@@ -189,6 +175,8 @@ export const Header = ({
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
+        window.history.replaceState(null, "", href);
+        setHash(href.slice(1));
       } else {
         // If on other page, navigate to homepage with hash
         router.push(href);
@@ -196,25 +184,38 @@ export const Header = ({
     }
   }, [pathname, router]);
 
-  // Render navigation items with active state styling
+  // Render navigation items with active state styling (GitHub underline-nav style)
   const renderNavItems = useCallback(
     (items: Array<{ href: string; label: string }>, isMobile = false) => {
       return items.map(({ href, label }) => {
         const isActive = isActiveLink(href);
+        if (isMobile) {
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={(e) => handleNavClick(href, e)}
+              className={`flex items-center rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent ${
+                isActive ? "bg-accent font-semibold text-foreground" : "text-foreground"
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        }
         return (
           <Link
             key={href}
             href={href}
             onClick={(e) => handleNavClick(href, e)}
-            className={`text-[13px] transition-colors ${
-              isActive 
-                ? "text-primary font-semibold" 
-                : "text-muted-foreground hover:text-primary"
-            } ${
-              isMobile ? "px-4 py-2 hover:bg-muted/50 rounded-lg" : ""
+            aria-current={isActive ? "page" : undefined}
+            className={`relative flex h-full items-center px-2 text-sm transition-colors ${
+              isActive
+                ? "font-semibold text-foreground after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-[#fd8c73]"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {label}
+            <span className="rounded-md px-1 py-1 hover:bg-accent">{label}</span>
           </Link>
         );
       });
@@ -223,188 +224,141 @@ export const Header = ({
   );
 
   return (
-    <header className={headerClasses}>
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+    <header className="sticky top-0 z-50 border-b border-border bg-canvas-subtle/95 backdrop-blur supports-[backdrop-filter]:bg-canvas-subtle/80">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex h-full items-center gap-4">
+          {/* Mobile Menu Toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="lg:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMobileMenuOpen}
           >
-            <div className="bg-card border border-border rounded-2xl p-1">
-              <Image
-                src="/logo.png"
-                alt="Git Aura"
-                width={48}
-                height={48}
-                loading="lazy"
-                className="w-10 h-10 rounded-xl text-primary"
-              />
-            </div>
-            <span className="hidden xl:block text-sm font-semibold tracking-[-0.03em] text-foreground">
-              Git Aura
-            </span>
+            {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
+
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 rounded-md">
+            <LogoMark />
+            <span className="text-sm font-semibold text-foreground">GitAura</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden xl:flex items-center gap-5">
+          <nav className="hidden h-full items-stretch lg:flex" aria-label="Primary">
             {renderNavItems(allNavItems)}
           </nav>
+        </div>
 
-          {/* CTA Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            {isSignedIn ? (
-              <>
-                {/* Admin Button - Only show for admin users */}
-                {isAdmin && (
+        {/* CTA Buttons */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {!isLoaded ? (
+            <div className="h-8 w-24 animate-pulse rounded-md bg-accent" />
+          ) : isSignedIn ? (
+            <>
+              {isAdmin && (
+                <Button asChild variant="outline" size="sm" className="h-8">
                   <Link href="/admin/users">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 rounded-full px-3 text-xs items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      <span className="hidden sm:inline">Admin</span>
-                    </Button>
+                    <Shield className="h-4 w-4" />
+                    <span className="hidden sm:inline">Admin</span>
                   </Link>
-                )}
-
-                {/* <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2"
-                  onClick={syncUserData}
-                  disabled={isSyncing}
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
-                  />
-                </Button> */}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center gap-2 h-8 rounded-full px-2"
-                  onClick={handleGoToProfile}
-                >
-                  {user?.imageUrl ? (
-                    <img
-                      src={user.imageUrl}
-                      alt={user?.firstName || "Profile"}
-                      className="w-5 h-5 rounded-full"
-                    />
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
-                  <span className="hidden md:inline text-xs">
-                    {user?.firstName || "Profile"}
-                  </span>
                 </Button>
+              )}
 
-                <SignOutButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hidden sm:flex h-8 rounded-full px-3 text-xs"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </SignOutButton>
-              </>
-            ) : (
+              <SignOutButton>
+                <Button variant="ghost" size="sm" className="hidden h-8 text-muted-foreground sm:flex">
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </Button>
+              </SignOutButton>
+
+              <button
+                type="button"
+                onClick={handleGoToProfile}
+                className="flex items-center gap-2 rounded-full transition-opacity hover:opacity-85"
+                aria-label="Open your profile"
+                title={githubAccount?.username ? `@${githubAccount.username}` : "Profile"}
+              >
+                {user?.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt={user?.firstName || "Profile"}
+                    className="h-8 w-8 rounded-full border border-border"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
+                    <User className="h-4 w-4" />
+                  </span>
+                )}
+              </button>
+            </>
+          ) : (
+            <>
               <SignInButton mode="modal">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="h-8 rounded-full px-3 text-xs items-center whitespace-nowrap"
-                >
-                  <Github className="w-4 h-4 mr-0 md:mr-2" />
-                  <span className="hidden sm:inline">Connect GitHub</span>
+                <Button variant="ghost" size="sm" className="hidden h-8 sm:flex">
+                  Sign in
                 </Button>
               </SignInButton>
-            )}
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="xl:hidden h-8 w-8 rounded-full px-0"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-4 h-4" />
-              ) : (
-                <Menu className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
+              <SignInButton mode="modal">
+                <Button size="sm" className="h-8">
+                  <Github className="h-4 w-4" />
+                  <span>Connect GitHub</span>
+                </Button>
+              </SignInButton>
+            </>
+          )}
         </div>
       </div>
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="xl:hidden">
+        <div className="lg:hidden">
           <button
-            className="fixed inset-0 top-16 z-40 bg-background/72 backdrop-blur-[2px]"
+            className="fixed inset-0 top-14 z-40 bg-black/40"
             aria-label="Close mobile menu"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          <div className="fixed inset-x-4 top-[4.7rem] z-50 overflow-hidden rounded-[2rem] border border-border bg-background/96 shadow-[0_28px_90px_-44px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
-            <nav className="flex max-h-[calc(100vh-6rem)] flex-col overflow-y-auto px-3 py-3">
+          <div className="absolute inset-x-0 top-14 z-50 border-b border-border bg-background gh-shadow">
+            <nav className="mx-auto flex max-h-[calc(100vh-4rem)] max-w-6xl flex-col gap-0.5 overflow-y-auto px-3 py-3">
               {renderNavItems(allNavItems, true)}
 
               {isSignedIn ? (
-                <div className="mt-3 border-t border-border/70 pt-3">
+                <div className="mt-2 flex flex-col gap-0.5 border-t border-border pt-2">
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       handleGoToProfile();
                     }}
-                    className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                    className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-accent"
                   >
                     {user?.imageUrl ? (
-                      <img
-                        src={user.imageUrl}
-                        alt={user?.firstName || "Profile"}
-                        className="h-8 w-8 rounded-full"
-                      />
+                      <img src={user.imageUrl} alt="" className="h-6 w-6 rounded-full" />
                     ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border">
-                        <User className="h-4 w-4" />
-                      </div>
+                      <User className="h-4 w-4" />
                     )}
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {user?.firstName || "Profile"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Open your profile
-                      </p>
-                    </div>
+                    <span className="font-medium">Your profile</span>
                   </button>
 
                   {isAdmin && (
                     <Link
                       href="/admin/users"
-                      className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent"
                     >
                       <Shield className="h-4 w-4" />
-                      Admin Panel
+                      Admin panel
                     </Link>
                   )}
 
                   <SignOutButton>
                     <button
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                      className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent"
                     >
                       <LogOut className="h-4 w-4" />
-                      Sign Out
+                      Sign out
                     </button>
                   </SignOutButton>
                 </div>

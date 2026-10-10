@@ -1,157 +1,190 @@
 "use client";
-import React from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Theme, GitHubContributions } from "./types";
 
 interface ContributionGridProps {
   contributions: GitHubContributions;
   selectedTheme: Theme;
+  /** Optional content rendered on the left side of the legend row. */
+  footer?: React.ReactNode;
+  /** Square size in px (defaults to GitHub's 10px). */
+  cellSize?: number;
+  /** Gap between squares in px (defaults to 3px). */
+  cellGap?: number;
+  /**
+   * When false the full year is always laid out (no horizontal scroll) —
+   * used by the exported share card.
+   */
+  scrollable?: boolean;
+}
+
+const CELL = 10; // px — GitHub uses 10px squares
+const GAP = 3; // px — and 3px spacing
+const WEEKS = 53;
+const WEEKDAY_LABELS: Record<number, string> = { 1: "Mon", 3: "Wed", 5: "Fri" };
+
+// Format a Date as YYYY-MM-DD using the *local* calendar day. Using
+// toISOString() here shifts the day for timezones ahead of UTC.
+function toLocalDateKey(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 const ContributionGrid: React.FC<ContributionGridProps> = ({
   contributions,
   selectedTheme,
+  footer,
+  cellSize = CELL,
+  cellGap = GAP,
+  scrollable = true,
 }) => {
-  const getContributionColor = (count: number): string => {
-    if (count > 12) return "bg-green-500 dark:bg-green-400";
-    if (count > 7) return "bg-green-400 dark:bg-green-500";
-    if (count > 3) return "bg-green-300 dark:bg-green-600";
-    if (count > 0) return "bg-green-200 dark:bg-green-700";
-    return "bg-gray-100 dark:bg-gray-800";
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const levelClasses = [
+    selectedTheme.contribution.level0,
+    selectedTheme.contribution.level1,
+    selectedTheme.contribution.level2,
+    selectedTheme.contribution.level3,
+    selectedTheme.contribution.level4,
+  ];
+
+  const getLevel = (count: number): number => {
+    if (count > 12) return 4;
+    if (count > 7) return 3;
+    if (count > 3) return 2;
+    if (count > 0) return 1;
+    return 0;
   };
 
-  const generateCommitGrid = () => {
-    const weekdays = ["Mon", "", "Wed", "", "Fri"];
-    const grid = [];
-
-    // Add weekday labels column
-    grid.push(
-      <div
-        key="weekdays"
-        className="flex flex-col gap-[1px] sm:gap-[2px] text-xs text-muted-foreground pr-1 sm:pr-2 pt-3 sm:pt-4 shrink-0"
-      >
-        {weekdays.map((day, i) => (
-          <div
-            key={i}
-            className="h-[7px] sm:h-[9px] md:h-[11px] flex items-center text-xs"
-          >
-            <span className="hidden sm:inline text-xs">{day}</span>
-            <span className="sm:hidden text-xs">{day.slice(0, 1)}</span>
-          </div>
-        ))}
-      </div>
-    );
-
-    // Create a map of date to contribution count
+  const { weeks, monthLabels } = useMemo(() => {
     const contributionMap: Record<string, number> = {};
     contributions.contributionDays.forEach((day) => {
       contributionMap[day.date] = day.contributionCount;
     });
 
-    // Generate columns (weeks) - Use actual data range
     const today = new Date();
     const oneYearAgo = new Date(today);
     oneYearAgo.setFullYear(today.getFullYear() - 1);
 
-    // Ensure we start from Sunday to match GitHub's grid
+    // Start on the Sunday of the week one year ago to match GitHub's grid
     const startDate = new Date(oneYearAgo);
-    const dayOfWeek = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    startDate.setDate(startDate.getDate() - dayOfWeek);
+    startDate.setHours(0, 0, 0, 0);
+    startDate.setDate(startDate.getDate() - startDate.getDay());
 
-    for (let week = 0; week < 53; week++) {
-      const weekCells = [];
-      // Generate cells for each day in the week (Sunday to Saturday)
+    const weeks: Array<Array<{ date: Date; count: number } | null>> = [];
+    const monthLabels: Array<{ week: number; label: string }> = [];
+    let lastMonth = -1;
+    let lastLabelWeek = -10;
+
+    for (let week = 0; week < WEEKS; week++) {
+      const days: Array<{ date: Date; count: number } | null> = [];
       for (let day = 0; day < 7; day++) {
         const date = new Date(startDate);
-        date.setDate(date.getDate() + week * 7 + day);
-
-        // Skip dates that are too far in the future
+        date.setDate(startDate.getDate() + week * 7 + day);
         if (date > today) {
-          weekCells.push(
-            <div
-              key={`${week}-${day}`}
-              className="w-[10px] h-[10px] rounded-sm bg-transparent"
-            />
-          );
+          days.push(null);
           continue;
         }
-
-        const dateStr = date.toISOString().split("T")[0];
-        const contributionCount = contributionMap[dateStr] || 0;
-
-        weekCells.push(
-          <div
-            key={`${week}-${day}`}
-            className={`w-[7px] h-[7px] sm:w-[9px] sm:h-[9px] md:w-[11px] md:h-[11px] rounded-sm ${getContributionColor(
-              contributionCount
-            )} hover:ring-1 sm:hover:ring-2 hover:ring-ring hover:ring-offset-1 sm:hover:ring-offset-2 hover:ring-offset-background transition-all cursor-pointer touch-manipulation hover:scale-110`}
-            title={`${date.toDateString()}: ${contributionCount} contributions`}
-          />
-        );
+        days.push({ date, count: contributionMap[toLocalDateKey(date)] || 0 });
       }
-      grid.push(
-        <div key={week} className="flex flex-col gap-[1px] sm:gap-[2px]">
-          {weekCells}
-        </div>
-      );
+      weeks.push(days);
+
+      // Month label goes on the first week whose first day is in a new month
+      const firstDay = new Date(startDate);
+      firstDay.setDate(startDate.getDate() + week * 7);
+      const month = firstDay.getMonth();
+      if (month !== lastMonth) {
+        if (week - lastLabelWeek >= 3) {
+          monthLabels.push({
+            week,
+            label: firstDay.toLocaleString("en-US", { month: "short" }),
+          });
+          lastLabelWeek = week;
+        }
+        lastMonth = month;
+      }
     }
 
-    return (
-      <div className="flex gap-[1px] sm:gap-[2px] justify-center w-full overflow-hidden">
-        {grid}
-      </div>
-    );
-  };
+    return { weeks, monthLabels };
+  }, [contributions.contributionDays]);
 
-  const getMonthLabels = () => {
-    // Generate rolling 12 months ending at the current month
-    const now = new Date();
-    const months: string[] = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const short = d.toLocaleString("en-US", { month: "short" });
-      months.push(short);
-    }
+  // Like GitHub on narrow screens: show the most recent weeks first
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && scrollable) el.scrollLeft = el.scrollWidth;
+  }, [weeks, scrollable]);
 
-    return (
-      <div className="grid grid-cols-[repeat(12,_minmax(0,_1fr))] text-xs text-muted-foreground ml-4 sm:ml-6 mb-1 sm:mb-2 overflow-hidden max-w-full">
-        {months.map((month, i) => (
-          <div key={i} className="text-xs truncate text-center">
-            <span className="hidden sm:inline">{month}</span>
-            <span className="sm:hidden">{month.slice(0, 1)}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const cellBase =
+    "rounded-[2px] outline outline-1 -outline-offset-1 outline-foreground/5";
 
   return (
-    <div className="w-full flex justify-center">
-      <div className="bg-card backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 lg:p-6 border border-border shadow-inner max-w-full">
-        <div className="w-full overflow-hidden">
-          {getMonthLabels()}
-          <div className="pb-2 w-full overflow-hidden">
-            {generateCommitGrid()}
-          </div>
-        </div>
-        <div className="flex items-center justify-between sm:justify-end mt-2 sm:mt-3 md:mt-4 gap-2 sm:gap-3">
-          <div className="flex items-center gap-1 sm:gap-2 text-xs">
-            <span className="text-muted-foreground font-mona-sans whitespace-nowrap">
-              Less
+    <div className="w-full">
+      <div ref={scrollRef} className={scrollable ? "overflow-x-auto" : ""}>
+        <div
+          className="inline-grid pb-1 text-xs text-foreground"
+          style={{
+            gridTemplateColumns: `28px repeat(${WEEKS}, ${cellSize}px)`,
+            gridTemplateRows: `15px repeat(7, ${cellSize}px)`,
+            gap: `${cellGap}px`,
+          }}
+          role="img"
+          aria-label={`${contributions.totalContributions.toLocaleString()} contributions in the last year`}
+        >
+          {monthLabels.map(({ week, label }) => (
+            <span
+              key={`m-${week}`}
+              className="whitespace-nowrap leading-[15px]"
+              style={{ gridColumn: week + 2, gridRow: 1 }}
+            >
+              {label}
             </span>
-            <div className="flex gap-0.5 sm:gap-1">
-              {[0, 1, 4, 8, 13].map((level, index) => (
-                <div
-                  key={index}
-                  className={`w-[7px] h-[7px] sm:w-2 sm:h-2 md:w-2.5 md:h-2.5 rounded-sm ${getContributionColor(
-                    level
-                  )}`}
+          ))}
+
+          {Object.entries(WEEKDAY_LABELS).map(([day, label]) => (
+            <span
+              key={`d-${day}`}
+              className="flex items-center"
+              style={{ gridColumn: 1, gridRow: Number(day) + 2 }}
+            >
+              {label}
+            </span>
+          ))}
+
+          {weeks.map((days, week) =>
+            days.map((cell, day) =>
+              cell ? (
+                <span
+                  key={`${week}-${day}`}
+                  className={`${cellBase} ${levelClasses[getLevel(cell.count)]}`}
+                  style={{ gridColumn: week + 2, gridRow: day + 2 }}
+                  title={`${cell.count === 0 ? "No" : cell.count} contribution${
+                    cell.count === 1 ? "" : "s"
+                  } on ${cell.date.toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}`}
                 />
-              ))}
-            </div>
-            <span className="text-muted-foreground font-mona-sans whitespace-nowrap">
-              More
-            </span>
-          </div>
+              ) : null
+            )
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+        <div className="min-w-0">{footer}</div>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className="mr-1">Less</span>
+          {levelClasses.map((cls, index) => (
+            <span
+              key={index}
+              className={`${cellBase} ${cls}`}
+              style={{ width: cellSize, height: cellSize }}
+            />
+          ))}
+          <span className="ml-1">More</span>
         </div>
       </div>
     </div>

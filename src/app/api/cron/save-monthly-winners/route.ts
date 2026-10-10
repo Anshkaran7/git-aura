@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 async function saveMonthlyWinners(request: NextRequest) {
   try {
-    // Verify cron secret for security
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = authorizeCronOrAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     console.log(
       "🕰️ [CRON] Monthly Winners Capture - Starting at",
@@ -17,10 +15,7 @@ async function saveMonthlyWinners(request: NextRequest) {
     );
 
     // Call the save monthly winners API
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      "http://localhost:3000";
+    const baseUrl = new URL(request.url).origin; // call this same deployment
     const response = await fetch(
       `${baseUrl}/api/save-monthly-winners`,
       {

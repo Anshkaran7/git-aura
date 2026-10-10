@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { fetchGitHubContributions } from "@/lib/github-contributions";
 import { calculateAndStoreUserAura } from "@/lib/aura-calculations";
@@ -17,11 +18,8 @@ function clampLimit(value: unknown) {
 
 async function refreshAllUsers(request: NextRequest) {
   try {
-    // Verify cron secret to ensure this is called by Vercel cron
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = authorizeCronOrAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     const {
       batchSize = 5,
@@ -151,7 +149,7 @@ async function refreshAllUsers(request: NextRequest) {
     if (!skipRankUpdate) {
       // Update ranks after all refreshes when this endpoint is called directly.
       const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_URL || "https://git-aura.karandev.in";
+        new URL(request.url).origin; // call this same deployment
       const rankUpdateResponse = await fetch(`${baseUrl}/api/cron/update-ranks`, {
         method: "POST",
         headers: {

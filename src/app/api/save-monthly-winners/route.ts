@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authorizeCronOrAdmin, internalCronHeaders } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 import { getMonthlyRankingValues, sortMonthlyRankedEntries } from "@/lib/leaderboard";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authResult = authorizeCronOrAdmin(request);
+    if (!authResult.ok) return authResult.response;
 
     let requestBody: { monthYear?: string } = {};
     try {
@@ -111,14 +110,10 @@ export async function POST(request: NextRequest) {
 
       if (isCurrentMonth) {
         const badgeResponse = await fetch(
-          `${
-            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-          }/api/award-badges`,
+          `${new URL(request.url).origin}/api/award-badges`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: internalCronHeaders(),
           }
         );
 
