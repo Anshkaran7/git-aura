@@ -47,7 +47,8 @@ async function refreshAllUsers(request: NextRequest) {
         lastAuraRefreshAt: true,
       },
       orderBy: {
-        lastAuraRefreshAt: "asc",
+        // Postgres sorts NULLs last by default; never-refreshed users go first.
+        lastAuraRefreshAt: { sort: "asc", nulls: "first" },
       },
       take: maxUsers,
     });

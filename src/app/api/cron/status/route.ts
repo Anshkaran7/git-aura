@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
           isBanned: false,
           githubUsername: { not: null },
         },
-        orderBy: [{ lastAuraRefreshAt: "asc" }],
+        orderBy: [{ lastAuraRefreshAt: { sort: "asc", nulls: "first" } }],
         take: 10,
         select: {
           githubUsername: true,
